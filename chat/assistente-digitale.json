@@ -1,0 +1,338 @@
+{
+    "assistente": {
+        "nome": "Assistente Digitale",
+        "descrizione": "Soluzione AI avanzata per PMI che vogliono automatizzare, ottimizzare e crescere nel mercato digitale",
+        "tagline": "L'AI che trasforma il tuo business",
+        "sito_web": "https://assistente-digitale.it/",
+        "sviluppatore": {
+            "nome": "DIGITAL&MORE",
+            "specializzazione": "Soluzioni digitali innovative per PMI",
+            "sito": "https://digitalandmore.it/",
+            "social": {
+                "facebook": "https://www.facebook.com/digitalandmoreIT/",
+                "instagram": "https://www.instagram.com/digitalandmoreit/",
+                "linkedin": "https://www.linkedin.com/company/digitalandmoreit/"
+            }
+        },
+        "social": {
+            "linkedin": "https://www.linkedin.com/showcase/assistente-digitale/",
+            "facebook": "https://www.facebook.com/profile.php?id=61577397371499",
+            "instagram": "https://www.instagram.com/assistente.digitale/"
+        }
+    },
+    
+    "come_funziona": {
+        "conversazioni_intelligenti": {
+            "titolo": "Conversazioni Intelligenti",
+            "descrizione": "L'AI comprende il contesto e risponde in modo naturale, gestendo richieste complesse con precisione umana",
+            "caratteristiche": [
+                "Linguaggio Naturale",
+                "Multilingua"
+            ]
+        },
+        "prenotazioni_automatiche": {
+            "titolo": "Prenotazioni Automatiche", 
+            "descrizione": "Gestisce calendari in tempo reale, conferma appuntamenti e ottimizza la disponibilità riducendo i no-show",
+            "caratteristiche": [
+                "Calendario Integrato",
+                "Promemoria SMS"
+            ]
+        },
+        "preventivi_personalizzati": {
+            "titolo": "Preventivi Personalizzati",
+            "descrizione": "Crea preventivi dettagliati in tempo reale basati sulle esigenze specifiche del cliente",
+            "caratteristiche": [
+                "PDF Automatici",
+                "Calcoli Precisi"
+            ]
+        },
+        "integrazioni_flessibili": {
+            "titolo": "Integrazioni Flessibili",
+            "descrizione": "Possibilità di integrazione con CRM, gestionali, calendari, email marketing, social media e WhatsApp Business per un ecosistema unificato",
+            "caratteristiche": [
+                "CRM & Gestionali", 
+                "WhatsApp Business",
+                "Email Marketing",
+                "Social Media"
+            ]
+        },
+        "completamente_personalizzabile": {
+            "titolo": "Completamente Personalizzabile",
+            "descrizione": "Layout, funzionalità e workflow totalmente adattabili al tuo brand e alle tue esigenze specifiche di business",
+            "caratteristiche": [
+                "Design Personalizzato",
+                "Funzionalità Custom"
+            ]
+        },
+        "conformita_normativa": {
+            "titolo": "Conformità Normativa",
+            "descrizione": "Le nostre soluzioni sono sviluppate per rispettare i requisiti normativi, con massimo impegno in qualità di Silver Partner Iubenda",
+            "caratteristiche": [
+                "Conformità GDPR",
+                "Privacy by Design",
+                "Silver Partner Iubenda"
+            ],
+            "partner_info": "https://digitalandmore.it/iubenda-partner/"
+        }
+    },
+
+    "vantaggi_concreti": {
+        "risultati_immediati": {
+            "disponibilita": "24/7 - Disponibilità Completa",
+            "tempo_risposta": "<3s - Tempo di Risposta", 
+            "clienti_simultanei": "∞ - Clienti Simultanei",
+            "conformita_normativa": "Sviluppato per conformità GDPR"
+        },
+        "benefici": {
+            "roi_immediato": {
+                "titolo": "ROI Immediato e Misurabile",
+                "descrizione": "Vedi risultati concreti fin dal primo giorno con riduzione dei costi operativi e automazione completa dei processi ripetitivi"
+            },
+            "automazione_completa": {
+                "titolo": "Automazione Completa", 
+                "descrizione": "Libera il tuo team dalle attività ripetitive per concentrarsi su strategia e crescita del business"
+            },
+            "clienti_soddisfatti": {
+                "titolo": "Clienti Più Soddisfatti",
+                "descrizione": "Supporto istantaneo e personalizzato che migliora l'esperienza cliente e aumenta la fedeltà al brand"
+            },
+            "scalabilita_automatica": {
+                "titolo": "Scalabilità Automatica", 
+                "descrizione": "Gestisci migliaia di conversazioni simultanee senza costi aggiuntivi o perdita di qualità del servizio"
+            }
+        }
+    },
+    
+    "settori_sviluppati": {
+        "ecommerce": {
+            "nome": "E-commerce",
+            "status": "Demo Disponibile",
+            "descrizione": "Automatizza vendite, supporto clienti e gestione ordini per il tuo negozio online",
+            "demo_url": "https://assistente-digitale.it/e-commerce-demo/",
+            "funzionalita": [
+                "Gestione Ordini",
+                "Supporto Clienti 24/7", 
+                "Tracking Spedizioni",
+                "Raccomandazioni Prodotti",
+                "Recupero Carrelli Abbandonati"
+            ],
+            "benefici": [
+                "Aumento conversioni",
+                "Riduzione tempo risposta",
+                "Automazione customer service",
+                "Miglioramento customer experience",
+                "Riduzione costi operativi"
+            ]
+        },
+        
+        "studio_dentistico": {
+            "nome": "Studio Dentistico",
+            "status": "Demo Disponibile", 
+            "descrizione": "Gestisce prenotazioni, informazioni su trattamenti e preventivi automatici per studi dentistici",
+            "demo_url": "https://assistente-digitale.it/studio-dentistico-demo/",
+            "funzionalita": [
+                "Prenotazioni Online",
+                "Info Trattamenti",
+                "Preventivi Automatici",
+                "Promemoria Appuntamenti",
+                "Gestione Lista d'Attesa"
+            ],
+            "benefici": [
+                "Riduzione no-show",
+                "Automazione agenda",
+                "Miglior patient experience", 
+                "Ottimizzazione tempi",
+                "Aumento prenotazioni online"
+            ]
+        },
+
+        "impresa_servizi": {
+            "nome": "Impresa di Servizi",
+            "status": "In Sviluppo",
+            "descrizione": "Preventivi rapidi, gestione progetti e pianificazione lavori automatizzati per imprese di servizi",
+            "funzionalita": [
+                "Preventivi Rapidi",
+                "Gestione Progetti", 
+                "Pianificazione Lavori",
+                "Gestione Cliente",
+                "Tracking Interventi"
+            ],
+            "settori_target": ["Edilizia", "Manutenzioni", "Consulenza", "Servizi Tecnici"],
+            "notifiche_disponibili": true
+        },
+
+        "centro_estetico": {
+            "nome": "Centro Estetico",
+            "status": "In Sviluppo", 
+            "descrizione": "Prenotazioni trattamenti, consulenze personalizzate e gestione pacchetti benessere per centri estetici",
+            "funzionalita": [
+                "Prenotazioni Trattamenti",
+                "Consulenze Personalizzate",
+                "Pacchetti Benessere",
+                "Schede Cliente",
+                "Promemoria Appuntamenti"
+            ],
+            "settori_target": ["Centri Estetici", "Spa", "Wellness Center"],
+            "notifiche_disponibili": true
+        },
+
+        "parrucchiere": {
+            "nome": "Parrucchiere/Barbiere",
+            "status": "In Sviluppo",
+            "descrizione": "Booking servizi, consulenza stile e gestione appuntamenti per saloni di bellezza",
+            "funzionalita": [
+                "Booking Servizi",
+                "Consulenza Stile",
+                "Gestione Appuntamenti",
+                "Gestione Staff",
+                "Programmi Fedeltà"
+            ],
+            "settori_target": ["Parrucchieri", "Barbieri", "Saloni Beauty"],
+            "notifiche_disponibili": true
+        },
+
+        "ristorante": {
+            "nome": "Ristorante/Food Service", 
+            "status": "In Sviluppo",
+            "descrizione": "Prenotazioni tavoli, menu digitale e gestione delivery & takeaway per ristoranti",
+            "funzionalita": [
+                "Prenotazioni Tavoli",
+                "Menu Digitale", 
+                "Delivery & Takeaway",
+                "Gestione Allergie",
+                "Recensioni Automatiche"
+            ],
+            "settori_target": ["Ristoranti", "Pizzerie", "Bar", "Catering"],
+            "notifiche_disponibili": true
+        }
+    },
+
+    "demo_disponibili": {
+        "note": "Attualmente abbiamo 2 demo complete e funzionanti. I settori in sviluppo saranno disponibili prossimamente.",
+        "ecommerce": {
+            "url": "https://assistente-digitale.it/e-commerce-demo/",
+            "descrizione": "Prova l'esperienza completa di shopping con assistente AI",
+            "cta": "Prova la Demo"
+        },
+        "studio_dentistico": {
+            "url": "https://assistente-digitale.it/studio-dentistico-demo/",
+            "descrizione": "Simula prenotazioni e richieste informazioni per uno studio dentistico",
+            "cta": "Prova la Demo"
+        }
+    },
+
+    "integrazioni": {
+        "capacita_integrazione": "Siamo in grado di integrare l'Assistente Digitale con diverse piattaforme e servizi per creare un ecosistema completo",
+        "piattaforme_supportate": [
+            "HubSpot",
+            "Shopify", 
+            "WooCommerce",
+            "Sendinblue (Brevo)",
+            "MailChimp",
+            "Zapier",
+            "Active Campaign",
+            "WhatsApp Business",
+            "WordPress",
+            "Google My Business",
+            "Google Calendar",
+            "Google Sheets",
+            "LinkedIn",
+            "Meta (Facebook/Instagram)",
+            "Instagram Direct",
+            "Asana"
+        ],
+        "categorie": {
+            "crm_marketing": ["HubSpot", "Active Campaign", "Sendinblue (Brevo)", "MailChimp"],
+            "ecommerce": ["Shopify", "WooCommerce"],
+            "automazione": ["Zapier"],
+            "comunicazione": ["WhatsApp Business", "Meta", "Instagram", "LinkedIn"],
+            "calendario": ["Google Calendar"],
+            "gestione": ["Asana", "Google Sheets"],
+            "web_social": ["WordPress", "Google My Business", "Meta"]
+        },
+        "note": "Altre integrazioni possibili su richiesta specifica"
+    },
+    
+    "processo_implementazione": [
+        {
+            "fase": "Analisi e Consulenza",
+            "durata": "3-5 giorni", 
+            "descrizione": "Analisi approfondita del business e definizione requisiti specifici per il tuo settore"
+        },
+        {
+            "fase": "Progettazione AI",
+            "durata": "7-10 giorni",
+            "descrizione": "Creazione dell'assistente personalizzato con training specifico per il tuo settore e dati aziendali"
+        },
+        {
+            "fase": "Implementazione",
+            "durata": "5-7 giorni",
+            "descrizione": "Integrazione con i sistemi esistenti e test completi nel tuo ambiente"
+        },
+        {
+            "fase": "Go-Live e Supporto",
+            "durata": "Ongoing",
+            "descrizione": "Lancio ufficiale con monitoraggio continuo e ottimizzazioni basate sui dati reali"
+        }
+    ],
+    
+    "contatti": {
+        "email_commerciale": "info@assistente-digitale.it",
+        "email_supporto": "support@assistente-digitale.it", 
+        "telefono": "+39 0983 535253",
+        "whatsapp_business": "+39 0983 535253",
+        "orari_supporto": "Lun-Ven 9:00-18:00",
+        "sede": "Italia",
+        "sviluppatore_contatti": {
+            "telefono": "+39 0983 535253",
+            "whatsapp_business": "+39 0983 535253"
+        }
+    },
+    
+    "pricing": {
+        "policy": "Preventivo personalizzato basato su settore, complessità e funzionalità richieste",
+        "consulenza_gratuita": true,
+        "demo_gratuita": true, 
+        "note": "Soluzioni scalabili pensate per PMI con pricing competitivo"
+    },
+    
+    "tecnologia": {
+        "ai_engine": "GPT-4o con training personalizzato per settore",
+        "linguaggi_supportati": ["Italiano", "Inglese"],
+        "capacita_integrazione": ["CRM", "Gestionali", "Email Marketing", "Calendari", "Social Media", "WhatsApp Business"],
+        "sicurezza": "Soluzioni sviluppate per rispettare requisiti normativi GDPR",
+        "partnership": "Silver Partner Iubenda per conformità privacy",
+        "uptime": "Architettura progettata per alta disponibilità"
+    },
+    
+    "faq": [
+        {
+            "domanda": "Sviluppate assistenti per tutti i settori?",
+            "risposta": "Attualmente lavoriamo su 6 settori specifici: E-commerce e Studio Dentistico (demo disponibili), Impresa di Servizi, Centro Estetico, Parrucchiere e Ristorante (in sviluppo). Ogni assistente è progettato specificamente per le esigenze del settore."
+        },
+        {
+            "domanda": "Posso provare una demo del mio settore?",
+            "risposta": "Abbiamo demo complete per E-commerce e Studio Dentistico. Per gli altri settori in sviluppo, offriamo consulenze personalizzate e mockup specifici."
+        },
+        {
+            "domanda": "L'AI sostituisce i miei dipendenti?",
+            "risposta": "No, l'AI potenzia il tuo team automatizzando le attività ripetitive specifiche del tuo settore, permettendo al personale di concentrarsi su attività a maggior valore aggiunto."
+        },
+        {
+            "domanda": "Quanto tempo serve per l'implementazione?",
+            "risposta": "Il processo completo richiede 2-3 settimane dall'analisi iniziale al go-live, con tempi che possono variare in base alla complessità specifica del settore."
+        },
+        {
+            "domanda": "Che tipo di integrazioni supportate?",
+            "risposta": "Siamo in grado di integrare con le principali piattaforme: HubSpot, Shopify, WooCommerce, Google Calendar, MailChimp, WhatsApp Business, e molte altre. Le integrazioni sono personalizzate per settore."
+        },
+        {
+            "domanda": "Come garantite la conformità GDPR?",
+            "risposta": "Le nostre soluzioni sono sviluppate per rispettare i requisiti normativi GDPR. Il nostro impegno è massimo in qualità di Silver Partner di Iubenda, specializzata in conformità privacy."
+        },
+        {
+            "domanda": "Quando saranno disponibili gli altri settori?",
+            "risposta": "Stiamo sviluppando attivamente i settori Impresa di Servizi, Centro Estetico, Parrucchiere e Ristorante. Puoi richiedere di essere notificato quando saranno disponibili."
+        }
+    ]
+}

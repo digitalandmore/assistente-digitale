@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente Digitale - Consulenza AI per PMI</title>
+    <link rel="stylesheet" href="chat.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- HubSpot Tracking Code -->
+    <script type="text/javascript" id="hs-script-loader" async defer src="//js-eu1.hs-scripts.com/146570440.js"></script>
+</head>
+<body>
+    <!-- Chat Container Principale -->
+    <div class="chat-container">
+        <!-- Header con branding Assistente Digitale -->
+        <header class="chat-header">
+            <div class="header-content">
+                <div class="brand-info">
+                    <div class="brand-logo">
+                        <div class="logo-circle">
+                            <img src="https://assistente-digitale.it/images/favicon.png" alt="Assistente Digitale" class="logo-image">
+                        </div>
+                        <div class="brand-details">
+                            <h1 class="brand-name">Assistente Digitale</h1>
+                            <p class="brand-specialty">Consulenza AI per PMI</p>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <div class="status-badge">
+                            <span class="status-dot"></span>
+                            <span class="status-text">Online</span>
+                        </div>
+                        <!-- Tasto chiudi per mobile -->
+                        <button class="close-button mobile-only" id="closeChatBtn" aria-label="Chiudi chat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 6L6 18M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Area messaggi -->
+        <main class="chat-messages" id="chatMessages">
+            <!-- I messaggi vengono inseriti dinamicamente da chat.js -->
+        </main>
+
+        <!-- Indicatore di digitazione -->
+        <div class="typing-indicator" id="typingIndicator" style="display: none;">
+            <div class="typing-content">
+                <div class="typing-avatar">
+                    <img src="https://assistente-digitale.it/images/favicon.png" alt="AI" class="avatar-image">
+                </div>
+                <div class="typing-bubble">
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span class="typing-text">Sto elaborando la tua richiesta...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area input -->
+        <footer class="chat-input-area">
+            <div class="input-wrapper">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="userInput" 
+                        placeholder="Descrivi la tua esigenza business..."
+                        autocomplete="off"
+                        maxlength="500"
+                        class="chat-input"
+                    >
+                    <button type="button" id="sendButton" class="send-button" aria-label="Invia messaggio">
+                        <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m22 2-7 20-4-9-9-4z"/>
+                            <path d="M22 2 11 13"/>
+                        </svg>
+                    </button>
+                </div>
+                <!-- RIMOSSO: Footer powered by -->
+            </div>
+        </footer>
+
+        <!-- Container nascosto per HubSpot -->
+        <div id="hidden-hubspot-form" style="display: none;"></div>
+    </div>
+    
+    <!-- Script principale -->
+    <script src="chat.js"></script>
+    
+    <!-- Script per chiusura mobile -->
+    <script>
+document.getElementById('closeChatBtn')?.addEventListener('click', function() {
+    // Comunica al parent di chiudere la chat
+    if (window.parent) {
+        window.parent.postMessage('closeChatWidget', '*');
+    }
+    
+    // Fallback locale
+    if (typeof window.parent.closeChatWidget === 'function') {
+        window.parent.closeChatWidget();
+    }
+});
+
+// Aggiungi anche event listener per altri possibili pulsanti di chiusura
+document.addEventListener('click', function(e) {
+    // Se clicca su un elemento con classe close-chat o simile
+    if (e.target.classList.contains('close-chat') || 
+        e.target.closest('.close-chat') ||
+        e.target.id === 'closeChatBtn') {
+        
+        if (window.parent) {
+            window.parent.postMessage('closeChatWidget', '*');
+        }
+    }
+});
+</script>
+</body>
+</html>
