@@ -58,8 +58,8 @@ app.use((req, res, next) => {
 // OpenAI configuration
 const openAiConfig = {
     apiKey: process.env.OPENAI_API_KEY,
-    model: 'gpt-4',
-    maxTokens: 1000
+    model: 'gpt-4o-mini',
+    maxTokens: 1200
 };
 
 // API endpoint per ottenere configurazione client
@@ -245,7 +245,178 @@ function mapPropertiesFallback(inputData) {
     };
 }
 
+/* ==================== OPENAI PROXY ENDPOINTS ==================== */
+
+// Endpoint per analisi intento tramite backend
+app.post('/api/ai/analyze-intent', async (req, res) => {
+    try {
+        const { message, conversationHistory } = req.body;
+        
+        if (!process.env.OPENAI_API_KEY) {
+            return res.status(500).json({ 
+                success: false, 
+                error: 'OpenAI non configurato sul server' 
+            });
+        }
+        
+        const intentPrompt = `
+Analizza questo messaggio e determina l'intento dell'utente:
+
+MESSAGGIO: "${message}"
+
+CONTESTO CONVERSAZIONE (ultimi messaggi):
+${conversationHistory ? conversationHistory.map(msg => `${msg.sender}: ${msg.content}`).join('\n') : 'Nessun contesto'}
+
+POSSIBILI INTENTI:
+1. consultation_request - Vuole consulenza/preventivo/informazioni commerciali
+2. general_info - Chiede informazioni sui servizi
+3. demo_request - Vuole vedere demo
+4. pricing_info - Chiede costi/prezzi
+5. technical_info - Domande tecniche
+6. sector_specific - Domande su settori specifici
+
+PAROLE CHIAVE CONSULENZA: "preventivo", "consulenza", "interessato", "richiedo", "vorrei", "contatto", "chiamata"
+
+Restituisci SOLO un JSON:
+{
+  "category": "consultation_request|general_info|demo_request|pricing_info|technical_info|sector_specific",
+  "intent": "descrizione_breve",
+  "wantsConsultation": true/false,
+  "confidence": 0.0-1.0
+}
+`;
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${openAiConfig.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: openAiConfig.model,
+                messages: [{ role: 'user', content: intentPrompt }],
+                max_tokens: 200,
+                temperature: 0.3
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`OpenAI Intent Analysis Error: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        const intentResult = data.choices[0].message.content.trim();
+        
+        try {
+            const intent = JSON.parse(intentResult);
+            res.status(200).json({
+                success: true,
+                intent: intent
+            });
+        } catch (parseError) {
+            // Fallback intent se parsing JSON fallisce
+            res.status(200).json({
+                success: true,
+                intent: {
+                    category: 'general_info',
+                    intent: 'general_question',
+                    wantsConsultation: false,
+                    confidence: 0.5
+                }
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Errore Intent Analysis:', error.message);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            intent: {
+                category: 'general_info',
+                intent: 'fallback',
+                wantsConsultation: false,
+                confidence: 0.0
+            }
+        });
+    }
+});
+
+// Endpoint principale per chat AI tramite backend
+app.post('/api/ai/chat', async (req, res) => {
+    try {
+        const { messages, maxTokens, temperature } = req.body;
+        
+        if (!process.env.OPENAI_API_KEY) {
+            return res.status(500).json({ 
+                success: false, 
+                error: 'OpenAI non configurato sul server' 
+            });
+        }
+        
+        if (!messages || !Array.isArray(messages)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Messages array richiesto' 
+            });
+        }
+        
+        console.log('🤖 OpenAI Chat Request:', {
+            messagesCount: messages.length,
+            maxTokens: maxTokens || openAiConfig.maxTokens,
+            model: openAiConfig.model
+        });
+        
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${openAiConfig.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: openAiConfig.model,
+                messages: messages,
+                max_tokens: maxTokens || openAiConfig.maxTokens,
+                temperature: temperature || 0.8,
+                presence_penalty: 0.1,
+                frequency_penalty: 0.1
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ OpenAI API Error:', response.status, errorText);
+            throw new Error(`OpenAI Chat Error: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        
+        // Log utilizzo token per monitoring
+        if (data.usage) {
+            console.log('📊 Token Usage:', {
+                prompt: data.usage.prompt_tokens,
+                completion: data.usage.completion_tokens,
+                total: data.usage.total_tokens
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            choices: data.choices,
+            usage: data.usage || null
+        });
+        
+    } catch (error) {
+        console.error('❌ Errore OpenAI Chat:', error.message);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 /* ==================== HUBSPOT INTEGRATION ==================== */
+
 // Endpoint per creare contatto HubSpot con AI Property Mapping
 app.post('/api/hubspot/create-contact', async (req, res) => {
     try {
@@ -360,6 +531,7 @@ app.post('/api/hubspot/create-contact', async (req, res) => {
 });
 
 /* ==================== HEALTH CHECK E API ROUTES ==================== */
+
 // Health check completo
 app.get('/health', (req, res) => {
     const status = {
@@ -390,7 +562,12 @@ app.get('/api/health', (req, res) => {
             cached_properties_count: hubspotPropertiesCache?.length || 0,
             cache_age_minutes: cacheTimestamp ? Math.round((Date.now() - cacheTimestamp) / (1000 * 60)) : 0
         },
-        backend_url: 'https://assistente-digitale.onrender.com'
+        backend_url: 'https://assistente-digitale.onrender.com',
+        endpoints: {
+            ai_chat: '/api/ai/chat',
+            ai_intent: '/api/ai/analyze-intent',
+            hubspot: '/api/hubspot/create-contact'
+        }
     };
     
     res.status(200).json(status);
@@ -405,12 +582,15 @@ app.get('/api/status', (req, res) => {
         endpoints: {
             config: '/api/config',
             health: '/api/health',
+            ai_chat: '/api/ai/chat',
+            ai_intent: '/api/ai/analyze-intent',
             hubspot: '/api/hubspot/create-contact'
         }
     });
 });
 
 /* ==================== STATIC FILES & SPA ROUTING ==================== */
+
 // Serve index.html for all non-API routes (SPA behavior)
 app.get('*', (req, res, next) => {
     // Skip API routes
@@ -427,12 +607,21 @@ app.get('*', (req, res, next) => {
 });
 
 /* ==================== ERROR HANDLING ==================== */
+
 // 404 handler for API routes
 app.use('/api/*', (req, res) => {
     res.status(404).json({
         error: 'API endpoint not found',
         path: req.path,
-        method: req.method
+        method: req.method,
+        availableEndpoints: [
+            'GET /api/config',
+            'GET /api/health',
+            'GET /api/status',
+            'POST /api/ai/chat',
+            'POST /api/ai/analyze-intent',
+            'POST /api/hubspot/create-contact'
+        ]
     });
 });
 
@@ -447,6 +636,7 @@ app.use((err, req, res, next) => {
 });
 
 /* ==================== SERVER STARTUP ==================== */
+
 // Pre-carica proprietà HubSpot al startup se configurato
 if (process.env.HUBSPOT_API_KEY) {
     console.log('🔄 Pre-caricamento proprietà HubSpot...');
@@ -475,8 +665,12 @@ app.listen(PORT, '0.0.0.0', () => {
 │  AI Mapping: ${process.env.OPENAI_API_KEY && process.env.HUBSPOT_API_KEY ? '✅ Attivo' : '❌ Inattivo'}        │
 │  CORS: ✅ Configurato per Render        │
 ├─────────────────────────────────────────┤
-│  Health Check: /health                  │
-│  API Status: /api/status                │
+│  Endpoints:                             │
+│  /health - Health check                 │
+│  /api/status - API status               │
+│  /api/ai/chat - Chat principale         │
+│  /api/ai/analyze-intent - Analisi AI    │
+│  /api/hubspot/create-contact - CRM      │
 ╰─────────────────────────────────────────╯
     `);
 });

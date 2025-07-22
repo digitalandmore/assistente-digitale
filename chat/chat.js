@@ -336,104 +336,56 @@ async function processWithOpenAI(userMessage) {
     }
 }
 
-// NUOVA FUNZIONE: Analizza intento utente
-async function analyzeUserIntent(userMessage) {
+// NUOVA FUNZIONE TRAMITE BACKEND
+async function analyzeUserIntent(message) {
     try {
-        const intentPrompt = `
-Analizza questo messaggio utente e determina se vuole richiedere una consulenza/preventivo:
-
-MESSAGGIO: "${userMessage}"
-
-ESEMPI DI RICHIESTE CONSULENZA:
-- "vorrei un preventivo"
-- "sono interessato"  
-- "facciamo una consulenza"
-- "posso avere più informazioni sui prezzi?"
-- "mi serve aiuto per il mio business"
-- "come posso procedere?"
-
-ESEMPI DI SEMPLICI DOMANDE:
-- "come funziona?"
-- "che servizi offrite?"
-- "avete demo?"
-- "che settori seguite?"
-
-Rispondi SOLO con:
-CONSULENZA: se vuole procedere con richiesta/preventivo/consulenza
-INFORMAZIONI: se vuole solo informazioni
-
-Risposta:`;
-
-        const response = await fetch(openAiConfig.endpoint, {
+        const apiUrl = `${getApiBaseUrl()}/api/ai/analyze-intent`;  // ✅ VIA BACKEND
+        
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${openAiConfig.apiKey}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: openAiConfig.model,
-                messages: [{ role: 'user', content: intentPrompt }],
-                max_tokens: 50,
-                temperature: 0.1 // Molto deterministico
+                message: message,
+                conversationHistory: conversationHistory.slice(-5) // Ultimi 5 messaggi
             })
         });
-
+        
         if (!response.ok) {
-            debugLog('WARN', 'Errore analisi intento, uso fallback');
-            return { wantsConsultation: false };
+            throw new Error(`Intent Analysis Error: ${response.status}`);
         }
-
-        const data = await response.json();
-        const result = data.choices[0].message.content.trim().toUpperCase();
         
-        const wantsConsultation = result.includes('CONSULENZA');
-        
-        debugLog('INTENT', `Messaggio: "${userMessage}" → Intento: ${result} → Consulenza: ${wantsConsultation}`);
-        
-        return { wantsConsultation };
+        const result = await response.json();
+        return result.intent;
         
     } catch (error) {
-        debugLog('ERROR', 'Errore analisi intento', error);
-        return { wantsConsultation: false }; // Fallback sicuro
+        debugLog('WARN', 'Errore analisi intento, uso fallback');
+        return { category: 'general', intent: 'general_info' };
     }
 }
 
 
-async function callOpenAI(userMessage) {
-    if (!openAiConfig.apiKey) {
-        throw new Error('API Key non configurata');
-    }
+async function callOpenAI(messages, maxTokens = 1200) {
+    const apiUrl = `${getApiBaseUrl()}/api/ai/chat`;  // ✅ VIA BACKEND
     
-    const messages = [
-        { 
-            role: 'system', 
-            content: openAiConfig.systemPromptTemplate + `\n\nUSA SEMPRE HTML: <h3>, <strong>, <ul><li>`
-        },
-        ...conversationHistory.slice(-6).map(msg => ({
-            role: msg.sender === 'user' ? 'user' : 'assistant',
-            content: msg.content.replace(/<[^>]*>/g, '')
-        })),
-        { role: 'user', content: userMessage }
-    ];
-    
-    const response = await fetch(openAiConfig.endpoint, {
+    const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${openAiConfig.apiKey}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: openAiConfig.model,
             messages: messages,
-            max_tokens: openAiConfig.maxTokens,
-            temperature: 0.7
+            maxTokens: maxTokens || 1200,
+            temperature: openAiConfig.temperature || 0.8
         })
     });
-    
+
     if (!response.ok) {
+        const errorText = await response.text();
         throw new Error(`OpenAI Error: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return data.choices[0].message.content;
 }
