@@ -317,8 +317,20 @@ async function processWithOpenAI(userMessage) {
             return;
         }
         
-        // Altrimenti risposta normale
-        const aiResponse = await callOpenAI(userMessage);
+        // COSTRUISCI L'ARRAY DI MESSAGGI CORRETTO
+        const messages = [
+            { role: 'system', content: openAiConfig.systemPromptTemplate },
+            ...conversationHistory.slice(-8).map(msg => ({
+                role: msg.sender === 'user' ? 'user' : 'assistant', 
+                content: msg.content
+            })),
+            { role: 'user', content: userMessage }
+        ];
+        
+        debugLog('AI', 'Messaggi preparati per OpenAI:', messages.length);
+        
+        // Chiamata API corretta
+        const aiResponse = await callOpenAI(messages);
         hideTypingIndicator();
         addMessageToChat(aiResponse, 'assistant');
         
