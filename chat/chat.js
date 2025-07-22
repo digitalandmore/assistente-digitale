@@ -336,10 +336,12 @@ async function processWithOpenAI(userMessage) {
     }
 }
 
-// NUOVA FUNZIONE TRAMITE BACKEND
+// VERSIONE CORRETTA analyzeUserIntent
 async function analyzeUserIntent(message) {
     try {
-        const apiUrl = `${getApiBaseUrl()}/api/ai/analyze-intent`;  // ✅ VIA BACKEND
+        const apiUrl = `${getApiBaseUrl()}/api/ai/analyze-intent`;
+        
+        debugLog('AI', 'Analisi intento per:', message.substring(0, 50) + '...');
         
         const response = await fetch(apiUrl, {
             method: 'POST',
@@ -348,7 +350,10 @@ async function analyzeUserIntent(message) {
             },
             body: JSON.stringify({
                 message: message,
-                conversationHistory: conversationHistory.slice(-5) // Ultimi 5 messaggi
+                conversationHistory: conversationHistory.slice(-5).map(msg => ({
+                    sender: msg.sender,
+                    content: msg.content
+                }))
             })
         });
         
@@ -357,17 +362,31 @@ async function analyzeUserIntent(message) {
         }
         
         const result = await response.json();
-        return result.intent;
+        
+        if (result.success && result.intent) {
+            debugLog('AI', 'Intent rilevato:', result.intent.category);
+            return result.intent;
+        }
+        
+        throw new Error('Invalid intent response format');
         
     } catch (error) {
         debugLog('WARN', 'Errore analisi intento, uso fallback');
-        return { category: 'general', intent: 'general_info' };
+        return { 
+            category: 'general', 
+            intent: 'general_info',
+            wantsConsultation: false,
+            confidence: 0.5
+        };
     }
 }
 
 
 async function callOpenAI(messages, maxTokens = 1200) {
-    const apiUrl = `${getApiBaseUrl()}/api/ai/chat`;  // ✅ VIA BACKEND
+    const apiUrl = `${getApiBaseUrl()}/api/ai/chat`;
+    
+    debugLog('AI', `Chiamata API: ${apiUrl}`);
+    debugLog('AI', 'Messages count:', messages.length);
     
     const response = await fetch(apiUrl, {
         method: 'POST',
@@ -383,10 +402,23 @@ async function callOpenAI(messages, maxTokens = 1200) {
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`OpenAI Error: ${response.status}`);
+        console.error('❌ Backend Response:', errorText);
+        throw new Error(`OpenAI Error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    
+    // Controlla se la risposta ha il formato corretto
+    if (!data.success || !data.choices || !data.choices[0]) {
+        console.error('❌ Formato risposta backend errato:', data);
+        throw new Error('Backend response format error');
+    }
+    
+    // Log token usage se disponibile
+    if (data.usage) {
+        debugLog('AI', 'Token usage:', `${data.usage.total_tokens} tokens`);
+    }
+    
     return data.choices[0].message.content;
 }
 
