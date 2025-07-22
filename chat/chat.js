@@ -36,6 +36,33 @@ const openAiConfig = {
     systemPromptTemplate: null
 };
 
+// ==================== CONFIGURAZIONE API ==================== 
+const API_CONFIG = {
+    // URL del backend
+    BASE_URL: 'https://assistente-digitale.onrender.com',
+    
+    // Fallback per sviluppo locale
+    LOCAL_URL: 'http://localhost:3000',
+    
+    // Endpoints
+    ENDPOINTS: {
+        CONFIG: '/api/config',
+        HUBSPOT_CREATE_CONTACT: '/api/hubspot/create-contact',
+        HEALTH: '/health'
+    }
+};
+
+// Funzione per ottenere l'URL base corretto
+function getApiBaseUrl() {
+    // Se siamo in produzione (non localhost), usa sempre Render
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        return API_CONFIG.BASE_URL;
+    }
+    
+    // Altrimenti usa localhost per sviluppo
+    return API_CONFIG.LOCAL_URL;
+}
+
 /* ==================== SISTEMA DI DEBUG ==================== */
 
 function debugLog(category, message, data = null) {
@@ -78,25 +105,34 @@ async function loadConfiguration() {
 
 async function loadEnvironmentVariables() {
     try {
-        // Prova server Express
-        const configResponse = await fetch('/api/config');
+        debugLog('CONFIG', 'Caricamento configurazione dal server...');
+        
+        // Usa l'URL dinamico
+        const apiUrl = `${getApiBaseUrl()}${API_CONFIG.ENDPOINTS.CONFIG}`;
+        debugLog('CONFIG', 'API URL:', apiUrl);
+        
+        const configResponse = await fetch(apiUrl);
+        
         if (configResponse.ok) {
             const serverConfig = await configResponse.json();
-            if (serverConfig.openai_api_key) {
-                openAiConfig.apiKey = serverConfig.openai_api_key;
-                debugLog('SUCCESS', 'OpenAI API Key caricata dal server');
-                return;
+            
+            if (serverConfig.openai_configured) {
+                openAiConfig.apiKey = 'configured'; // Non esporre la chiave reale
+                debugLog('SUCCESS', 'OpenAI configurato sul backend');
             }
+            
+            if (serverConfig.hubspot_configured) {
+                debugLog('SUCCESS', 'HubSpot configurato sul backend');
+            }
+            
+            debugLog('SUCCESS', `Backend connesso: ${serverConfig.backend_url || getApiBaseUrl()}`);
+            return;
         }
+        
+        throw new Error(`Config API Error: ${configResponse.status}`);
+        
     } catch (error) {
-        debugLog('ERROR', 'Server non disponibile', error);
-    }
-    
-    // Fallback variabili globali
-    if (window.OPENAI_API_KEY) {
-        openAiConfig.apiKey = window.OPENAI_API_KEY;
-        debugLog('SUCCESS', 'API Key da variabile globale');
-    } else {
+        debugLog('ERROR', 'Server non disponibile', error.message);
         debugLog('ERROR', 'Nessuna API Key trovata');
     }
 }
@@ -803,19 +839,22 @@ window.completeLead = async function(uniqueId) {
     }
 };
 
-// NUOVA FUNZIONE: HubSpot API Contacts
+//HubSpot API Contacts
 async function submitToHubSpotAPI(data) {
     try {
         debugLog('HUBSPOT_API', 'Tentativo creazione contatto HubSpot con AI mapping', data);
         
-        // Chiamata al server con i dati RAW - il server farà il mapping con AI
-        const response = await fetch('/api/hubspot/create-contact', {
+        // USA URL DINAMICO invece di URL relativo
+        const apiUrl = `${getApiBaseUrl()}${API_CONFIG.ENDPOINTS.HUBSPOT_CREATE_CONTACT}`;
+        debugLog('HUBSPOT_API', 'API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {  // ✅ USA URL DINAMICO
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                properties: data  // Invia dati originali, il server farà il mapping
+                properties: data
             })
         });
         
