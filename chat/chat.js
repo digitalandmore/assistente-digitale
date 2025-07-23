@@ -842,7 +842,7 @@ window.completeLead = async function(uniqueId) {
                 <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
                 <h3 style="margin: 0 0 10px 0;">Richiesta Ricevuta</h3>
                 <p style="margin: 0; opacity: 0.9;">Ti contatteremo entro 24 ore</p>
-                ${hubspotSuccess ? '<p style="font-size: 12px; opacity: 0.8; margin: 5px 0 0 0;">🤖 Processato con AI Property Mapping</p>' : ''}
+                ${hubspotSuccess ? '<p style="font-size: 12px; opacity: 0.8; margin: 5px 0 0 0;">Processato con AI Property Mapping</p>' : ''}
             </div>
             
             <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin: 20px 0;">
@@ -1021,7 +1021,7 @@ function addMessageToChat(message, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
     
-    // MODIFICARE: Avatar structure per compatibilità CSS
+    // Avatar structure per compatibilità CSS
     if (sender === 'assistant') {
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
@@ -1036,22 +1036,35 @@ function addMessageToChat(message, sender) {
     } else if (sender === 'user') {
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
-        avatar.textContent = 'U'; // O iniziale nome utente
+        avatar.textContent = 'U';
         messageDiv.appendChild(avatar);
     }
     
-    // MODIFICARE: Bubble structure per compatibilità CSS
+    // Bubble structure per compatibilità CSS
     const bubbleDiv = document.createElement('div');
     bubbleDiv.className = 'message-bubble';
     
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
-    contentDiv.innerHTML = sender === 'assistant' ? message : message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    // ✅ FIX: Preserva HTML per AI, escape per utente
+    if (sender === 'assistant') {
+        contentDiv.innerHTML = message; // Mantieni HTML per formattazione AI
+    } else {
+        contentDiv.textContent = message; // Safe text per utente
+    }
     
     bubbleDiv.appendChild(contentDiv);
     messageDiv.appendChild(bubbleDiv);
     chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Smooth scroll
+    setTimeout(() => {
+        chatMessages.scrollTo({
+            top: chatMessages.scrollHeight,
+            behavior: 'smooth'
+        });
+    }, 100);
     
     conversationHistory.push({ content: message, sender, timestamp: new Date() });
 }
@@ -1156,7 +1169,7 @@ async function showWelcomeMessage() {
 function addModernStyles() {
     const style = document.createElement('style');
     style.textContent = `
-        /* Welcome message button styles aggiornati */
+        /* Welcome message button styles */
         button[onclick*="sendQuickMessage"] {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1171,11 +1184,6 @@ function addModernStyles() {
         
         button[onclick*="sendQuickMessage"]:active {
             transform: translateY(0);
-        }
-        
-        button[onclick*="sendQuickMessage"]:focus {
-            outline: 2px solid rgba(37, 99, 235, 0.3);
-            outline-offset: 1px;
         }
         
         /* Message structure compatibility */
@@ -1199,11 +1207,19 @@ function addModernStyles() {
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            font-size: 14px;
+            font-weight: 600;
         }
         
         .message.assistant .message-avatar {
             background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e5e7eb;
             padding: 4px;
+        }
+        
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
         }
         
         .message-avatar .avatar-image {
@@ -1223,15 +1239,73 @@ function addModernStyles() {
         }
         
         .message.assistant .message-bubble {
-            background: var(--white);
-            border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-sm);
-            color: var(--text-dark);
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            color: #1f2937;
         }
         
         .message.user .message-bubble {
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
-            color: var(--white);
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+        
+        /* ✅ FORMATTAZIONE MESSAGGI AI */
+        .message-content h1, .message-content h2, .message-content h3, .message-content h4 {
+            margin: 12px 0 8px 0;
+            color: #1f2937;
+            font-weight: 600;
+        }
+        
+        .message-content h3 {
+            font-size: 16px;
+            color: #1e40af;
+        }
+        
+        .message-content h4 {
+            font-size: 14px;
+            color: #374151;
+        }
+        
+        .message-content p {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .message-content ul, .message-content ol {
+            margin: 8px 0;
+            padding-left: 1.5rem;
+        }
+        
+        .message-content li {
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }
+        
+        .message-content strong {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .message-content a {
+            color: #2563eb;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+        
+        .message-content a:hover {
+            color: #1d4ed8;
+        }
+        
+        /* Stili per div speciali nei messaggi */
+        .message-content div[style*="background"] {
+            margin: 12px 0;
+            border-radius: 8px;
+        }
+        
+        .message-content div[style*="linear-gradient"] h3,
+        .message-content div[style*="linear-gradient"] h4 {
+            color: inherit !important;
         }
         
         @keyframes fadeInUp {
@@ -1240,7 +1314,6 @@ function addModernStyles() {
         }
         
         @media (max-width: 768px) {
-            /* Pulsanti su mobile: stack verticale o wrap */
             div[style*="display: flex; flex-wrap: wrap"] {
                 gap: 6px !important;
             }
@@ -1257,13 +1330,12 @@ function addModernStyles() {
                 padding: 10px 14px;
             }
             
-            /* Header compatto su mobile */
-            h3 {
-                font-size: 16px !important;
+            .message-content h3 {
+                font-size: 15px !important;
             }
             
-            h4 {
-                font-size: 14px !important;
+            .message-content h4 {
+                font-size: 13px !important;
             }
         }
     `;
