@@ -209,9 +209,11 @@ ${faq.length > 0
 }
 
 === CONTATTI ===
-Email: ${contatti.email_commerciale || 'info@assistente-digitale.it'}
-Telefono: ${contatti.telefono || '+39 0983 535253'}
-WhatsApp: ${contatti.whatsapp_business || '+39 0983 535253'}
+Email: <a href="mailto:${contatti.email_commerciale || 'info@assistente-digitale.it'}">${contatti.email_commerciale || 'info@assistente-digitale.it'}</a>
+Telefono: <a href="tel:${contatti.telefono || '+390983535253'}">${contatti.telefono || '+39 0983 535253'}</a>
+WhatsApp: <a href="https://wa.me/390983535253" target="_blank" rel="noopener noreferrer">WhatsApp Business</a>
+Sito Web: <a href="${assistente.sito_web}" target="_blank" rel="noopener noreferrer">${assistente.sito_web}</a>
+Sviluppatore: <a href="${assistente.sviluppatore?.sito}" target="_blank" rel="noopener noreferrer">${assistente.sviluppatore?.nome}</a>
 
 === LEAD GENERATION ===
 STRATEGIA COMMERCIALE:
@@ -248,20 +250,29 @@ IMPORTANTE: Usa SEMPRE la formattazione HTML nelle tue risposte:
    <li>Elemento lista</li>
    <li>Altro elemento</li>
    </ul>
-5. **Link**: <a href="URL">Testo link</a>
+5. **Link ESTERNI**: <a href="URL" target="_blank" rel="noopener noreferrer">Testo link</a>
 6. **Paragrafi**: <p>Testo paragrafo completo</p>
 
+REGOLE PER I LINK:
+- **Demo e siti esterni**: SEMPRE target="_blank" rel="noopener noreferrer"
+- **Link interni** (es. privacy policy): senza target="_blank"
+
+ESEMPI CORRETTI:
+- Demo: <a href="https://assistente-digitale.it/e-commerce-demo/" target="_blank" rel="noopener noreferrer">Prova Demo E-commerce</a>
+- Sito aziendale: <a href="https://digitalandmore.it/" target="_blank" rel="noopener noreferrer">DIGITAL&MORE</a>
+- Social: <a href="https://www.linkedin.com/showcase/assistente-digitale/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+- Privacy interno: <a href="/privacy-policy.html">Privacy Policy</a>
+
 ESEMPIO RISPOSTA FORMATTATA:
-<h3>I Nostri Settori di Attività</h3>
-<p>Attualmente lavoriamo su sei settori specifici:</p>
-<ol>
-<li><strong>E-commerce</strong>: Automazione vendite, supporto clienti e gestione ordini</li>
-<li><strong>Studio Dentistico</strong>: Gestione prenotazioni e preventivi automatici</li>
-<li><strong>Impresa di Servizi</strong>: Preventivi rapidi e gestione progetti (in sviluppo)</li>
-</ol>
+<h3>Demo Disponibili</h3>
+<p>Puoi provare subito le nostre soluzioni:</p>
+<ul>
+<li><strong>E-commerce</strong>: <a href="https://assistente-digitale.it/e-commerce-demo/" target="_blank" rel="noopener noreferrer">Prova la Demo Live</a></li>
+<li><strong>Studio Dentistico</strong>: <a href="https://assistente-digitale.it/studio-dentistico-demo/" target="_blank" rel="noopener noreferrer">Testa la Demo</a></li>
+</ul>
 <p>Ti interessa una <strong>consulenza gratuita</strong> per il tuo settore?</p>
 
-NON usare MAI markdown (**testo**) o altro formato. SOLO HTML.
+NON usare MAI markdown (**testo**) o altro formato. SOLO HTML con target="_blank" per link esterni.
 
 === COMPORTAMENTO ===
 Sii professionale, competente e orientato alla soluzione. Usa un tono cordiale ma non troppo informale.
@@ -1190,13 +1201,12 @@ async function showWelcomeMessage() {
                 </div>
             </div>
             
-            <!-- CTA finale discreta -->
+           <!-- CTA finale discreta -->
             <div style="margin: 20px 0 8px 0; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; text-align: left;">
-                <p style="margin: 0; font-size: 13px; color: #64748b; font-style: italic;">
-                    💬 Oppure scrivi direttamente la tua domanda qui sotto
-                </p>
-            </div>
-        </div>
+         <p style="margin: 0; font-size: 13px; color: #64748b; font-style: italic;">
+        💬 Oppure scrivi direttamente la tua domanda qui sotto
+        </p>
+    </div>
     `;
     
     addMessageToChat(welcomeMessage, 'assistant');
@@ -1460,7 +1470,6 @@ function checkHubSpotStatus() {
 }
 
 
-// E aggiorna initializeAssistente:
 async function initializeAssistente() {
     try {
         debugLog('INIT', 'Avvio Assistente Digitale AI Chat');
@@ -1469,7 +1478,8 @@ async function initializeAssistente() {
         await loadEnvironmentVariables();
         await generateSystemPrompt();
         setupEventListeners();
-        addModernStyles(); // AGGIUNGI QUESTA RIGA
+        addModernStyles();
+        initMobileKeyboardHandling(); // ✅ AGGIUNGI QUESTA RIGA
         showWelcomeMessage();
         
         setTimeout(checkHubSpotStatus, 2000);
@@ -1479,6 +1489,53 @@ async function initializeAssistente() {
     } catch (error) {
         debugLog('ERROR', 'Errore inizializzazione', error);
         showErrorState();
+    }
+}
+
+// ==================== GESTIONE TASTIERA MOBILE ==================== 
+function initMobileKeyboardHandling() {
+    if (window.innerWidth <= 768) {
+        const chatContainer = document.querySelector('.chat-container');
+        const chatInput = document.querySelector('#userInput');
+        const chatMessages = document.querySelector('#chatMessages');
+        
+        if (chatInput && chatContainer) {
+            // Gestisce focus input
+            chatInput.addEventListener('focus', () => {
+                console.log('📱 Input focus - Gestione tastiera mobile');
+                
+                // Scroll automatico ai messaggi recenti
+                setTimeout(() => {
+                    if (chatMessages) {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                }, 300);
+                
+                // Previene resize del container
+                document.body.style.height = '100vh';
+                document.body.style.overflow = 'hidden';
+            });
+            
+            // Gestisce blur input
+            chatInput.addEventListener('blur', () => {
+                console.log('📱 Input blur - Ripristino viewport');
+                
+                // Ripristina comportamento normale
+                setTimeout(() => {
+                    document.body.style.height = '';
+                    document.body.style.overflow = '';
+                }, 300);
+            });
+            
+            // Gestisce orientamento
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    if (chatMessages) {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                }, 500);
+            });
+        }
     }
 }
 
