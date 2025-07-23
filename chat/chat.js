@@ -214,30 +214,24 @@ Telefono: ${contatti.telefono || '+39 0983 535253'}
 WhatsApp: ${contatti.whatsapp_business || '+39 0983 535253'}
 
 === LEAD GENERATION ===
-STRATEGIA COMMERCIALE OBBLIGATORIA:
+STRATEGIA COMMERCIALE:
 1. Fornisci SEMPRE informazioni complete e utili
 2. CONCLUDI SEMPRE ogni risposta con l'invito alla consulenza
-3. NON avviare mai direttamente la raccolta dati
-4. ASPETTA conferma esplicita dell'utente prima di procedere
+3. Usa frasi naturali per invitare alla consulenza
 
-FRASI OBBLIGATORIE DI CHIUSURA (usa sempre una di queste):
-- "Ti interessa una consulenza gratuita personalizzata per approfondire?"
-- "Vuoi che organizziamo una consulenza gratuita per valutare la tua situazione?"
-- "Posso organizzare una consulenza gratuita per mostrarti come implementarlo - ti interessa?"
-- "Ti piacerebbe una consulenza gratuita per vedere come adattarlo alla tua azienda?"
-- "Vuoi una consulenza gratuita per discutere le tue esigenze specifiche?"
+ESEMPI INVITI NATURALI:
+- "Ti interessa una consulenza gratuita per approfondire?"
+- "Vuoi che organizziamo una consulenza per il tuo caso specifico?"
+- "Posso aiutarti con una consulenza gratuita per vedere come implementarlo?"
 
-SOLO quando l'utente risponde con conferma esplicita tipo:
-- "Sì" / "Si" / "Certo" / "D'accordo" / "Va bene" / "Ok" / "Okay"
-- "Mi interessa" / "Sono interessato" / "Procediamo"
-- "Sí, voglio" / "Sí, mi piace" / "Perfetto"
+SOLO quando l'utente conferma ESPLICITAMENTE l'interesse per la consulenza:
+- Risposte affermative chiare dopo il tuo invito
+- Conferme dirette come "Sì", "Mi interessa", "Procediamo"
 
 ALLORA rispondi ESATTAMENTE: "LEAD_GENERATION_START"
 
-Non avviare MAI lead gen per frasi come:
-- "Richiedo consulenza" (prima dai info + chiedi conferma)
-- "Preventivo" (prima dai info + chiedi conferma)
-- "Interessato" generico (prima dai info + chiedi conferma)
+IMPORTANTE: NON interpretare domande o richieste di info come conferme.
+Lascia che sia l'utente a confermare esplicitamente.
 
 === FORMATTAZIONE RISPOSTA ===
 IMPORTANTE: Usa SEMPRE la formattazione HTML nelle tue risposte:
@@ -340,36 +334,18 @@ async function processWithOpenAI(userMessage) {
     showTypingIndicator();
     
     try {
-        // CONTROLLO: Conferma per avviare lead gen (step 2)
-        const confirmationWords = [
-            'sì', 'si', 'certo', 'ok', 'okay', 'va bene', 'd\'accordo',
-            'mi interessa', 'sono interessato', 'procediamo', 'perfetto',
-            'sí voglio', 'sí mi piace', 'andiamo', 'facciamolo'
-        ];
+        // ANALISI AI DELL'INTENTO - Lascia che l'AI decida
+        const intentAnalysis = await analyzeUserIntent(userMessage);
         
-        const messageText = userMessage.toLowerCase().trim();
-        const isConfirmation = confirmationWords.some(word => 
-            messageText === word || messageText.includes(word)
-        );
-        
-        // Controlla se l'ultimo messaggio AI conteneva un invito consulenza
-        const lastAssistantMessage = conversationHistory
-            .slice(-5)
-            .reverse()
-            .find(msg => msg.sender === 'assistant');
-            
-        const lastMessageHadCTA = lastAssistantMessage && 
-            lastAssistantMessage.content.toLowerCase().includes('consulenza gratuita');
-        
-        debugLog('LEAD', 'Controllo conferma lead gen:', { 
-            messageText,
-            isConfirmation,
-            lastMessageHadCTA
+        debugLog('LEAD', 'Analisi intento AI:', { 
+            category: intentAnalysis.category,
+            wantsConsultation: intentAnalysis.wantsConsultation,
+            confidence: intentAnalysis.confidence
         });
         
-        // SE conferma dopo CTA → Avvia lead gen
-        if (isConfirmation && lastMessageHadCTA && !leadGenState.active) {
-            debugLog('LEAD', '✅ CONFERMA RICEVUTA - Avvio lead generation');
+        // SE L'AI rileva intento di consulenza con alta confidenza → Avvia lead gen
+        if (intentAnalysis.wantsConsultation && intentAnalysis.confidence > 0.7 && !leadGenState.active) {
+            debugLog('LEAD', '🎯 AI RILEVA INTENTO CONSULENZA - Avvio lead generation');
             hideTypingIndicator();
             setTimeout(() => {
                 startLeadGeneration();
@@ -377,7 +353,7 @@ async function processWithOpenAI(userMessage) {
             return;
         }
         
-        // ALTRIMENTI: Risposta AI normale con CTA
+        // ALTRIMENTI: Risposta AI normale con strategia commerciale
         const messages = [
             { role: 'system', content: openAiConfig.systemPromptTemplate },
             ...conversationHistory.slice(-6).map(msg => ({
@@ -393,7 +369,7 @@ async function processWithOpenAI(userMessage) {
         
         // CONTROLLO SPECIALE: Se AI risponde con "LEAD_GENERATION_START"
         if (aiResponse.includes('LEAD_GENERATION_START')) {
-            debugLog('LEAD', '🤖 AI ha richiesto lead generation');
+            debugLog('LEAD', '🤖 AI ha richiesto lead generation tramite trigger');
             hideTypingIndicator();
             setTimeout(() => {
                 startLeadGeneration();
@@ -425,6 +401,12 @@ async function analyzeUserIntent(message) {
         
         debugLog('AI', 'Analisi intento per:', message.substring(0, 50) + '...');
         
+        // Includi il contesto della conversazione per un'analisi migliore
+        const contextMessages = conversationHistory.slice(-3).map(msg => ({
+            sender: msg.sender,
+            content: msg.content.substring(0, 200) // Limita lunghezza per efficienza
+        }));
+        
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -432,10 +414,15 @@ async function analyzeUserIntent(message) {
             },
             body: JSON.stringify({
                 message: message,
-                conversationHistory: conversationHistory.slice(-5).map(msg => ({
-                    sender: msg.sender,
-                    content: msg.content
-                }))
+                conversationHistory: contextMessages,
+                // Contesto aggiuntivo per l'AI
+                context: {
+                    isAfterCTA: conversationHistory.slice(-2).some(msg => 
+                        msg.sender === 'assistant' && 
+                        msg.content.toLowerCase().includes('consulenza gratuita')
+                    ),
+                    leadGenActive: leadGenState.active
+                }
             })
         });
         
@@ -446,19 +433,35 @@ async function analyzeUserIntent(message) {
         const result = await response.json();
         
         if (result.success && result.intent) {
-            debugLog('AI', 'Intent rilevato:', result.intent.category);
             return result.intent;
         }
         
         throw new Error('Invalid intent response format');
         
     } catch (error) {
-        debugLog('WARN', 'Errore analisi intento, uso fallback');
+        debugLog('WARN', 'Errore analisi intento, uso fallback semplice');
+        
+        // FALLBACK SEMPLICE - Solo parole chiave molto esplicite
+        const lowerMessage = message.toLowerCase();
+        const explicitConsent = [
+            'sì', 'si', 'ok', 'okay', 'certo', 'd\'accordo', 'va bene',
+            'mi interessa', 'sono interessato', 'procediamo', 'perfetto'
+        ];
+        
+        const hasExplicitConsent = explicitConsent.some(word => 
+            lowerMessage === word || lowerMessage === word + '!'
+        );
+        
+        const wasAfterCTA = conversationHistory.slice(-2).some(msg => 
+            msg.sender === 'assistant' && 
+            msg.content.toLowerCase().includes('consulenza gratuita')
+        );
+        
         return { 
-            category: 'general', 
-            intent: 'general_info',
-            wantsConsultation: false,
-            confidence: 0.5
+            category: hasExplicitConsent ? 'consultation_request' : 'general', 
+            intent: hasExplicitConsent ? 'wants_consultation' : 'general_info',
+            wantsConsultation: hasExplicitConsent && wasAfterCTA,
+            confidence: hasExplicitConsent ? 0.9 : 0.3
         };
     }
 }
