@@ -149,14 +149,14 @@ ${JSON.stringify(inputData, null, 2)}
 PROPRIETÀ HUBSPOT DISPONIBILI (SOLO SCRIVIBILI):
 ${JSON.stringify(propertyList.slice(0, 50), null, 2)}
 
-REGOLE MAPPING:
+REGOLE MAPPING AGGIORNATE:
 1. Mappa SOLO a proprietà esistenti nell'elenco sopra
 2. Se una proprietà non esiste, NON includerla 
 3. Usa nomi esatti delle proprietà (case-sensitive)
 4. Per nome completo, splitta in firstname/lastname
 5. Per campi custom, cerca proprietà simili o usa "message"
 
-ESEMPI MAPPING:
+MAPPING SPECIFICO PER HUBSPOT:
 - nome_completo → firstname, lastname 
 - email → email
 - telefono → phone  
@@ -165,8 +165,16 @@ ESEMPI MAPPING:
 - qualifica → jobtitle
 - settore → industry
 - messaggio → message
-- lead_source → hs_analytics_source (se esiste)
-- lead_score → hs_lead_score (se esiste)
+
+ATTENZIONE CAMPI CON VALORI FISSI:
+- lead_source → NON mappare a hs_analytics_source (usa OTHER_CAMPAIGNS se necessario)
+- hs_analytics_source → usa solo: ORGANIC_SEARCH, PAID_SEARCH, EMAIL_MARKETING, SOCIAL_MEDIA, REFERRALS, OTHER_CAMPAIGNS, DIRECT_TRAFFIC, OFFLINE, PAID_SOCIAL
+- hs_lead_status → usa solo: NEW, OPEN, IN_PROGRESS, OPEN_DEAL, UNQUALIFIED, ATTEMPTED_TO_CONTACT, CONNECTED, BAD_TIMING
+
+NON includere mai:
+- Valori custom per campi enum di HubSpot
+- Proprietà che non esistono nella lista disponibile
+- lead_source_detail, user_agent o altri metadati
 
 Restituisci SOLO un JSON valido con il mapping, senza spiegazioni:
 
@@ -179,7 +187,9 @@ Restituisci SOLO un JSON valido con il mapping, senza spiegazioni:
   "website": "example.com",
   "jobtitle": "Manager",
   "industry": "Tecnologia",
-  "message": "Messaggio del lead"
+  "message": "Messaggio del lead",
+  "hs_analytics_source": "OTHER_CAMPAIGNS",
+  "hs_lead_status": "NEW"
 }
 `;
 
