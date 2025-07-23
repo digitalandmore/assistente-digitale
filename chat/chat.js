@@ -238,6 +238,41 @@ Non avviare MAI lead gen per frasi come:
 - "Richiedo consulenza" (prima dai info + chiedi conferma)
 - "Preventivo" (prima dai info + chiedi conferma)
 - "Interessato" generico (prima dai info + chiedi conferma)
+
+=== FORMATTAZIONE RISPOSTA ===
+IMPORTANTE: Usa SEMPRE la formattazione HTML nelle tue risposte:
+
+1. **Titoli**: <h3>Titolo Principale</h3>, <h4>Sottotitolo</h4>
+2. **Grassetto**: <strong>testo importante</strong>
+3. **Liste numerate**: 
+   <ol>
+   <li><strong>Punto 1</strong>: Descrizione dettagliata</li>
+   <li><strong>Punto 2</strong>: Altra descrizione</li>
+   </ol>
+4. **Liste puntate**:
+   <ul>
+   <li>Elemento lista</li>
+   <li>Altro elemento</li>
+   </ul>
+5. **Link**: <a href="URL">Testo link</a>
+6. **Paragrafi**: <p>Testo paragrafo completo</p>
+
+ESEMPIO RISPOSTA FORMATTATA:
+<h3>I Nostri Settori di Attività</h3>
+<p>Attualmente lavoriamo su sei settori specifici:</p>
+<ol>
+<li><strong>E-commerce</strong>: Automazione vendite, supporto clienti e gestione ordini</li>
+<li><strong>Studio Dentistico</strong>: Gestione prenotazioni e preventivi automatici</li>
+<li><strong>Impresa di Servizi</strong>: Preventivi rapidi e gestione progetti (in sviluppo)</li>
+</ol>
+<p>Ti interessa una <strong>consulenza gratuita</strong> per il tuo settore?</p>
+
+NON usare MAI markdown (**testo**) o altro formato. SOLO HTML.
+
+=== COMPORTAMENTO ===
+Sii professionale, competente e orientato alla soluzione. Usa un tono cordiale ma non troppo informale.
+Evidenzia sempre i benefici concreti e i risultati misurabili.
+Non promettere mai risultati irrealistici.
 `;
 
     debugLog('SUCCESS', 'System prompt professionale generato');
@@ -1231,11 +1266,11 @@ function addModernStyles() {
         
         .message-bubble {
             max-width: 80%;
-            padding: 12px 16px;
+            padding: 16px 20px;
             border-radius: 16px;
             word-wrap: break-word;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.6;
         }
         
         .message.assistant .message-bubble {
@@ -1250,61 +1285,86 @@ function addModernStyles() {
             color: white;
         }
         
-        /* ✅ FORMATTAZIONE MESSAGGI AI */
-        .message-content h1, .message-content h2, .message-content h3, .message-content h4 {
-            margin: 12px 0 8px 0;
-            color: #1f2937;
-            font-weight: 600;
+        /* ✅ FORMATTAZIONE MESSAGGI AI - SELETTORI PIÙ SPECIFICI */
+        .message.assistant .message-content h1,
+        .message.assistant .message-content h2,
+        .message.assistant .message-content h3,
+        .message.assistant .message-content h4 {
+            margin: 16px 0 12px 0 !important;
+            color: #1f2937 !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
         }
         
-        .message-content h3 {
-            font-size: 16px;
-            color: #1e40af;
+        .message.assistant .message-content h3 {
+            font-size: 17px !important;
+            color: #1e40af !important;
         }
         
-        .message-content h4 {
-            font-size: 14px;
-            color: #374151;
+        .message.assistant .message-content h4 {
+            font-size: 15px !important;
+            color: #374151 !important;
         }
         
-        .message-content p {
-            margin: 8px 0;
-            line-height: 1.6;
+        .message.assistant .message-content p {
+            margin: 12px 0 !important;
+            line-height: 1.7 !important;
+            color: #374151 !important;
         }
         
-        .message-content ul, .message-content ol {
-            margin: 8px 0;
-            padding-left: 1.5rem;
+        .message.assistant .message-content ul,
+        .message.assistant .message-content ol {
+            margin: 16px 0 !important;
+            padding-left: 24px !important;
+            color: #374151 !important;
         }
         
-        .message-content li {
-            margin-bottom: 4px;
-            line-height: 1.5;
+        .message.assistant .message-content li {
+            margin-bottom: 8px !important;
+            line-height: 1.6 !important;
+            color: #374151 !important;
         }
         
-        .message-content strong {
-            font-weight: 600;
-            color: #1f2937;
+        .message.assistant .message-content strong,
+        .message.assistant .message-content b {
+            font-weight: 700 !important;
+            color: #1f2937 !important;
         }
         
-        .message-content a {
-            color: #2563eb;
-            text-decoration: underline;
-            font-weight: 500;
+        .message.assistant .message-content a {
+            color: #2563eb !important;
+            text-decoration: underline !important;
+            font-weight: 600 !important;
         }
         
-        .message-content a:hover {
-            color: #1d4ed8;
+        .message.assistant .message-content a:hover {
+            color: #1d4ed8 !important;
+        }
+        
+        /* Fix per liste numerate */
+        .message.assistant .message-content ol {
+            list-style-type: decimal !important;
+        }
+        
+        .message.assistant .message-content ul {
+            list-style-type: disc !important;
+        }
+        
+        .message.assistant .message-content ol li::marker,
+        .message.assistant .message-content ul li::marker {
+            color: #3b82f6 !important;
+            font-weight: bold !important;
         }
         
         /* Stili per div speciali nei messaggi */
-        .message-content div[style*="background"] {
-            margin: 12px 0;
-            border-radius: 8px;
+        .message.assistant .message-content div[style*="background"] {
+            margin: 16px 0 !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
         }
         
-        .message-content div[style*="linear-gradient"] h3,
-        .message-content div[style*="linear-gradient"] h4 {
+        .message.assistant .message-content div[style*="linear-gradient"] h3,
+        .message.assistant .message-content div[style*="linear-gradient"] h4 {
             color: inherit !important;
         }
         
@@ -1327,15 +1387,15 @@ function addModernStyles() {
             .message-bubble {
                 max-width: 85%;
                 font-size: 13px;
-                padding: 10px 14px;
+                padding: 14px 16px;
             }
             
-            .message-content h3 {
-                font-size: 15px !important;
+            .message.assistant .message-content h3 {
+                font-size: 16px !important;
             }
             
-            .message-content h4 {
-                font-size: 13px !important;
+            .message.assistant .message-content h4 {
+                font-size: 14px !important;
             }
         }
     `;
