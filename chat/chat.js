@@ -214,30 +214,30 @@ Telefono: ${contatti.telefono || '+39 0983 535253'}
 WhatsApp: ${contatti.whatsapp_business || '+39 0983 535253'}
 
 === LEAD GENERATION ===
-Avvia raccolta dati SOLO quando l'utente chiede esplicitamente:
-- "preventivo"
-- "consulenza"  
-- "interessato"
-- "sono interessato"
-- "richiedo"
+STRATEGIA COMMERCIALE OBBLIGATORIA:
+1. Fornisci SEMPRE informazioni complete e utili
+2. CONCLUDI SEMPRE ogni risposta con l'invito alla consulenza
+3. NON avviare mai direttamente la raccolta dati
+4. ASPETTA conferma esplicita dell'utente prima di procedere
 
-Per tutto il resto, fornisci informazioni sui servizi.
+FRASI OBBLIGATORIE DI CHIUSURA (usa sempre una di queste):
+- "Ti interessa una consulenza gratuita personalizzata per approfondire?"
+- "Vuoi che organizziamo una consulenza gratuita per valutare la tua situazione?"
+- "Posso organizzare una consulenza gratuita per mostrarti come implementarlo - ti interessa?"
+- "Ti piacerebbe una consulenza gratuita per vedere come adattarlo alla tua azienda?"
+- "Vuoi una consulenza gratuita per discutere le tue esigenze specifiche?"
 
-=== REGOLE ASSOLUTE ===
-1. USA SEMPRE HTML nelle risposte: <h3>, <h4>, <strong>, <ul><li>, <p>
-2. Link demo: <a href="URL" target="_blank"><strong>Testo Link</strong></a>  
-3. Dati utente evidenziati: <strong>nome@email.com</strong>
-4. SOLO dati dal JSON - MAI inventare informazioni
-5. Comunicazione professionale e concisa - MASSIMO 1 emoji per risposta
-6. SEMPRE concludere con INVITO all'azione: "Se desideri una consulenza gratuita personalizzata, fammelo sapere!"
-7. Tono aziendale serio, moderno e innovativo
+SOLO quando l'utente risponde con conferma esplicita tipo:
+- "Sì" / "Si" / "Certo" / "D'accordo" / "Va bene" / "Ok" / "Okay"
+- "Mi interessa" / "Sono interessato" / "Procediamo"
+- "Sí, voglio" / "Sí, mi piace" / "Perfetto"
 
-IMPORTANTE: In OGNI risposta sui servizi, invita SEMPRE l'utente a richiedere una consulenza gratuita.
+ALLORA rispondi ESATTAMENTE: "LEAD_GENERATION_START"
 
-ESEMPI CORRETTI di chiusura risposte:
-- "Vuoi scoprire come possiamo aiutare la tua azienda? Richiedi una consulenza gratuita!"
-- "Per una valutazione personalizzata, organizziamo una consulenza gratuita - fammi sapere!"
-- "Se ti interessa approfondire, posso organizzare una consulenza gratuita per te!"
+Non avviare MAI lead gen per frasi come:
+- "Richiedo consulenza" (prima dai info + chiedi conferma)
+- "Preventivo" (prima dai info + chiedi conferma)
+- "Interessato" generico (prima dai info + chiedi conferma)
 `;
 
     debugLog('SUCCESS', 'System prompt professionale generato');
@@ -305,11 +305,36 @@ async function processWithOpenAI(userMessage) {
     showTypingIndicator();
     
     try {
-        // PRIMA: Valuta l'intento con AI
-        const intentAnalysis = await analyzeUserIntent(userMessage);
+        // CONTROLLO: Conferma per avviare lead gen (step 2)
+        const confirmationWords = [
+            'sì', 'si', 'certo', 'ok', 'okay', 'va bene', 'd\'accordo',
+            'mi interessa', 'sono interessato', 'procediamo', 'perfetto',
+            'sí voglio', 'sí mi piace', 'andiamo', 'facciamolo'
+        ];
         
-        if (intentAnalysis.wantsConsultation && !leadGenState.active) {
-            // Se vuole consulenza, vai diretto al lead generation
+        const messageText = userMessage.toLowerCase().trim();
+        const isConfirmation = confirmationWords.some(word => 
+            messageText === word || messageText.includes(word)
+        );
+        
+        // Controlla se l'ultimo messaggio AI conteneva un invito consulenza
+        const lastAssistantMessage = conversationHistory
+            .slice(-5)
+            .reverse()
+            .find(msg => msg.sender === 'assistant');
+            
+        const lastMessageHadCTA = lastAssistantMessage && 
+            lastAssistantMessage.content.toLowerCase().includes('consulenza gratuita');
+        
+        debugLog('LEAD', 'Controllo conferma lead gen:', { 
+            messageText,
+            isConfirmation,
+            lastMessageHadCTA
+        });
+        
+        // SE conferma dopo CTA → Avvia lead gen
+        if (isConfirmation && lastMessageHadCTA && !leadGenState.active) {
+            debugLog('LEAD', '✅ CONFERMA RICEVUTA - Avvio lead generation');
             hideTypingIndicator();
             setTimeout(() => {
                 startLeadGeneration();
@@ -317,10 +342,10 @@ async function processWithOpenAI(userMessage) {
             return;
         }
         
-        // COSTRUISCI L'ARRAY DI MESSAGGI CORRETTO
+        // ALTRIMENTI: Risposta AI normale con CTA
         const messages = [
             { role: 'system', content: openAiConfig.systemPromptTemplate },
-            ...conversationHistory.slice(-8).map(msg => ({
+            ...conversationHistory.slice(-6).map(msg => ({
                 role: msg.sender === 'user' ? 'user' : 'assistant', 
                 content: msg.content
             })),
@@ -329,8 +354,18 @@ async function processWithOpenAI(userMessage) {
         
         debugLog('AI', 'Messaggi preparati per OpenAI:', messages.length);
         
-        // Chiamata API corretta
         const aiResponse = await callOpenAI(messages);
+        
+        // CONTROLLO SPECIALE: Se AI risponde con "LEAD_GENERATION_START"
+        if (aiResponse.includes('LEAD_GENERATION_START')) {
+            debugLog('LEAD', '🤖 AI ha richiesto lead generation');
+            hideTypingIndicator();
+            setTimeout(() => {
+                startLeadGeneration();
+            }, 500);
+            return;
+        }
+        
         hideTypingIndicator();
         addMessageToChat(aiResponse, 'assistant');
         
@@ -1082,9 +1117,9 @@ async function showWelcomeMessage() {
                         Vedi Demo
                     </button>
                     
-                    <button onclick="sendQuickMessage('Richiedo una consulenza gratuita')" 
+                    <button onclick="sendQuickMessage('Richiedo informazioni per una consulenza')" 
                             style="background: linear-gradient(135deg, #dc2626, #ef4444); color: white; border: none; border-radius: 20px; padding: 8px 14px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2); font-family: 'Inter', sans-serif;">
-                        Consulenza Gratuita
+                         Consulenza Gratuita
                     </button>
                     
                     <button onclick="sendQuickMessage('Che settori seguite?')" 
@@ -1289,28 +1324,6 @@ function checkHubSpotStatus() {
     }
 }
 
-// Aggiungi alla fine del file prima di initializeAssistente:
-function addModernStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        button[onclick*="sendQuickMessage"]:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
-        }
-        
-        button[onclick*="sendQuickMessage"]:active {
-            transform: translateY(0);
-        }
-        
-        @media (max-width: 768px) {
-            div[style*="grid-template-columns"] {
-                grid-template-columns: 1fr !important;
-                gap: 10px !important;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-}
 
 // E aggiorna initializeAssistente:
 async function initializeAssistente() {
