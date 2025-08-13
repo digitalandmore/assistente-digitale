@@ -3,9 +3,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import helmet from 'helmet';
 import compression from 'compression';
-import Conversation from './models/Conversation.js';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 import  session from 'express-session';
 import { fileURLToPath } from 'url';
@@ -19,7 +17,7 @@ import statusController from './controllers/statusController.js';
 import errorController from './controllers/errorController.js';
 import globalErrorController from './controllers/globalErrorController.js';
 import spaBehaviorController from './controllers/spabehaviorController.js';
-
+import getChatController from './controllers/getChatcontroller.js';
 // Load environment variables
 dotenv.config();
 
@@ -124,11 +122,25 @@ app.get('/api/health',dectailHealtController);
 // API status endpoint
 app.get('/api/status', statusController);
 
+/* ==================== API REST ANDPOINT ==================== */
+app.get('/api/conversations', getChatController);
+
 /* ==================== STATIC FILES & SPA ROUTING ==================== */
 
 // Serve index.html for all non-API routes (SPA behavior)
-app.get('*', spaBehaviorController);
-
+app.get('*', (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+        return next();
+    }
+    
+    res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+        if (err) {
+            console.error('Error serving index.html:', err);
+            res.status(404).send('File not found');
+        }
+    });
+});
 /* ==================== ERROR HANDLING ==================== */
 
 // 404 handler for API routes
@@ -137,6 +149,35 @@ app.use('/api/*', errorController);
 // Global error handler
 app.use(globalErrorController);
 
+
+
+
+
+function listRoutes(app) {
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      // Route diretta
+      const methods = Object.keys(middleware.route.methods)
+        .map((m) => m.toUpperCase())
+        .join(', ');
+      console.log(`${methods} ${middleware.route.path}`);
+    } else if (middleware.name === 'router') {
+      // Router montato
+      middleware.handle.stack.forEach((handler) => {
+        const route = handler.route;
+        if (route) {
+          const methods = Object.keys(route.methods)
+            .map((m) => m.toUpperCase())
+            .join(', ');
+          console.log(`${methods} ${route.path}`);
+        }
+      });
+    }
+  });
+}
+
+// Dopo aver registrato tutte le rotte:
+listRoutes(app);
 /* ==================== SERVER STARTUP ==================== */
 
 // Pre-carica proprietà HubSpot al startup se configurato
@@ -172,7 +213,8 @@ app.listen(PORT, '0.0.0.0', () => {
 │  /api/status - API status               │
 │  /api/ai/chat - Chat principale         │
 │  /api/ai/analyze-intent - Analisi AI    │
-│  /api/hubspot/create-contact - CRM      │
+│  /api/hubspot/create-contact - CRM 
+|  /api/conversations                     │
 ╰─────────────────────────────────────────╯
     `);
 });
