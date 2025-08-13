@@ -1,3 +1,4 @@
+import path from 'path';
 const spaBehaviorController = (req, res, next) => {
     // Skip API routes
     if (req.path.startsWith('/api/')) {
