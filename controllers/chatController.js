@@ -5,7 +5,7 @@ import openAiConfig from '../config/openAiConfig.js';
 export const chat = async (req, res) => {
   try {
     const { messages, maxTokens, temperature } = req.body;
-    let conversationId = req.session.conversationId; 
+    let conversationId = req.session.conversationId;
     const userId = req.session.userId || 'anonymous';
 
     if (!process.env.OPENAI_API_KEY) {
@@ -63,7 +63,8 @@ export const chat = async (req, res) => {
     if (!conversationId) {
       conversationId = uuidv4();
       req.session.conversationId = conversationId;
-    }
+
+
 
     await Conversation.findOneAndUpdate(
       { userId, conversationId },
@@ -76,12 +77,20 @@ export const chat = async (req, res) => {
       { $push: { messages: { role: 'assistant', content: data.choices[0].message.content } } }
     );
 
+    if (data.choices[0].message.content === "LEAD_GENERATION_START") {
+      await Conversation.findOneAndUpdate(
+        { userId, conversationId },
+        { leadGenerated: true }
+      );
+    }
+
     res.status(200).json({
       success: true,
       conversationId,
       choices: data.choices,
       usage: data.usage || null
     });
+    }
 
   } catch (error) {
     console.error('❌ Errore OpenAI Chat:', error.message);
