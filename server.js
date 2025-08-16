@@ -26,7 +26,8 @@ const PORT = process.env.PORT || 3000;
 /* ==================== CONFIGURAZIONE MONGO DB E SESSION STOARAGE ==================== */
 mongoose.connect(`mongodb+srv://assistente-digitale:${process.env.DB_PASS}@cluster0.zkeifcp.mongodb.net/`, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  tls: true,
 });
 
 
@@ -195,6 +196,7 @@ if (process.env.HUBSPOT_API_KEY) {
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
+  console.log('Node version:', process.version);
     console.log(`
 ╭─────────────────────────────────────────╮
 │  🚀 Assistente Digitale Server + AI    │
