@@ -1,3 +1,4 @@
+import openAiConfig from "../config/openAiConfig.js";
 const analizeIntent = async (req, res) => {
     try {
         const { message, conversationHistory } = req.body;
