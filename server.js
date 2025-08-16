@@ -28,6 +28,7 @@ mongoose.connect(`mongodb+srv://assistente-digitale:${process.env.DB_PASS}@clust
   useNewUrlParser: true,
   useUnifiedTopology: true,
   tls: true,
+  tlsAllowInvalidCertificates: true
 });
 
 
