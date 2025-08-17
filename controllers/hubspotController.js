@@ -1,3 +1,7 @@
+import {getHubSpotProperties} from '../services/hubespostService.js';
+import { mapPropertiesFallback } from '../services/hubespostService.js';
+import {mapPropertiesWithAI} from '../services/hubespostService.js';
+
 const hubespostController = async (req, res) => {
     try {
         const { properties } = req.body;

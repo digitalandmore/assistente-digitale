@@ -159,7 +159,7 @@ Restituisci SOLO un JSON valido con il mapping, senza spiegazioni:
         return mapPropertiesFallback(inputData);
     }
 }
-
+export {  mapPropertiesWithAI };
 // Fallback mapping senza AI
 export function mapPropertiesFallback(inputData) {
     const [firstName, ...lastNameArray] = (inputData.nome_completo || '').split(' ');
