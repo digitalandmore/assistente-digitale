@@ -141,7 +141,7 @@ Restituisci SOLO un JSON valido con il mapping, senza spiegazioni:
 
         const data = await response.json();
         const aiResult = data.choices[0].message.content.trim();
-        
+        aiResult = aiResult.replace(/```json\s*|```/g, '');
         // Parse JSON response
         let mappedProperties;
         try {
