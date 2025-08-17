@@ -1,6 +1,6 @@
-import {getHubSpotProperties} from '../services/hubespostService.js';
+import { getHubSpotProperties } from '../services/hubespostService.js';
 import { mapPropertiesFallback } from '../services/hubespostService.js';
-import {mapPropertiesWithAI} from '../services/hubespostService.js';
+import { mapPropertiesWithAI } from '../services/hubespostService.js';
 
 const hubespostController = async (req, res) => {
     try {
@@ -61,7 +61,7 @@ const hubespostController = async (req, res) => {
                 properties: finalProperties
             })
         });
-
+        const result = await response.json();
         if (!response.ok) {
             // Gestione contatto duplicato
             if (response.status === 409) {
