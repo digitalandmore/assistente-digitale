@@ -24,7 +24,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 /* ==================== CONFIGURAZIONE MONGO DB E SESSION STOARAGE ==================== */
-mongoose.connect(`mongodb+srv://assistente-digitale:${process.env.DB_PASS}@cluster0.zkeifcp.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0`, {
+mongoose.connect(`mongodb+srv://assistente-digitale:${process.env.DB_PASS}@cluster0.zkeifcp.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0&ssl=true`, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   tls: true,
