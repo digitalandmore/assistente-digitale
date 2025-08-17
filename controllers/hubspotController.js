@@ -4,9 +4,9 @@ import { mapPropertiesWithAI } from '../services/hubespostService.js';
 import Conversation from '../models/Conversation.js';
 const hubespostController = async (req, res) => {
     try {
-        const { properties } = req.body;
+        const { properties, conversationId } = req.body;
         const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY;
-        const conversationId = req.session.conversationId;
+
         if (!HUBSPOT_API_KEY) {
             return res.status(500).json({
                 success: false,
