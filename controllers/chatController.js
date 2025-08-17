@@ -63,7 +63,7 @@ export const chat = async (req, res) => {
     if (!conversationId) {
       conversationId = uuidv4();
       req.session.conversationId = conversationId;
-
+    }
 
 
     await Conversation.findOneAndUpdate(
@@ -90,7 +90,7 @@ export const chat = async (req, res) => {
       choices: data.choices,
       usage: data.usage || null
     });
-    }
+
 
   } catch (error) {
     console.error('❌ Errore OpenAI Chat:', error.message);
