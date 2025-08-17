@@ -77,7 +77,7 @@ export const chat = async (req, res) => {
       { $push: { messages: { role: 'assistant', content: data.choices[0].message.content } } }
     );
 
-    if (data.choices[0].message.content === "LEAD_GENERATION_START") {
+    if (data.choices[0].message.content === "LEAD_GENERATION_START" || data.choices[0].message.content === "<strong>LEAD_GENERATION_END</strong>") {
       await Conversation.findOneAndUpdate(
         { userId, conversationId },
         { leadGenerated: true }

@@ -1,12 +1,12 @@
 import { getHubSpotProperties } from '../services/hubespostService.js';
 import { mapPropertiesFallback } from '../services/hubespostService.js';
 import { mapPropertiesWithAI } from '../services/hubespostService.js';
-
+import Conversation from '../models/Conversation.js';
 const hubespostController = async (req, res) => {
     try {
         const { properties } = req.body;
         const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY;
-
+        const conversationId = req.session.conversationId ;
         if (!HUBSPOT_API_KEY) {
             return res.status(500).json({
                 success: false,
@@ -95,7 +95,12 @@ const hubespostController = async (req, res) => {
         }
 
         console.log('✅ Contatto HubSpot creato:', result.id);
-
+        //aggiorno la conversazione con l'ID del contatto, l'unicità della mail è garantita da HubSpot
+        await Conversation.findOneAndUpdate(
+            { conversationId },
+            { $set: { userId: finalProperties.email, } },
+            { new: true }   
+        )
         res.status(200).json({
             success: true,
             id: result.id,
