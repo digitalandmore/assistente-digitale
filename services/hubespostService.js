@@ -1,3 +1,4 @@
+import openAiConfig from '../config/openAiConfig.js';
 let hubspotPropertiesCache = null;
 let cacheTimestamp = null;
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minuti
