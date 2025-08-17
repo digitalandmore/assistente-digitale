@@ -6,7 +6,7 @@ const hubespostController = async (req, res) => {
     try {
         const { properties } = req.body;
         const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY;
-        const conversationId = req.session.conversationId ;
+        const conversationId = req.session.conversationId;
         if (!HUBSPOT_API_KEY) {
             return res.status(500).json({
                 success: false,
@@ -96,11 +96,21 @@ const hubespostController = async (req, res) => {
 
         console.log('✅ Contatto HubSpot creato:', result.id);
         //aggiorno la conversazione con l'ID del contatto, l'unicità della mail è garantita da HubSpot
-        await Conversation.findOneAndUpdate(
+        console.log('conversationId:', conversationId);
+        console.log('finalProperties.email:', finalProperties.email);
+
+        const updatedConv = await Conversation.findOneAndUpdate(
             { conversationId },
-            { $set: { userId: finalProperties.email, } },
-            { new: true }   
-        )
+            { $set: { userId: finalProperties.email } },
+            { new: true }
+        );
+
+        if (!updatedConv) {
+            console.log('⚠️ Nessuna conversazione trovata con questo conversationId');
+        } else {
+            console.log('✅ Conversazione aggiornata correttamente:', updatedConv);
+        }
+
         res.status(200).json({
             success: true,
             id: result.id,
