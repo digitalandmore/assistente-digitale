@@ -6,6 +6,7 @@ export const chat = async (req, res) => {
   try {
     const { messages, maxTokens, temperature } = req.body;
     let conversationId = req.session.conversationId;
+
     const userId = req.session.userId || 'anonymous';
 
     if (!process.env.OPENAI_API_KEY) {
@@ -64,7 +65,6 @@ export const chat = async (req, res) => {
       conversationId = uuidv4();
       req.session.conversationId = conversationId;
     }
-
 
     await Conversation.findOneAndUpdate(
       { userId, conversationId },

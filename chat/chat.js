@@ -40,10 +40,10 @@ const openAiConfig = {
 const API_CONFIG = {
     // URL del backend
     BASE_URL: 'https://assistente-digitale.onrender.com',
-    
+
     // Fallback per sviluppo locale
     LOCAL_URL: 'http://localhost:3000',
-    
+
     // Endpoints
     ENDPOINTS: {
         CONFIG: '/api/config',
@@ -58,7 +58,7 @@ function getApiBaseUrl() {
     if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         return API_CONFIG.BASE_URL;
     }
-    
+
     // Altrimenti usa localhost per sviluppo
     return API_CONFIG.LOCAL_URL;
 }
@@ -78,18 +78,18 @@ function debugLog(category, message, data = null) {
 async function initializeAssistente() {
     try {
         debugLog('INIT', 'Avvio Assistente Digitale AI Chat');
-        
+
         await loadConfiguration();
         await loadEnvironmentVariables();
         await generateSystemPrompt();
         setupEventListeners();
         showWelcomeMessage();
-        
+
         // Aggiungi controllo HubSpot
         setTimeout(checkHubSpotStatus, 2000);
-        
+
         debugLog('SUCCESS', 'Assistente inizializzato con successo');
-        
+
     } catch (error) {
         debugLog('ERROR', 'Errore inizializzazione', error);
         showErrorState();
@@ -106,31 +106,31 @@ async function loadConfiguration() {
 async function loadEnvironmentVariables() {
     try {
         debugLog('CONFIG', 'Caricamento configurazione dal server...');
-        
+
         // Usa l'URL dinamico
         const apiUrl = `${getApiBaseUrl()}${API_CONFIG.ENDPOINTS.CONFIG}`;
         debugLog('CONFIG', 'API URL:', apiUrl);
-        
+
         const configResponse = await fetch(apiUrl);
-        
+
         if (configResponse.ok) {
             const serverConfig = await configResponse.json();
-            
+
             if (serverConfig.openai_configured) {
                 openAiConfig.apiKey = 'configured'; // Non esporre la chiave reale
                 debugLog('SUCCESS', 'OpenAI configurato sul backend');
             }
-            
+
             if (serverConfig.hubspot_configured) {
                 debugLog('SUCCESS', 'HubSpot configurato sul backend');
             }
-            
+
             debugLog('SUCCESS', `Backend connesso: ${serverConfig.backend_url || getApiBaseUrl()}`);
             return;
         }
-        
+
         throw new Error(`Config API Error: ${configResponse.status}`);
-        
+
     } catch (error) {
         debugLog('ERROR', 'Server non disponibile', error.message);
         debugLog('ERROR', 'Nessuna API Key trovata');
@@ -139,28 +139,28 @@ async function loadEnvironmentVariables() {
 
 async function generateSystemPrompt() {
     const oggi = new Date().toLocaleDateString('it-IT');
-    
+
     // Controllo di sicurezza per evitare l'errore "Cannot convert undefined or null to object"
     if (!assistenteConfig || typeof assistenteConfig !== 'object') {
         debugLog('ERROR', 'assistenteConfig non disponibile per generateSystemPrompt');
         throw new Error('Configurazione assistente non caricata');
     }
-    
-    const { 
-        assistente, 
-        settori_sviluppati = {}, 
-        contatti = {}, 
-        pricing = {}, 
-        processo_implementazione = [], 
-        faq = [] 
+
+    const {
+        assistente,
+        settori_sviluppati = {},
+        contatti = {},
+        pricing = {},
+        processo_implementazione = [],
+        faq = []
     } = assistenteConfig;
-    
+
     // Controllo che assistente esista
     if (!assistente) {
         debugLog('ERROR', 'Sezione assistente mancante nella configurazione');
         throw new Error('Configurazione assistente incompleta');
     }
-    
+
     openAiConfig.systemPromptTemplate = `
 Sei l'${assistente.nome}, consulente AI professionale per PMI.
 
@@ -172,8 +172,8 @@ Sviluppatore: ${assistente.sviluppatore?.nome || 'DIGITAL&MORE'} - ${assistente.
 
 === SERVIZI CON DEMO LIVE DISPONIBILI ===
 ${Object.entries(settori_sviluppati)
-    .filter(([key, servizio]) => servizio.status === 'Demo Disponibile')
-    .map(([key, servizio]) => `
+            .filter(([key, servizio]) => servizio.status === 'Demo Disponibile')
+            .map(([key, servizio]) => `
 🟢 ${servizio.nome}:
 - ${servizio.descrizione}  
 - Demo LIVE: ${servizio.demo_url || 'N/A'}
@@ -183,8 +183,8 @@ ${Object.entries(settori_sviluppati)
 
 === SERVIZI IN SVILUPPO (DEMO NON DISPONIBILI) ===
 ${Object.entries(settori_sviluppati)
-    .filter(([key, servizio]) => servizio.status === 'In Sviluppo')
-    .map(([key, servizio]) => `
+            .filter(([key, servizio]) => servizio.status === 'In Sviluppo')
+            .map(([key, servizio]) => `
 🟡 ${servizio.nome}:
 - ${servizio.descrizione}
 - Settori target: ${servizio.settori_target?.join(', ') || 'Non specificati'}
@@ -197,16 +197,16 @@ Consulenza gratuita: ${pricing.consulenza_gratuita ? 'SÌ - SEMPRE GRATUITA' : '
 Trial disponibile: ${pricing.trial_disponibile || 'Non specificato'}
 
 === PROCESSO IMPLEMENTAZIONE ===
-${processo_implementazione.length > 0 
-    ? processo_implementazione.map((fase, i) => `${i+1}. ${fase.fase}: ${fase.descrizione} (${fase.durata})`).join('\n')
-    : 'Processo personalizzato basato sulle esigenze'
-}
+${processo_implementazione.length > 0
+            ? processo_implementazione.map((fase, i) => `${i + 1}. ${fase.fase}: ${fase.descrizione} (${fase.durata})`).join('\n')
+            : 'Processo personalizzato basato sulle esigenze'
+        }
 
 === FAQ COMPLETE ===
-${faq.length > 0 
-    ? faq.map((item, i) => `Q${i+1}: ${item.domanda}\nR${i+1}: ${item.risposta}`).join('\n\n')
-    : 'FAQ in aggiornamento'
-}
+${faq.length > 0
+            ? faq.map((item, i) => `Q${i + 1}: ${item.domanda}\nR${i + 1}: ${item.risposta}`).join('\n\n')
+            : 'FAQ in aggiornamento'
+        }
 
 === CONTATTI ===
 Email: <a href="mailto:${contatti.email_commerciale || 'info@assistente-digitale.it'}">${contatti.email_commerciale || 'info@assistente-digitale.it'}</a>
@@ -315,7 +315,7 @@ RIMANDA SEMPRE alle nostre soluzioni specifiche.
 function setupEventListeners() {
     const sendButton = document.getElementById('sendButton');
     const userInput = document.getElementById('userInput');
-    
+
     sendButton?.addEventListener('click', handleUserMessage);
     userInput?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -323,10 +323,10 @@ function setupEventListeners() {
             handleUserMessage();
         }
     });
-    
+
     // AGGIUNGERE: Event listener per chiusura mobile
     const closeButton = document.getElementById('closeChatBtn');
-    closeButton?.addEventListener('click', function() {
+    closeButton?.addEventListener('click', function () {
         // Funzione per chiudere la chat su mobile
         if (typeof closeChatWidget === 'function') {
             closeChatWidget();
@@ -341,7 +341,7 @@ function setupEventListeners() {
             }
         }
     });
-    
+
     userInput?.focus();
     debugLog('SUCCESS', 'Event listeners configurati');
 }
@@ -351,12 +351,12 @@ function setupEventListeners() {
 async function handleUserMessage() {
     const userInput = document.getElementById('userInput');
     const message = userInput?.value?.trim();
-    
+
     if (!message || isAiProcessing) return;
-    
+
     addMessageToChat(message, 'user');
     userInput.value = '';
-    
+
     if (leadGenState.active) {
         await handleLeadGenResponse(message);
     } else {
@@ -368,20 +368,20 @@ let userContext = { nome: null, azienda: null, settore: null };
 
 async function processWithOpenAI(userMessage) {
     if (isAiProcessing) return;
-    
+
     isAiProcessing = true;
     showTypingIndicator();
-    
+
     try {
         // ANALISI AI DELL'INTENTO - Lascia che l'AI decida
         const intentAnalysis = await analyzeUserIntent(userMessage);
-        
-        debugLog('LEAD', 'Analisi intento AI:', { 
+
+        debugLog('LEAD', 'Analisi intento AI:', {
             category: intentAnalysis.category,
             wantsConsultation: intentAnalysis.wantsConsultation,
             confidence: intentAnalysis.confidence
         });
-        
+
         // SE L'AI rileva intento di consulenza con alta confidenza → Avvia lead gen
         if (intentAnalysis.wantsConsultation && intentAnalysis.confidence > 0.7 && !leadGenState.active) {
             debugLog('LEAD', '🎯 AI RILEVA INTENTO CONSULENZA - Avvio lead generation');
@@ -391,21 +391,21 @@ async function processWithOpenAI(userMessage) {
             }, 500);
             return;
         }
-        
+
         // ALTRIMENTI: Risposta AI normale con strategia commerciale
         const messages = [
             { role: 'system', content: openAiConfig.systemPromptTemplate },
             ...conversationHistory.slice(-6).map(msg => ({
-                role: msg.sender === 'user' ? 'user' : 'assistant', 
+                role: msg.sender === 'user' ? 'user' : 'assistant',
                 content: msg.content
             })),
             { role: 'user', content: userMessage }
         ];
-        
+
         debugLog('AI', 'Messaggi preparati per OpenAI:', messages.length);
-        
+
         const aiResponse = await callOpenAI(messages);
-        
+
         // CONTROLLO SPECIALE: Se AI risponde con "LEAD_GENERATION_START"
         if (aiResponse.includes('LEAD_GENERATION_START')) {
             debugLog('LEAD', '🤖 AI ha richiesto lead generation tramite trigger');
@@ -415,10 +415,10 @@ async function processWithOpenAI(userMessage) {
             }, 500);
             return;
         }
-        
+
         hideTypingIndicator();
         addMessageToChat(aiResponse, 'assistant');
-        
+
     } catch (error) {
         debugLog('ERROR', 'Errore AI', error);
         hideTypingIndicator();
@@ -437,15 +437,15 @@ async function processWithOpenAI(userMessage) {
 async function analyzeUserIntent(message) {
     try {
         const apiUrl = `${getApiBaseUrl()}/api/ai/analyze-intent`;
-        
+
         debugLog('AI', 'Analisi intento per:', message.substring(0, 50) + '...');
-        
+
         // Includi il contesto della conversazione per un'analisi migliore
         const contextMessages = conversationHistory.slice(-3).map(msg => ({
             sender: msg.sender,
             content: msg.content.substring(0, 200) // Limita lunghezza per efficienza
         }));
-        
+
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -456,48 +456,48 @@ async function analyzeUserIntent(message) {
                 conversationHistory: contextMessages,
                 // Contesto aggiuntivo per l'AI
                 context: {
-                    isAfterCTA: conversationHistory.slice(-2).some(msg => 
-                        msg.sender === 'assistant' && 
+                    isAfterCTA: conversationHistory.slice(-2).some(msg =>
+                        msg.sender === 'assistant' &&
                         msg.content.toLowerCase().includes('consulenza gratuita')
                     ),
                     leadGenActive: leadGenState.active
                 }
             })
         });
-        
+
         if (!response.ok) {
             throw new Error(`Intent Analysis Error: ${response.status}`);
         }
-        
+
         const result = await response.json();
-        
+
         if (result.success && result.intent) {
             return result.intent;
         }
-        
+
         throw new Error('Invalid intent response format');
-        
+
     } catch (error) {
         debugLog('WARN', 'Errore analisi intento, uso fallback semplice');
-        
+
         // FALLBACK SEMPLICE - Solo parole chiave molto esplicite
         const lowerMessage = message.toLowerCase();
         const explicitConsent = [
             'sì', 'si', 'ok', 'okay', 'certo', 'd\'accordo', 'va bene',
             'mi interessa', 'sono interessato', 'procediamo', 'perfetto'
         ];
-        
-        const hasExplicitConsent = explicitConsent.some(word => 
+
+        const hasExplicitConsent = explicitConsent.some(word =>
             lowerMessage === word || lowerMessage === word + '!'
         );
-        
-        const wasAfterCTA = conversationHistory.slice(-2).some(msg => 
-            msg.sender === 'assistant' && 
+
+        const wasAfterCTA = conversationHistory.slice(-2).some(msg =>
+            msg.sender === 'assistant' &&
             msg.content.toLowerCase().includes('consulenza gratuita')
         );
-        
-        return { 
-            category: hasExplicitConsent ? 'consultation_request' : 'general', 
+
+        return {
+            category: hasExplicitConsent ? 'consultation_request' : 'general',
             intent: hasExplicitConsent ? 'wants_consultation' : 'general_info',
             wantsConsultation: hasExplicitConsent && wasAfterCTA,
             confidence: hasExplicitConsent ? 0.9 : 0.3
@@ -508,14 +508,15 @@ async function analyzeUserIntent(message) {
 
 async function callOpenAI(messages, maxTokens = 1200) {
     const apiUrl = `${getApiBaseUrl()}/api/ai/chat`;
-    
+
     debugLog('AI', `Chiamata API: ${apiUrl}`);
     debugLog('AI', 'Messages count:', messages.length);
-    
+
     const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
+            
         },
         body: JSON.stringify({
             messages: messages,
@@ -531,18 +532,20 @@ async function callOpenAI(messages, maxTokens = 1200) {
     }
 
     const data = await response.json();
-    
+    if (data.conversationId) {
+        sessionStorage.setItem("conversationId", data.conversationId);
+    }
     // Controlla se la risposta ha il formato corretto
     if (!data.success || !data.choices || !data.choices[0]) {
         console.error('❌ Formato risposta backend errato:', data);
         throw new Error('Backend response format error');
     }
-    
+
     // Log token usage se disponibile
     if (data.usage) {
         debugLog('AI', 'Token usage:', `${data.usage.total_tokens} tokens`);
     }
-    
+
     return data.choices[0].message.content;
 }
 
@@ -553,45 +556,45 @@ async function startLeadGeneration() {
         debugLog('LEAD', 'Lead generation già attiva - IGNORATO');
         return;
     }
-    
+
     leadGenState.active = true;
     leadGenState.fieldIndex = 0;
     leadGenState.collectedData = {};
     leadGenState.currentField = leadGenState.requiredFields[0];
-    
+
     // CERCA EMAIL REALE NELLA CONVERSAZIONE (non "nome@email.com")
     const emailPattern = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
     const recentMessages = conversationHistory.slice(-10).map(msg => msg.content).join(' ');
     const foundEmails = recentMessages.match(emailPattern);
-    
+
     if (foundEmails && foundEmails.length > 0) {
         // FILTRA email generiche/false
-        const realEmail = foundEmails.find(email => 
-            !email.includes('nome@email.com') && 
-            !email.includes('mario@azienda.it') && 
+        const realEmail = foundEmails.find(email =>
+            !email.includes('nome@email.com') &&
+            !email.includes('mario@azienda.it') &&
             !email.includes('example.com') &&
             !email.includes('@test.') &&
             email.length > 5
         );
-        
+
         if (realEmail) {
             leadGenState.collectedData.email = realEmail;
             debugLog('LEAD', '📧 Email REALE trovata:', realEmail);
         }
     }
-    
+
     debugLog('LEAD', 'AVVIO Lead generation - Campo 1:', leadGenState.currentField.label);
-    
+
     // Messaggio PROFESSIONALE senza emoji
     addMessageToChat(`
         <div style="background: linear-gradient(135deg, #f8fafc, #e2e8f0); border: 2px solid #3b82f6; border-radius: 12px; padding: 25px; margin: 15px 0;">
             <h4 style="color: #1e40af; margin-top: 0;">Richiesta Consulenza Gratuita</h4>
             <p>Per organizzare una <strong>consulenza personalizzata gratuita</strong> e fornirti una proposta su misura, raccogliamo alcune informazioni essenziali.</p>
-            ${leadGenState.collectedData.email ? 
-                `<div style="background: #dbeafe; padding: 12px; border-radius: 8px; font-size: 14px; margin: 15px 0;">
+            ${leadGenState.collectedData.email ?
+            `<div style="background: #dbeafe; padding: 12px; border-radius: 8px; font-size: 14px; margin: 15px 0;">
                     <strong>Email già disponibile:</strong> ${leadGenState.collectedData.email}
                 </div>` : ''
-            }
+        }
             <p style="margin-bottom: 0;">Iniziamo con il tuo <strong style="color: #dc2626;">${leadGenState.currentField.label}</strong>:</p>
         </div>
     `, 'assistant');
@@ -602,16 +605,16 @@ async function handleLeadGenResponse(userMessage) {
         debugLog('LEAD', 'Lead generation NON attiva - ignorato');
         return;
     }
-    
+
     const currentField = leadGenState.currentField;
     const validation = validateLeadField(currentField, userMessage);
-    
+
     debugLog('LEAD', `Campo ${currentField.key} (${leadGenState.fieldIndex + 1}/${leadGenState.requiredFields.length}):`, {
         input: userMessage,
         valid: validation.valid,
         reason: validation.reason || 'OK'
     });
-    
+
     if (!validation.valid) {
         addMessageToChat(`
             <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
@@ -622,52 +625,52 @@ async function handleLeadGenResponse(userMessage) {
         `, 'assistant');
         return;
     }
-    
+
     // Salva dato
     leadGenState.collectedData[currentField.key] = userMessage.trim();
     leadGenState.fieldIndex++;
-    
+
     debugLog('LEAD', `✅ Salvato ${currentField.key} = "${userMessage.trim()}"`);
     debugLog('LEAD', `Progresso: ${leadGenState.fieldIndex}/${leadGenState.requiredFields.length}`);
-    
+
     // Controllo completamento
     if (leadGenState.fieldIndex >= leadGenState.requiredFields.length) {
         debugLog('LEAD', '🎯 TUTTI I CAMPI COMPLETATI - Mostro GDPR');
         await showGDPRAndRecap();
         return;
     }
-    
+
     // Prossimo campo - SALTA SE GIÀ PRESENTE
     let nextField = leadGenState.requiredFields[leadGenState.fieldIndex];
-    
+
     // Se abbiamo già questo dato (es. email dalla conversazione), salta
     while (nextField && leadGenState.collectedData[nextField.key] && leadGenState.fieldIndex < leadGenState.requiredFields.length) {
         debugLog('LEAD', `⏭️ Saltando ${nextField.key} - già presente: ${leadGenState.collectedData[nextField.key]}`);
         leadGenState.fieldIndex++;
         nextField = leadGenState.requiredFields[leadGenState.fieldIndex];
     }
-    
+
     // Se finiti tutti i campi dopo i salti
     if (leadGenState.fieldIndex >= leadGenState.requiredFields.length) {
         debugLog('LEAD', '🎯 TUTTI I CAMPI COMPLETATI (dopo salti) - Mostro GDPR');
         await showGDPRAndRecap();
         return;
     }
-    
+
     leadGenState.currentField = nextField;
-    
+
     debugLog('LEAD', `➡️ Prossimo campo: ${nextField.key} (${nextField.label})`);
-    
-   
+
+
     // MESSAGGI PROFESSIONALI per ogni campo specifico
     setTimeout(() => {
-        const userName = leadGenState.collectedData.nome_completo ? 
+        const userName = leadGenState.collectedData.nome_completo ?
             leadGenState.collectedData.nome_completo.split(' ')[0] : '';
-            
+
         let fieldMessage = '';
         let headerMessage = 'Informazione ricevuta';
-        
-        switch(nextField.key) {
+
+        switch (nextField.key) {
             case 'email':
                 fieldMessage = `Ho bisogno della tua <strong>${nextField.label}</strong> per inviarti la documentazione e organizzare la consulenza:`;
                 break;
@@ -692,7 +695,7 @@ async function handleLeadGenResponse(userMessage) {
             default:
                 fieldMessage = `Inserisci <strong>${nextField.label}</strong>:`;
         }
-        
+
         addMessageToChat(`
             <div style="background: #f8fafc; padding: 18px; border-radius: 10px; border-left: 4px solid #3b82f6;">
                 <h4 style="color: #1e40af; margin-top: 0;">${headerMessage}</h4>
@@ -700,7 +703,7 @@ async function handleLeadGenResponse(userMessage) {
             </div>
         `, 'assistant');
     }, 800);
- }
+}
 
 // Funzione helper per esempi
 function getFieldExample(field) {
@@ -713,45 +716,45 @@ function getFieldExample(field) {
 
 function validateLeadField(field, value) {
     const trimmed = value.trim();
-    
+
     // Risposte generiche da rifiutare
     const generic = ['si', 'ok', 'va bene', 'certo', 'perfetto', 'bene', 'grazie', 'ottimo'];
     if (generic.includes(trimmed.toLowerCase())) {
         return { valid: false, reason: `"${trimmed}" non è un valore valido per ${field.label}` };
     }
-    
+
     // Evita risposte duplicate
-    const alreadyUsed = Object.values(leadGenState.collectedData).some(existingValue => 
+    const alreadyUsed = Object.values(leadGenState.collectedData).some(existingValue =>
         existingValue && existingValue.toLowerCase() === trimmed.toLowerCase()
     );
-    
+
     if (alreadyUsed) {
         return { valid: false, reason: 'Questo valore è già stato inserito' };
     }
-    
+
     switch (field.validation) {
         case 'fullName':
             if (trimmed.length < 5) return { valid: false, reason: 'Nome troppo corto' };
             const nameParts = trimmed.split(' ').filter(p => p.length > 1);
-            return nameParts.length >= 2 
-                ? { valid: true } 
+            return nameParts.length >= 2
+                ? { valid: true }
                 : { valid: false, reason: 'Inserisci nome e cognome completi (es: Mario Rossi)' };
-                
+
         case 'email':
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) 
-                ? { valid: true } 
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
+                ? { valid: true }
                 : { valid: false, reason: 'Formato email non valido (es: mario@azienda.it)' };
-                
+
         case 'optional':
             // Per campi opzionali, accetta anche "nessuno", "non ho", etc.
             if (trimmed.toLowerCase().match(/^(nessuno|non ho|niente|skip|salta)$/)) {
                 return { valid: true, value: '' }; // Valore vuoto ma valido
             }
             return trimmed.length > 0 ? { valid: true } : { valid: true, value: '' };
-            
+
         default:
-            return trimmed.length >= 2 
-                ? { valid: true } 
+            return trimmed.length >= 2
+                ? { valid: true }
                 : { valid: false, reason: `Campo ${field.label} troppo corto` };
     }
 }
@@ -762,11 +765,11 @@ async function showGDPRAndRecap() {
         debugLog('ERROR', 'showGDPRAndRecap chiamato ma lead gen non attivo');
         return;
     }
-    
+
     const data = leadGenState.collectedData;
-    
+
     debugLog('LEAD', '🎯 GDPR E RECAP - Dati raccolti:', data);
-    
+
     // Pulisci dati
     const cleanData = {};
     Object.keys(data).forEach(key => {
@@ -775,9 +778,9 @@ async function showGDPRAndRecap() {
         value = value.replace(/^(Si mi chiamo|Sono|Mi chiamo|il mio nome è|la mia email è)\s*/i, '').trim();
         cleanData[key] = value;
     });
-    
+
     leadGenState.collectedData = cleanData;
-    
+
     const uniqueId = Date.now();
     const recap = `
         <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #007bff; border-radius: 12px; padding: 25px; margin: 15px 0;">
@@ -820,16 +823,16 @@ async function showGDPRAndRecap() {
             </button>
         </div>
     `;
-    
+
     addMessageToChat(recap, 'assistant');
-    
+
     // Setup GDPR checkbox
     setTimeout(() => {
         const checkbox = document.getElementById(`gdpr_${uniqueId}`);
         const button = document.getElementById(`submit_${uniqueId}`);
-        
+
         if (checkbox && button) {
-            checkbox.addEventListener('change', function() {
+            checkbox.addEventListener('change', function () {
                 if (this.checked) {
                     button.disabled = false;
                     button.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
@@ -850,9 +853,9 @@ async function showGDPRAndRecap() {
     }, 300);
 }
 
-window.completeLead = async function(uniqueId) {
+window.completeLead = async function (uniqueId) {
     const checkbox = document.getElementById(`gdpr_${uniqueId}`);
-    
+
     if (!checkbox?.checked) {
         addMessageToChat(`
             <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; border-radius: 8px;">
@@ -862,57 +865,57 @@ window.completeLead = async function(uniqueId) {
         `, 'assistant');
         return;
     }
-    
+
     debugLog('LEAD', 'Completamento lead con AI HubSpot mapping', leadGenState.collectedData);
     showTypingIndicator();
-    
-    const dataToSubmit = {...leadGenState.collectedData};
-    
+
+    const dataToSubmit = { ...leadGenState.collectedData };
+
     try {
         // Aggiungi metadati
         dataToSubmit.gdpr_consent = true;
         dataToSubmit.gdpr_timestamp = new Date().toISOString();
         dataToSubmit.lead_source = 'assistente_digitale_chat';
         dataToSubmit.user_agent = navigator.userAgent;
-        
+
         // Reset stato
-        const completedData = {...dataToSubmit};
+        const completedData = { ...dataToSubmit };
         leadGenState.active = false;
         leadGenState.collectedData = {};
         leadGenState.fieldIndex = 0;
         leadGenState.currentField = null;
-        
+
         // Invii in parallelo con AI mapping
         const results = await Promise.allSettled([
             submitToFormspree(dataToSubmit),
             submitToHubSpotAPI(dataToSubmit)  // Ora usa AI mapping
         ]);
-        
+
         const formspreeResult = results[0];
         const hubspotResult = results[1];
-        
+
         let successCount = 0;
         let hubspotSuccess = false;
-        
+
         if (formspreeResult.status === 'fulfilled') {
             debugLog('SUCCESS', 'Formspree submission successful');
             successCount++;
         }
-        
+
         if (hubspotResult.status === 'fulfilled' && hubspotResult.value.success) {
             debugLog('SUCCESS', 'HubSpot AI mapping successful', hubspotResult.value.contactId);
             successCount++;
             hubspotSuccess = true;
         }
-        
+
         if (successCount === 0) {
             throw new Error('Tutti i servizi di invio hanno fallito');
         }
-        
+
         debugLog('INFO', `Lead inviato con successo a ${successCount}/2 servizi (con AI mapping)`);
-        
+
         hideTypingIndicator();
-        
+
         // Messaggio successo con indicazione AI
         const successMessage = `
             <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 25px; border-radius: 15px; text-align: center; margin: 20px 0;">
@@ -939,7 +942,7 @@ window.completeLead = async function(uniqueId) {
             </div>
         `;
         addMessageToChat(successMessage, 'assistant');
-        
+
     } catch (error) {
         debugLog('ERROR', 'Errore invio lead con AI mapping', error);
         hideTypingIndicator();
@@ -951,40 +954,42 @@ window.completeLead = async function(uniqueId) {
 async function submitToHubSpotAPI(data) {
     try {
         debugLog('HUBSPOT_API', 'Tentativo creazione contatto HubSpot con AI mapping', data);
-        
+
         // USA URL DINAMICO invece di URL relativo
         const apiUrl = `${getApiBaseUrl()}${API_CONFIG.ENDPOINTS.HUBSPOT_CREATE_CONTACT}`;
         debugLog('HUBSPOT_API', 'API URL:', apiUrl);
-        
+        const conversationId = sessionStorage.getItem("conversationId");
         const response = await fetch(apiUrl, {  // ✅ USA URL DINAMICO
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                properties: data
+                properties: data,
+                conversationId: conversationId || null,  // Includi conversationId se disponibile
             })
         });
-        
+
         const result = await response.json();
-        
+
         if (!response.ok) {
             throw new Error(`Server Error: ${response.status} - ${result.error || 'Unknown error'}`);
         }
-        
+
         debugLog('SUCCESS', `HubSpot contatto ${result.action} con AI mapping:`, result.id);
-        
-        return { 
-            success: true, 
+
+        return {
+            success: true,
             contactId: result.id,
             action: result.action,
-            method: 'hubspot_api_ai'
+            method: 'hubspot_api_ai',
+            conversationId
         };
-        
+
     } catch (error) {
         debugLog('ERROR', 'Errore HubSpot API con AI mapping', error.message);
-        return { 
-            success: false, 
+        return {
+            success: false,
             error: error.message,
             method: 'hubspot_api_ai'
         };
@@ -998,28 +1003,28 @@ async function submitToFormspree(data) {
     Object.entries(data).forEach(([key, value]) => {
         formData.append(key, value);
     });
-    
+
     // Determina il subject in base al tipo di richiesta
     const isUpdateRequest = data.messaggio && (
         data.messaggio.toLowerCase().includes('aggiornato') ||
         data.messaggio.toLowerCase().includes('notifica') ||
         data.messaggio.toLowerCase().includes('avvisa')
     );
-    
-    const subject = isUpdateRequest 
+
+    const subject = isUpdateRequest
         ? 'Richiesta Aggiornamenti - Assistente Digitale'
         : 'Nuovo Lead da Assistente Digitale';
-    
+
     formData.append('_subject', subject);
     formData.append('lead_source', 'Assistente Digitale Chat');
     formData.append('form_type', isUpdateRequest ? 'newsletter_signup' : 'lead_generation');
-    
+
     const response = await fetch('https://formspree.io/f/xblyagbn', {
         method: 'POST',
         body: formData,
         headers: { 'Accept': 'application/json' }
     });
-    
+
     if (!response.ok) throw new Error(`Formspree Error: ${response.status}`);
     return response.json();
 }
@@ -1027,23 +1032,23 @@ async function submitToFormspree(data) {
 async function submitToHubSpot(data) {
     try {
         debugLog('HUBSPOT', 'Tentativo invio HubSpot', data);
-        
+
         // Verifica se HubSpot è disponibile
         if (typeof window._hsq === 'undefined') {
             debugLog('WARN', 'HubSpot _hsq non disponibile');
             return { success: false, reason: 'HubSpot tracking code not loaded' };
         }
-        
+
         // CONTROLLI DI SICUREZZA per dati mancanti
         const nomeCompleto = data.nome_completo || '';
         if (!nomeCompleto) {
             debugLog('ERROR', 'Nome completo mancante');
             return { success: false, reason: 'Nome completo mancante' };
         }
-        
+
         const [nome, ...cognomeArray] = nomeCompleto.split(' ');
         const cognome = cognomeArray.join(' ') || '';
-        
+
         // HubSpot identify con proprietà CORRETTE
         window._hsq.push(['identify', {
             email: data.email || '',
@@ -1063,7 +1068,7 @@ async function submitToHubSpot(data) {
             gdpr_timestamp: data.gdpr_timestamp || '',
             user_agent: data.user_agent || ''
         }]);
-        
+
         // HubSpot event tracking
         window._hsq.push(['trackEvent', {
             id: 'assistente_digitale_lead_generated',
@@ -1077,10 +1082,10 @@ async function submitToHubSpot(data) {
                 phone: data.telefono || ''
             }
         }]);
-        
+
         debugLog('SUCCESS', 'HubSpot tracking inviato');
         return { success: true, method: 'tracking_code' };
-        
+
     } catch (error) {
         debugLog('ERROR', 'Errore HubSpot tracking', error);
         return { success: false, reason: error.message };
@@ -1094,21 +1099,21 @@ async function submitToHubSpot(data) {
 function addMessageToChat(message, sender) {
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return;
-    
+
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
-    
+
     // Avatar structure per compatibilità CSS
     if (sender === 'assistant') {
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
-        
+
         const img = document.createElement('img');
         img.src = 'https://assistente-digitale.it/images/favicon.png';
         img.alt = 'AI';
         img.className = 'avatar-image';
         avatar.appendChild(img);
-        
+
         messageDiv.appendChild(avatar);
     } else if (sender === 'user') {
         const avatar = document.createElement('div');
@@ -1116,25 +1121,25 @@ function addMessageToChat(message, sender) {
         avatar.textContent = 'U';
         messageDiv.appendChild(avatar);
     }
-    
+
     // Bubble structure per compatibilità CSS
     const bubbleDiv = document.createElement('div');
     bubbleDiv.className = 'message-bubble';
-    
+
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
-    
+
     // ✅ FIX: Preserva HTML per AI, escape per utente
     if (sender === 'assistant') {
         contentDiv.innerHTML = message; // Mantieni HTML per formattazione AI
     } else {
         contentDiv.textContent = message; // Safe text per utente
     }
-    
+
     bubbleDiv.appendChild(contentDiv);
     messageDiv.appendChild(bubbleDiv);
     chatMessages.appendChild(messageDiv);
-    
+
     // Smooth scroll
     setTimeout(() => {
         chatMessages.scrollTo({
@@ -1142,7 +1147,7 @@ function addMessageToChat(message, sender) {
             behavior: 'smooth'
         });
     }, 100);
-    
+
     conversationHistory.push({ content: message, sender, timestamp: new Date() });
 }
 
@@ -1151,7 +1156,7 @@ function showTypingIndicator() {
     const indicator = document.getElementById('typingIndicator');
     if (indicator) {
         indicator.style.display = 'block';
-        
+
         // AGGIUNGERE: Smooth scroll
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) {
@@ -1181,7 +1186,7 @@ async function showWelcomeMessage() {
         `, 'assistant');
         return;
     }
-    
+
     const welcomeMessage = `
         <div style="margin: 16px 0;">
             <!-- Header compatto -->
@@ -1236,7 +1241,7 @@ async function showWelcomeMessage() {
         </p>
     </div>
     `;
-    
+
     addMessageToChat(welcomeMessage, 'assistant');
 }
 
@@ -1445,7 +1450,7 @@ function addModernStyles() {
 
 
 // Funzione globale per i pulsanti
-window.sendQuickMessage = function(message) {
+window.sendQuickMessage = function (message) {
     const userInput = document.getElementById('userInput');
     if (userInput) {
         userInput.value = message;
@@ -1484,10 +1489,10 @@ function showErrorState() {
 
 function checkHubSpotStatus() {
     debugLog('HUBSPOT', 'Controllo stato HubSpot');
-    
+
     if (typeof window._hsq !== 'undefined') {
         debugLog('SUCCESS', 'HubSpot _hsq disponibile', window._hsq.length);
-        
+
         // Test tracking
         window._hsq.push(['trackPageView']);
         debugLog('INFO', 'Test pageview inviato');
@@ -1501,7 +1506,7 @@ function checkHubSpotStatus() {
 async function initializeAssistente() {
     try {
         debugLog('INIT', 'Avvio Assistente Digitale AI Chat');
-        
+
         await loadConfiguration();
         await loadEnvironmentVariables();
         await generateSystemPrompt();
@@ -1509,11 +1514,11 @@ async function initializeAssistente() {
         addModernStyles();
         initMobileKeyboardHandling(); // ✅ AGGIUNGI QUESTA RIGA
         showWelcomeMessage();
-        
+
         setTimeout(checkHubSpotStatus, 2000);
-        
+
         debugLog('SUCCESS', 'Assistente inizializzato con successo');
-        
+
     } catch (error) {
         debugLog('ERROR', 'Errore inizializzazione', error);
         showErrorState();
@@ -1526,35 +1531,35 @@ function initMobileKeyboardHandling() {
         const chatContainer = document.querySelector('.chat-container');
         const chatInput = document.querySelector('#userInput');
         const chatMessages = document.querySelector('#chatMessages');
-        
+
         if (chatInput && chatContainer) {
             // Gestisce focus input
             chatInput.addEventListener('focus', () => {
                 console.log('📱 Input focus - Gestione tastiera mobile');
-                
+
                 // Scroll automatico ai messaggi recenti
                 setTimeout(() => {
                     if (chatMessages) {
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                     }
                 }, 300);
-                
+
                 // Previene resize del container
                 document.body.style.height = '100vh';
                 document.body.style.overflow = 'hidden';
             });
-            
+
             // Gestisce blur input
             chatInput.addEventListener('blur', () => {
                 console.log('📱 Input blur - Ripristino viewport');
-                
+
                 // Ripristina comportamento normale
                 setTimeout(() => {
                     document.body.style.height = '';
                     document.body.style.overflow = '';
                 }, 300);
             });
-            
+
             // Gestisce orientamento
             window.addEventListener('orientationchange', () => {
                 setTimeout(() => {
