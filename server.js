@@ -115,7 +115,7 @@ app.post('/api/ai/chat',chat);
 // Endpoint per creare contatto HubSpot con AI Property Mapping
 app.post('/api/hubspot/create-contact', hubespostController );
 
-app.post('/api/update-lead-field', updateLeadField );
+
 
 /* ==================== HEALTH CHECK E API ROUTES ==================== */
 
