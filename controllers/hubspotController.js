@@ -104,7 +104,8 @@ const hubespostController = async (req, res) => {
             {
                 $set: {
                     userId: finalProperties.email,
-                    leadGenerated: true
+                    leadGenerated: true,
+                    sourcedLeads: 'HubSpot',
                 }
             },
             { new: true }

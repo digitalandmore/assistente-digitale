@@ -1,4 +1,4 @@
-import  { Schema, model } from 'mongoose';
+import { Schema, model } from 'mongoose';
 
 const messageSchema = new Schema({
   role: { type: String, enum: ["user", "assistant", "system"], required: true },
@@ -12,6 +12,7 @@ const conversationSchema = new Schema({
   messages: [messageSchema],
   createdAt: { type: Date, default: Date.now },
   leadGenerated: { type: Boolean, default: false },
+  sourcedLeads: { type: String, required: false }
 });
 
 export default model("Conversation", conversationSchema);
