@@ -13,11 +13,7 @@ const conversationSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
   leadGenerated: { type: Boolean, default: false },
   sourcedLeads: { type: String, required: false },
-  leadData: {
-    type: Map,
-    of: String,
-    default: {}
-  }
+
 });
 
 export default model("Conversation", conversationSchema);

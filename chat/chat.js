@@ -630,22 +630,22 @@ async function handleLeadGenResponse(userMessage) {
     leadGenState.collectedData[currentField.key] = userMessage.trim();
     leadGenState.fieldIndex++;
     // Aggiorna DB in tempo reale
-    conversationId = sessionStorage.getItem("conversationId") || null;
-    console.log('LEAD', 'Conversation ID:', conversationId);
-    try {
-        await fetch('/api/update-lead-field', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                conversationId,
-                field: currentField.key,
-                value: userMessage.trim()
-            })
-        });
-        debugLog('LEAD', `✅ Campo "${currentField.key}" salvato nel DB`);
-    } catch (err) {
-        console.error('❌ Errore aggiornamento campo lead sul DB:', err);
-    }
+    // conversationId = sessionStorage.getItem("conversationId") || null;
+    // console.log('LEAD', 'Conversation ID:', conversationId);
+    // try {
+    //     await fetch('/api/update-lead-field', {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify({
+    //             conversationId,
+    //             field: currentField.key,
+    //             value: userMessage.trim()
+    //         })
+    //     });
+    //     debugLog('LEAD', `✅ Campo "${currentField.key}" salvato nel DB`);
+    // } catch (err) {
+    //     console.error('❌ Errore aggiornamento campo lead sul DB:', err);
+    // }
 
     debugLog('LEAD', `✅ Salvato ${currentField.key} = "${userMessage.trim()}"`);
     debugLog('LEAD', `Progresso: ${leadGenState.fieldIndex}/${leadGenState.requiredFields.length}`);
@@ -975,7 +975,7 @@ async function submitToHubSpotAPI(data) {
         // USA URL DINAMICO invece di URL relativo
         const apiUrl = `${getApiBaseUrl()}${API_CONFIG.ENDPOINTS.HUBSPOT_CREATE_CONTACT}`;
         debugLog('HUBSPOT_API', 'API URL:', apiUrl);
-        const conversationId = sessionStorage.getItem("conversationId");
+        
         const response = await fetch(apiUrl, {  // ✅ USA URL DINAMICO
             method: 'POST',
             headers: {
@@ -983,7 +983,7 @@ async function submitToHubSpotAPI(data) {
             },
             body: JSON.stringify({
                 properties: data,
-                conversationId: conversationId || null,  // Includi conversationId se disponibile
+               
             })
         });
 
@@ -1000,7 +1000,6 @@ async function submitToHubSpotAPI(data) {
             contactId: result.id,
             action: result.action,
             method: 'hubspot_api_ai',
-            conversationId
         };
 
     } catch (error) {
