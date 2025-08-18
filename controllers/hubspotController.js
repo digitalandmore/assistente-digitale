@@ -101,7 +101,12 @@ const hubespostController = async (req, res) => {
 
         const updatedConv = await Conversation.findOneAndUpdate(
             { conversationId },
-            { $set: { userId: finalProperties.email } },
+            {
+                $set: {
+                    userId: finalProperties.email,
+                    leadGenerated: true
+                }
+            },
             { new: true }
         );
 
