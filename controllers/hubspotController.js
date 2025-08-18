@@ -98,7 +98,7 @@ const hubespostController = async (req, res) => {
         //aggiorno la conversazione con l'ID del contatto, l'unicità della mail è garantita da HubSpot
         console.log('conversationId:', conversationId);
         console.log('finalProperties.email:', finalProperties.email);
-
+ 
         const updatedConv = await Conversation.findOneAndUpdate(
             { conversationId },
             {

@@ -18,6 +18,7 @@ import errorController from './controllers/errorController.js';
 import globalErrorController from './controllers/globalErrorController.js';
 import spaBehaviorController from './controllers/spabehaviorController.js';
 import getChatController from './controllers/getChatcontroller.js';
+import updateLeadField from './controllers/update-lead-field.js';
 // Load environment variables
 dotenv.config();
 
@@ -113,6 +114,8 @@ app.post('/api/ai/chat',chat);
 
 // Endpoint per creare contatto HubSpot con AI Property Mapping
 app.post('/api/hubspot/create-contact', hubespostController );
+
+app.post('/api/update-lead-field', updateLeadField );
 
 /* ==================== HEALTH CHECK E API ROUTES ==================== */
 

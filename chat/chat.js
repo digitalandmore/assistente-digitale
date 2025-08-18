@@ -516,7 +516,7 @@ async function callOpenAI(messages, maxTokens = 1200) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
-            
+
         },
         body: JSON.stringify({
             messages: messages,
@@ -629,6 +629,23 @@ async function handleLeadGenResponse(userMessage) {
     // Salva dato
     leadGenState.collectedData[currentField.key] = userMessage.trim();
     leadGenState.fieldIndex++;
+    // Aggiorna DB in tempo reale
+    conversationId = sessionStorage.getItem("conversationId") || null;
+    console.log('LEAD', 'Conversation ID:', conversationId);
+    try {
+        await fetch('/api/update-lead-field', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                conversationId,
+                field: currentField.key,
+                value: userMessage.trim()
+            })
+        });
+        debugLog('LEAD', `✅ Campo "${currentField.key}" salvato nel DB`);
+    } catch (err) {
+        console.error('❌ Errore aggiornamento campo lead sul DB:', err);
+    }
 
     debugLog('LEAD', `✅ Salvato ${currentField.key} = "${userMessage.trim()}"`);
     debugLog('LEAD', `Progresso: ${leadGenState.fieldIndex}/${leadGenState.requiredFields.length}`);

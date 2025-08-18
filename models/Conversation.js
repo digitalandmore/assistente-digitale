@@ -12,7 +12,12 @@ const conversationSchema = new Schema({
   messages: [messageSchema],
   createdAt: { type: Date, default: Date.now },
   leadGenerated: { type: Boolean, default: false },
-  sourcedLeads: { type: String, required: false }
+  sourcedLeads: { type: String, required: false },
+  leadData: {
+    type: Map,
+    of: String,
+    default: {}
+  }
 });
 
 export default model("Conversation", conversationSchema);
