@@ -470,7 +470,9 @@ async function analyzeUserIntent(message) {
         }
 
         const result = await response.json();
-
+        if (data.conversationId) {
+            localStorage.setItem("conversationId", data.conversationId);
+        }
         if (result.success && result.intent) {
             return result.intent;
         }
@@ -521,7 +523,8 @@ async function callOpenAI(messages, maxTokens = 1200) {
         body: JSON.stringify({
             messages: messages,
             maxTokens: maxTokens || 1200,
-            temperature: openAiConfig.temperature || 0.8
+            temperature: openAiConfig.temperature || 0.8,
+            conversationId: localStorage.getItem("conversationId")
         })
     });
 
@@ -533,7 +536,7 @@ async function callOpenAI(messages, maxTokens = 1200) {
 
     const data = await response.json();
     if (data.conversationId) {
-        sessionStorage.setItem("conversationId", data.conversationId);
+        localStorage.setItem("conversationId", data.conversationId);
     }
     // Controlla se la risposta ha il formato corretto
     if (!data.success || !data.choices || !data.choices[0]) {
@@ -975,7 +978,7 @@ async function submitToHubSpotAPI(data) {
         // USA URL DINAMICO invece di URL relativo
         const apiUrl = `${getApiBaseUrl()}${API_CONFIG.ENDPOINTS.HUBSPOT_CREATE_CONTACT}`;
         debugLog('HUBSPOT_API', 'API URL:', apiUrl);
-        
+
         const response = await fetch(apiUrl, {  // ✅ USA URL DINAMICO
             method: 'POST',
             headers: {
@@ -983,7 +986,7 @@ async function submitToHubSpotAPI(data) {
             },
             body: JSON.stringify({
                 properties: data,
-               
+
             })
         });
 

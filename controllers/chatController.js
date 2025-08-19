@@ -4,8 +4,8 @@ import openAiConfig from '../config/openAiConfig.js';
 
 export const chat = async (req, res) => {
   try {
-    const { messages, maxTokens, temperature } = req.body;
-    let conversationId = req.session.conversationId;
+    let { messages, maxTokens, temperature, conversationId } = req.body;
+    // let conversationId = req.session.conversationId;
 
     const userId = req.session.userId || 'anonymous';
 
@@ -63,7 +63,7 @@ export const chat = async (req, res) => {
 
     if (!conversationId) {
       conversationId = uuidv4();
-      req.session.conversationId = conversationId;
+      // req.session.conversationId = conversationId;
     }
 
     await Conversation.findOneAndUpdate(
