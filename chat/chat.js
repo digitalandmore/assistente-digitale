@@ -573,7 +573,7 @@ const saveMessageToDB = async (
       ...additionalData
     };
     const apiUrl = `${getApiBaseUrl()}/api/ai/savechat`;
-    const response = await fetch("/api/ai/saveChat", {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody)
