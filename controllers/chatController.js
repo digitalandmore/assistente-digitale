@@ -90,7 +90,8 @@ export const chat = async (req, res) => {
       choices: data.choices,
       usage: data.usage || null
     });
-
+    console.log('📦 Dati ricevuti:', JSON.stringify(req.body, null, 2));
+    console.log('👤 Role ricevuto:', req.body.messages[0]?.role);
 
   } catch (error) {
     console.error('❌ Errore OpenAI Chat:', error.message);
@@ -99,4 +100,5 @@ export const chat = async (req, res) => {
       error: error.message
     });
   }
+
 };

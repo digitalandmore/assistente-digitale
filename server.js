@@ -19,6 +19,7 @@ import globalErrorController from './controllers/globalErrorController.js';
 import spaBehaviorController from './controllers/spabehaviorController.js';
 import getChatController from './controllers/getChatcontroller.js';
 import updateLeadField from './controllers/update-lead-field.js';
+import { saveToDbChatController } from './controllers/saveToDbChatController.js';
 // Load environment variables
 dotenv.config();
 
@@ -109,6 +110,7 @@ app.post('/api/ai/analyze-intent', analizeIntent
 
 // // Endpoint principale per chat AI tramite backend
 app.post('/api/ai/chat',chat);
+app.post('/api/ai/saveChat',saveToDbChatController);
 
 /* ==================== HUBSPOT INTEGRATION ==================== */
 
