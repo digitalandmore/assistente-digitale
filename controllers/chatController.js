@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import Conversation from '../models/Conversation.js';
 import openAiConfig from '../config/openAiConfig.js';
-
+import ArchivedConversation from '../models/ArchiviedConversation.js';
 export const chat = async (req, res) => {
   try {
     let { messages, maxTokens, temperature, conversationId } = req.body;
@@ -100,4 +100,52 @@ export const chat = async (req, res) => {
     });
   }
 
+};
+
+
+export const archiveChat = async (req, res) => {
+  try {
+    const { conversationId } = req.body;
+    console.log('request body:', req.body);
+    if (!conversationId) {
+      return res.status(400).json({ error: "conversationId mancante" });
+    }
+
+    // recupera la conversazione originale
+    const conversation = await Conversation.findOne({ conversationId });
+    if (!conversation) {
+      return res.status(404).json({ error: "Conversazione non trovata" });
+    }
+
+    // crea archivio
+    const archived = new ArchivedConversation({
+      conversationId: conversation._id.toString(),
+      userId: conversation.userId,
+      nome_completo: conversation.nome_completo,
+      email: conversation.email,
+      telefono: conversation.telefono,
+      azienda: conversation.azienda,
+      qualifica: conversation.qualifica,
+      settore: conversation.settore,
+      sito_web: conversation.sito_web,
+      messaggio: conversation.messaggio,
+      leadGenerated: conversation.leadGenerated,
+      sourcedLeads: conversation.sourcedLeads,
+      archiviedmessages: conversation.messages.map(m => ({
+        role: m.role,
+        content: m.content,
+        timestamp: m.timestamp
+      }))
+    });
+
+    await archived.save();
+
+    // elimina conversazione originale
+    await Conversation.findOneAndDelete(conversationId);
+
+    res.json({ success: true, archived });
+  } catch (err) {
+    console.error("Errore in archiveChat:", err);
+    res.status(500).json({ error: "Errore archiviazione" });
+  }
 };
