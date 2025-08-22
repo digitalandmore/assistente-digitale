@@ -476,6 +476,23 @@ p {
     gap: 1rem;
 }
 
+.hero-visual-modern img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+    margin: 0;
+    display: block;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-visual-modern img:hover {
+    transform: scale(1.06);
+    box-shadow: none;
+    border: none;
+}
+
 .demo-avatar {
     width: 45px;
     height: 45px;
@@ -717,6 +734,130 @@ p {
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 500;
+}
+
+/* ==================== DASHBOARD SECTION ==================== */
+
+.dashboard-modern {
+    padding: 4rem 0;
+    background: var(--white);
+}
+
+.dashboard-modern .section-header-modern {
+    margin-bottom: 1.5rem;
+}
+
+.dashboard-content-modern {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dashboard-grid-modern {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dashboard-image-center {
+    flex: 0 0 480px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dashboard-image-center img {
+    max-width: 520px;
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+    margin: 0;
+    display: block;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-image-center img:hover,
+.dashboard-image-center img:active {
+    transform: scale(1.06);
+}
+
+.dashboard-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex: 1 1 320px;
+}
+
+.dashboard-feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    font-size: 1.15rem;
+    color: var(--primary-dark, #222);
+    background: var(--gray-light, #f7f7fa);
+    padding: 1.25rem 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    font-weight: 600;
+    transition: transform 0.25s, background 0.25s, color 0.25s;
+    cursor: pointer;
+    will-change: transform;
+}
+
+.dashboard-feature-item i {
+    font-size: 1.6rem;
+    color: var(--primary, #2a6cff);
+    margin-top: 2px;
+    transition: color 0.25s;
+}
+
+.dashboard-feature-item:hover,
+.dashboard-feature-item:active {
+    transform: scale(1.04) translateX(8px);
+    background: var(--gradient-primary);
+    color: var(--white);
+}
+
+.dashboard-feature-item:hover i,
+.dashboard-feature-item:active i {
+    color: var(--white);
+}
+
+/* Mobile: immagine sopra, bullet sotto, spazio minimo */
+@media (max-width: 968px) {
+    .dashboard-modern.section {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    .dashboard-modern .section-header-modern {
+        margin-bottom: 0.2rem;
+    }
+    .dashboard-grid-modern {
+        flex-direction: column;
+        gap: 0rem;
+        max-width: 100%;
+    }
+    .dashboard-image-center {
+        margin-bottom: 0rem;
+        margin-top: 0rem;
+    }
+    .dashboard-image-center img {
+        max-width: 100%;
+        margin-bottom: 0rem;
+        margin-top: 0rem;
+        display: block;
+    }
+    .dashboard-features {
+        gap: 0.2rem;
+        width: 100%;
+    }
 }
 
 /* ==================== DEMO SECTION ==================== */
@@ -1182,7 +1323,7 @@ p {
 
 .cta-header {
     color: var(--white);
-    text-align: left;
+    text-align: center; /* <--- Cambiato da left a center */
     margin-bottom: 2rem;
 }
 
