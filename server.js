@@ -7,7 +7,13 @@ import path from 'path';
 import dotenv from 'dotenv';
 import  session from 'express-session';
 import { fileURLToPath } from 'url';
-import {chat, archiveChat} from './controllers/chatController.js';
+// Import controllers
+/* ==================== Controllers principali ==================== */
+import {chat, archiveChat, markAsVisualized, deleteChat} from './controllers/chatController.js';
+import getChatController from './controllers/getChatcontroller.js';
+import { saveToDbChatController } from './controllers/saveToDbChatController.js';
+
+/* ==================== Controllers ==================== */
 import analizeIntent from './controllers/analizeIntentController.js';
 import hubespostController from './controllers/hubspotController.js';
 import healtController from './controllers/healtController.js';
@@ -16,8 +22,7 @@ import { getHubSpotProperties } from './services/hubespostService.js';
 import statusController from './controllers/statusController.js';
 import errorController from './controllers/errorController.js';
 import globalErrorController from './controllers/globalErrorController.js';
-import getChatController from './controllers/getChatcontroller.js';
-import { saveToDbChatController } from './controllers/saveToDbChatController.js';
+
 // Load environment variables
 dotenv.config();
 
@@ -110,6 +115,8 @@ app.post('/api/ai/analyze-intent', analizeIntent
 app.post('/api/ai/chat',chat);
 app.post('/api/ai/saveChat',saveToDbChatController);
 app.post('/api/ai/archive',archiveChat);
+app.post('/api/ai/visualized', markAsVisualized);
+app.post('/api/ai/deleteChat', deleteChat);
 
 /* ==================== HUBSPOT INTEGRATION ==================== */
 

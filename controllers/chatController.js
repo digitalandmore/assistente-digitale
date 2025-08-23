@@ -149,3 +149,46 @@ export const archiveChat = async (req, res) => {
     res.status(500).json({ error: "Errore archiviazione" });
   }
 };
+
+
+export const markAsVisualized = async (req, res) => {
+  try {
+    const { conversationId } = req.body;
+    if (!conversationId) {
+      return res.status(400).json({ error: "conversationId mancante" });
+    }
+
+    const conversationMark = await Conversation.findOneAndUpdate(
+      { conversationId },
+      { visualized: true },
+      { new: true }
+    );
+
+    if (!conversationMark) {
+      return res.status(404).json({ error: "Conversazione non trovata" });
+    }
+
+    res.json({ success: true, conversationMark });
+  } catch (err) {
+    console.error("Errore in markAsVisualized:", err);
+    res.status(500).json({ error: "Errore aggiornamento conversazione" });
+  }
+}
+
+export const deleteChat = async(req, res)=>{
+  try {
+    const { conversationId } = req.body;
+    if (!conversationId) {
+      return res.status(400).json({ error: "conversationId mancante" });
+    }
+    const deletedConversation  = await Conversation.findOneAndDelete(
+      { conversationId }  )
+    if (!deletedConversation ) {
+      return res.status(404).json({ error: "Conversazione non trovata" });
+    }
+    res.json({ success: true, deletedConversation  });
+  } catch (error) {
+        console.error("Errore in markAsVisualized:", error);
+    res.status(500).json({ error: "Errore eliminazione conversazione" });
+  }
+}
