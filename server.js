@@ -22,6 +22,7 @@ import { getHubSpotProperties } from './services/hubespostService.js';
 import statusController from './controllers/statusController.js';
 import errorController from './controllers/errorController.js';
 import globalErrorController from './controllers/globalErrorController.js';
+import {getUsersController, updateUserDisplayName, createUser} from './controllers/usersController.js';
 
 // Load environment variables
 dotenv.config();
@@ -118,6 +119,11 @@ app.post('/api/ai/archive',archiveChat);
 app.post('/api/ai/visualized', markAsVisualized);
 app.post('/api/ai/deleteChat', deleteChat);
 
+
+//ROTTE DI GESTIONE DEGLI UTENTI
+app.get('/api/usersGet', getUsersController);
+app.post('/api/usersUpdate', updateUserDisplayName);
+app.post('/api/createUsers', createUser);
 /* ==================== HUBSPOT INTEGRATION ==================== */
 
 // Endpoint per creare contatto HubSpot con AI Property Mapping
