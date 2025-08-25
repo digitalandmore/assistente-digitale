@@ -7,7 +7,7 @@ const messageSchema = new Schema({
 });
 
 const conversationSchema = new Schema({
-  userId: { type: String, required: true },
+  userId: { type: String, required: true, unique: true },
   nome_completo: { type: String, required: false },
   email: { type: String, required: false },
   telefono: { type: String, required: false },
@@ -16,7 +16,7 @@ const conversationSchema = new Schema({
   settore: { type: String, required: false },
   sito_web: { type: String, required: false },
   messaggio: { type: String, required: false },
-  conversationId: { type: String, required: true },
+  conversationId: { type: String, required: true, unique: true },
   messages: [messageSchema],
   createdAt: { type: Date, default: Date.now },
   leadGenerated: { type: Boolean, default: false },

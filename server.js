@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 // Import controllers
 /* ==================== Controllers principali ==================== */
 import {chat, archiveChat, markAsVisualized, deleteChat} from './controllers/chatController.js';
-import getChatController from './controllers/getChatcontroller.js';
+import {getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat} from './controllers/getChatcontroller.js';
 import { saveToDbChatController } from './controllers/saveToDbChatController.js';
 
 /* ==================== Controllers ==================== */
@@ -22,7 +22,7 @@ import { getHubSpotProperties } from './services/hubespostService.js';
 import statusController from './controllers/statusController.js';
 import errorController from './controllers/errorController.js';
 import globalErrorController from './controllers/globalErrorController.js';
-import {getUsersController, updateUserDisplayName, createUser} from './controllers/usersController.js';
+import {getUsersController, updateUserDisplayName, createUser, } from './controllers/usersController.js';
 
 // Load environment variables
 dotenv.config();
@@ -118,6 +118,8 @@ app.post('/api/ai/saveChat',saveToDbChatController);
 app.post('/api/ai/archive',archiveChat);
 app.post('/api/ai/visualized', markAsVisualized);
 app.post('/api/ai/deleteChat', deleteChat);
+app.post('/api/ai/deleteChatArchived', DeleteChatContoller);
+app.post('/api/ai/restorechat', restoreChat);
 
 
 //ROTTE DI GESTIONE DEGLI UTENTI
@@ -144,6 +146,8 @@ app.get('/api/status', statusController);
 
 /* ==================== API REST ANDPOINT ==================== */
 app.get('/api/conversations', getChatController);
+app.get('/api/archivedconversations', getArchiviedChatController);
+app.get('/api/deleteChat', DeleteChatContoller)
 
 /* ==================== STATIC FILES & SPA ROUTING ==================== */
 
