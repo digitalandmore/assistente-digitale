@@ -96,11 +96,36 @@ async function initializeAssistente() {
     }
 }
 
-async function loadConfiguration() {
-    const response = await fetch('./assistente-digitale.json');
-    if (!response.ok) throw new Error(`Errore caricamento JSON: ${response.status}`);
-    assistenteConfig = await response.json();
-    debugLog('SUCCESS', 'Configurazione JSON caricata');
+// async function loadConfiguration() {
+//     const response = await fetch('./assistente-digitale.json');
+//     if (!response.ok) throw new Error(`Errore caricamento JSON: ${response.status}`);
+//     assistenteConfig = await response.json();
+//     debugLog('SUCCESS', 'Configurazione JSON caricata');
+// }
+async function loadConfiguration(nomeAssistente) {
+    try {
+        const response = await fetch("http://localhost:3000/api/ai/getknowledge", {
+            method: "POST", // perché il nome lo passiamo nel body
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ nome: nomeAssistente }) // es: "Assistente Digitale"
+        });
+
+        if (!response.ok) {
+            throw new Error(`Errore caricamento configurazione: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        // se usi findOne nel backend → arriva un oggetto
+        // se usi find → arriva un array
+        assistenteConfig = Array.isArray(result) ? result[0] : result;
+
+        debugLog("SUCCESS", "Configurazione caricata dal backend");
+    } catch (err) {
+        console.error("❌ loadConfiguration error:", err);
+    }
 }
 
 async function loadEnvironmentVariables() {
@@ -1566,7 +1591,8 @@ async function initializeAssistente() {
     try {
         debugLog('INIT', 'Avvio Assistente Digitale AI Chat');
 
-        await loadConfiguration();
+        await loadConfiguration("Assistente Digitale");
+        // loadConfiguration();
         await loadEnvironmentVariables();
         await generateSystemPrompt();
         setupEventListeners();

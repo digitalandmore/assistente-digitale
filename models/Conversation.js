@@ -23,6 +23,6 @@ const conversationSchema = new Schema({
   sourcedLeads: { type: String, required: false },
   visualized: { type: Boolean, default: false },
   progressiveNumber: { type: Number, unique: true }
-});
+}, { timestamps: true });
 
 export default model("Conversation", conversationSchema);

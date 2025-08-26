@@ -24,6 +24,8 @@ import errorController from './controllers/errorController.js';
 import globalErrorController from './controllers/globalErrorController.js';
 import {getUsersController, updateUserDisplayName, createUser, } from './controllers/usersController.js';
 
+import {editContact, getKnowledge} from './controllers/KnowledgeController.js'
+
 // Load environment variables
 dotenv.config();
 
@@ -121,6 +123,9 @@ app.post('/api/ai/deleteChat', deleteChat);
 app.post('/api/ai/deleteChatArchived', DeleteChatContoller);
 app.post('/api/ai/restorechat', restoreChat);
 
+//ROTTE GESTIONE KNOWLEDGE
+app.post('/api/ai/getknowledge', getKnowledge)
+app.post('/api/ai/editContact', editContact)
 
 //ROTTE DI GESTIONE DEGLI UTENTI
 app.get('/api/usersGet', getUsersController);
@@ -145,7 +150,8 @@ app.get('/api/health',dectailHealtController);
 app.get('/api/status', statusController);
 
 /* ==================== API REST ANDPOINT ==================== */
-app.get('/api/conversations', getChatController);
+// app.get('/api/conversations', getChatController);
+app.post('/api/conversations', getChatController);
 app.get('/api/archivedconversations', getArchiviedChatController);
 app.get('/api/deleteChat', DeleteChatContoller)
 

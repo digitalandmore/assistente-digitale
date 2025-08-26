@@ -1,9 +1,36 @@
 import Conversation from '../models/Conversation.js';
 import ArchiviedConversation from '../models/ArchiviedConversation.js';
 import path from 'path';
+// const getChatController = async (req, res) => {
+//   try {
+//     const conversations = await Conversation.find();
+//     res.status(200).json({
+//       success: true,
+//       count: conversations.length,
+//       conversations
+//     });
+//   } catch (error) {
+//     console.error('Errore nel recupero delle conversazioni:', error);
+//     res.status(500).json({
+//       success: false,
+//       error: 'Errore server nel recupero delle conversazioni'
+//     });
+//   }
+// }
 const getChatController = async (req, res) => {
   try {
-    const conversations = await Conversation.find();
+    // valore di default: ultimi 7 giorni
+    const { range = 7 } = req.body;
+
+    // Calcola la data di inizio (oggi - range giorni)
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - range);
+
+    // Recupera solo le conversazioni create dopo la data calcolata
+    const conversations = await Conversation.find({
+      createdAt: { $gte: startDate }
+    });
+
     res.status(200).json({
       success: true,
       count: conversations.length,
@@ -16,7 +43,7 @@ const getChatController = async (req, res) => {
       error: 'Errore server nel recupero delle conversazioni'
     });
   }
-}
+};
 
 const getArchiviedChatController = async (req, res) => {
   try {

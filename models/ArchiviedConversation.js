@@ -23,6 +23,6 @@ const archivedconversationSchema = new Schema({
   sourcedLeads: { type: String, required: false },
   progressiveNumber: { type: Number, unique: true }
 
-});
+}, { timestamps: true });
 
 export default model("ArchivedConversation", archivedconversationSchema);

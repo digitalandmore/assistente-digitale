@@ -8,7 +8,6 @@ export const saveToDbChatController = async (req, res) => {
     const { 
       messages, 
       conversationId: incomingConversationId, 
-      leadData,
       userId,
       nome_completo,
       email,
