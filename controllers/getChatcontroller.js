@@ -18,8 +18,6 @@ const getChatController = async (req, res) => {
   }
 }
 
-
-
 const getArchiviedChatController = async (req, res) => {
   try {
     const archiviedConversation = await ArchiviedConversation.find();
@@ -88,6 +86,7 @@ const restoreChat = async (req, res) => {
       messaggio: conversation.messaggio,
       leadGenerated: conversation.leadGenerated,
       sourcedLeads: conversation.sourcedLeads,
+      progressiveNumber: conversation.progressiveNumber,
       messages: conversation.archiviedmessages.map(m => ({
         role: m.role,
         content: m.content,

@@ -21,6 +21,7 @@ const archivedconversationSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
   leadGenerated: { type: Boolean, default: false },
   sourcedLeads: { type: String, required: false },
+  progressiveNumber: { type: Number, unique: true }
 
 });
 

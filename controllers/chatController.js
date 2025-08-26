@@ -2,6 +2,15 @@ import { v4 as uuidv4 } from 'uuid';
 import Conversation from '../models/Conversation.js';
 import openAiConfig from '../config/openAiConfig.js';
 import ArchivedConversation from '../models/ArchiviedConversation.js';
+import Counter from '../models/counter.js'
+async function getNextSeq(name) {
+  const counter = await Counter.findByIdAndUpdate(
+    name,
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true } // crea il counter se non esiste
+  );
+  return counter.seq;
+}
 export const chat = async (req, res) => {
   try {
     let { messages, maxTokens, temperature, conversationId } = req.body;
@@ -61,28 +70,40 @@ export const chat = async (req, res) => {
       });
     }
 
+
     if (!conversationId) {
       conversationId = uuidv4();
-      // req.session.conversationId = conversationId;
     }
 
-    await Conversation.findOneAndUpdate(
-      { userId, conversationId },
-      { $push: { messages: { role: 'user', content: messages[messages.length - 1].content } } },
-      { upsert: true, new: true }
-    );
+    let chatDoc = await Conversation.findOne({ userId, conversationId });
 
-    await Conversation.findOneAndUpdate(
-      { userId, conversationId },
-      { $push: { messages: { role: 'assistant', content: data.choices[0].message.content } } }
-    );
-
-    if (data.choices[0].message.content === "LEAD_GENERATION_START" || data.choices[0].message.content === "<strong>LEAD_GENERATION_END</strong>") {
-      await Conversation.findOneAndUpdate(
-        { userId, conversationId },
-        { leadGenerated: true }
-      );
+    if (!chatDoc) {
+      const seq = await getNextSeq('conversation');
+      chatDoc = new Conversation({
+        conversationId,
+        userId,
+        progressiveNumber: seq,
+        messages: [],
+        nome_completo: req.body.nome_completo || ''
+      });
+      await chatDoc.save();
     }
+
+    // aggiungi i messaggi in modo atomico per evitare problemi di concorrenza
+    await Conversation.findByIdAndUpdate(
+      chatDoc._id,
+      {
+        $push: {
+          messages: [
+            { role: 'user', content: messages[messages.length - 1].content },
+            { role: 'assistant', content: data.choices[0].message.content }
+          ]
+        }
+      },
+      { new: true }
+    );
+
+
 
     res.status(200).json({
       success: true,
@@ -119,7 +140,7 @@ export const archiveChat = async (req, res) => {
 
     // crea archivio
     const archived = new ArchivedConversation({
-      conversationId: conversation._id.toString(),
+      conversationId: conversation.conversationId,
       userId: conversation.userId,
       nome_completo: conversation.nome_completo,
       email: conversation.email,
@@ -131,6 +152,7 @@ export const archiveChat = async (req, res) => {
       messaggio: conversation.messaggio,
       leadGenerated: conversation.leadGenerated,
       sourcedLeads: conversation.sourcedLeads,
+      progressiveNumber: conversation.progressiveNumber,
       archiviedmessages: conversation.messages.map(m => ({
         role: m.role,
         content: m.content,
@@ -141,7 +163,7 @@ export const archiveChat = async (req, res) => {
     await archived.save();
 
     // elimina conversazione originale
-    await Conversation.findOneAndDelete(conversationId);
+    await Conversation.findOneAndDelete({ conversationId });
 
     res.json({ success: true, archived });
   } catch (err) {
@@ -175,20 +197,20 @@ export const markAsVisualized = async (req, res) => {
   }
 }
 
-export const deleteChat = async(req, res)=>{
+export const deleteChat = async (req, res) => {
   try {
     const { conversationId } = req.body;
     if (!conversationId) {
       return res.status(400).json({ error: "conversationId mancante" });
     }
-    const deletedConversation  = await Conversation.findOneAndDelete(
-      { conversationId }  )
-    if (!deletedConversation ) {
+    const deletedConversation = await Conversation.findOneAndDelete(
+      { conversationId })
+    if (!deletedConversation) {
       return res.status(404).json({ error: "Conversazione non trovata" });
     }
-    res.json({ success: true, deletedConversation  });
+    res.json({ success: true, deletedConversation });
   } catch (error) {
-        console.error("Errore in markAsVisualized:", error);
+    console.error("Errore in markAsVisualized:", error);
     res.status(500).json({ error: "Errore eliminazione conversazione" });
   }
 }

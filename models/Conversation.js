@@ -21,7 +21,8 @@ const conversationSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
   leadGenerated: { type: Boolean, default: false },
   sourcedLeads: { type: String, required: false },
-  visualized: { type: Boolean, default: false }
+  visualized: { type: Boolean, default: false },
+  progressiveNumber: { type: Number, unique: true }
 });
 
 export default model("Conversation", conversationSchema);
