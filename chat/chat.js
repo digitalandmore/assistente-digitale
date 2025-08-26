@@ -104,7 +104,7 @@ async function initializeAssistente() {
 // }
 async function loadConfiguration(nomeAssistente) {
     try {
-        const response = await fetch("http://localhost:3000/api/ai/getknowledge", {
+        const response = await fetch("https://assistente-digitale.onrender.com/api/ai/getknowledge", {
             method: "POST", // perché il nome lo passiamo nel body
             headers: {
                 "Content-Type": "application/json"
