@@ -174,21 +174,8 @@ app.get('*', (req, res, next) => {
 });
 /* ==================== INTEGRAZIONE META ==================== */
 /* ==================== INTEGRAZIONE WHATSAPP ==================== */
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // deve coincidere con quello che hai messo su Meta
+// deve coincidere con quello che hai messo su Meta
 
-// Endpoint di verifica webhook
-// app.get("/webhook", (req, res) => {
-//   const mode = req.query["hub.mode"];
-//   const token = req.query["hub.verify_token"];
-//   const challenge = req.query["hub.challenge"];
-
-//   if (mode && token === process.env.VERIFY_TOKEN) {
-//     console.log("Webhook verificato!");
-//     res.status(200).send(challenge);
-//   } else {
-//     res.sendStatus(403);
-//   }
-// });
 app.get('/webhook', (req, res) => {
   const VERIFY_TOKEN = "lamiaverificaclientIP"; // lo stesso token che hai inserito in Meta
 
@@ -237,11 +224,11 @@ app.post("/webhook", async (req, res) => {
 async function sendMessage(to, text) {
   // const url = `https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`;
   const url = `https://graph.facebook.com/v22.0/669493372918582/messages`;
-
+const VERIFY_TOKEN = "lamiaverificaclientIP";
   const response = await fetch(url, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${process.env.VERIFY_TOKEN}`,
+      "Authorization": `Bearer ${VERIFY_TOKEN}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
