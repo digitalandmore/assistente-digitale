@@ -128,58 +128,60 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// 2️⃣ Ricezione messaggi (POST)
-// app.post("/webhook", async (req, res) => {
-//   try {
-//     const entry = req.body.entry?.[0];
-//     const changes = entry?.changes?.[0];
-//     const messages = changes?.value?.messages;
+// --- Lista numeri autorizzati in sandbox ---
+const sandboxNumbers = ["15556387167"]; // sostituisci col tuo numero verificato
 
-//     if (messages) {
-//       const msg = messages[0];
-//       const from = msg.from;
-//       const text = msg.text?.body || "";
+// --- Funzione per inviare messaggi solo se il numero è autorizzato ---
+async function sendMessageSafe(to, text) {
+  if (!sandboxNumbers.includes(to)) {
+    console.warn(`⚠️ Numero non registrato in sandbox: ${to}`);
+    return;
+  }
 
-//       console.log("Messaggio ricevuto da:", from);
-//       console.log("Testo:", text);
-
-//       // Risposta fissa
-//       await sendMessage(from, "Ciao 👋 questa è una risposta di test!");
-//     }
-
-//     res.sendStatus(200);
-//   } catch (err) {
-//     console.error("Errore nel webhook:", err);
-//     res.sendStatus(500);
-//   }
-// });
-// 3️⃣ Funzione per inviare messaggi
-async function sendMessage(to, text) {
-  const url = `https://graph.facebook.com/v22.0/${process.env.PHONE_NUMBER_ID}/messages`;
-  console.log(to)
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to,
-      text: { body: text },
-    }),
-  });
-
-  const data = await response.json();
-  console.log("Risposta API:", data);
+  try {
+    // Qui chiami la tua API WhatsApp
+    // Esempio placeholder:
+    console.log(`[API] Messaggio inviato a ${to}: "${text}"`);
+    // await sendMessage(to, text);
+  } catch (err) {
+    console.error("Errore invio messaggio:", err);
+  }
 }
+
+// --- Webhook WhatsApp ---
 app.post("/webhook", async (req, res) => {
-  const { from, text } = req.body;
+  console.log("📩 Webhook ricevuto:");
+  console.log(JSON.stringify(req.body, null, 2));
 
-  console.log(`Messaggio ricevuto da: ${from}, testo: ${text}`);
+  const entry = req.body.entry || [];
 
-  // Risposta di prova
-  await sendMessage(from, "Ciao 👋 messaggio di prova ricevuto!");
+  for (const e of entry) {
+    const changes = e.changes || [];
+    for (const change of changes) {
+      const value = change.value;
+      const messages = value?.messages || [];
+
+      if (!messages.length) {
+        console.log("Nessun messaggio da processare in questo evento.");
+        continue;
+      }
+
+      for (const msg of messages) {
+        const from = msg.from;
+        const text = msg.text?.body;
+
+        if (!from || !text) {
+          console.log("Messaggio incompleto, ignorato:", msg);
+          continue;
+        }
+
+        console.log(`Messaggio ricevuto da ${from}: ${text}`);
+
+        // Risposta di prova
+        await sendMessageSafe(from, "Ciao 👋 messaggio di prova ricevuto!");
+      }
+    }
+  }
 
   res.sendStatus(200);
 });
