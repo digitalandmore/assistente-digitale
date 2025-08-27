@@ -127,6 +127,11 @@ app.get("/webhook", (req, res) => {
     res.sendStatus(403);
   }
 });
+const sandboxNumbers = [
+  "15556387167", // numero sandbox di test
+  "393516064089" // il tuo numero reale, dopo che lo registri nella sandbox
+];
+
 async function sendMessageSafe(to, text) {
   if (!sandboxNumbers.includes(to)) {
     console.warn(`⚠️ Numero non registrato in sandbox: ${to}`);
