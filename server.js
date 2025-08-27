@@ -111,6 +111,24 @@ app.get('/api/config', (req, res) => {
 /* ==================== OPENAI PROXY ENDPOINTS ==================== */
 /* ==================== INTEGRAZIONE META ==================== */
 /* ==================== INTEGRAZIONE WHATSAPP ==================== */
+async function getOpenAIResponse(messages) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 500,
+      temperature: 0.8
+    })
+  });
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
+}
 async function handleIncomingMessage(from, text, req, res) {
   try {
     // Prepara il payload come se fosse una richiesta POST al controller
@@ -206,7 +224,7 @@ async function sendMessageSafe(to, text) {
     console.error("Errore invio messaggio:", err);
   }
 }
-app.post("/webhook", async(req, res) => {
+app.post("/webhook", async (req, res) => {
   const entry = req.body.entry || [];
 
   for (const e of entry) {
@@ -234,7 +252,9 @@ app.post("/webhook", async(req, res) => {
         console.log("wa_id:", contactWaId);
         console.log("Testo:", text);
         await sendMessageSafe(from, "Ciao 👋 messaggio di prova ricevuto!");
-        await handleIncomingMessage(from, text, req, res);
+        // await handleIncomingMessage(from, text, req, res);
+        const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
+        await sendMessageSafe(from, assistantText);
 
       } else {
         console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
