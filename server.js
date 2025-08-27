@@ -177,63 +177,76 @@ app.get('*', (req, res, next) => {
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // deve coincidere con quello che hai messo su Meta
 
 // Endpoint di verifica webhook
+// app.get("/webhook", (req, res) => {
+//   const mode = req.query["hub.mode"];
+//   const token = req.query["hub.verify_token"];
+//   const challenge = req.query["hub.challenge"];
+
+//   if (mode && token === process.env.VERIFY_TOKEN) {
+//     console.log("Webhook verificato!");
+//     res.status(200).send(challenge);
+//   } else {
+//     res.sendStatus(403);
+//   }
+// });
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode && token === process.env.VERIFY_TOKEN) {
-    console.log("Webhook verificato!");
-    res.status(200).send(challenge);
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("✅ Webhook verificato!");
+    res.status(200).send(challenge); // <-- deve essere solo la stringa
   } else {
+    console.log("❌ Verifica fallita");
     res.sendStatus(403);
   }
 });
 
 // 2. Ricezione messaggi + risposta fissa
-app.post("/webhook", async (req, res) => {
-  try {
-    const entry = req.body.entry?.[0];
-    const changes = entry?.changes?.[0];
-    const messages = changes?.value?.messages;
+// app.post("/webhook", async (req, res) => {
+//   try {
+//     const entry = req.body.entry?.[0];
+//     const changes = entry?.changes?.[0];
+//     const messages = changes?.value?.messages;
 
-    if (messages) {
-      const msg = messages[0];
-      const from = msg.from;
+//     if (messages) {
+//       const msg = messages[0];
+//       const from = msg.from;
 
-      console.log("Messaggio ricevuto da:", from);
+//       console.log("Messaggio ricevuto da:", from);
 
-      // Risposta sempre uguale
-      await sendMessage(from, "Ciao 👋 questa è una risposta fissa di test!");
-    }
+//       // Risposta sempre uguale
+//       await sendMessage(from, "Ciao 👋 questa è una risposta fissa di test!");
+//     }
 
-    res.sendStatus(200);
-  } catch (err) {
-    console.error("Errore nel webhook:", err);
-    res.sendStatus(500);
-  }
-});
+//     res.sendStatus(200);
+//   } catch (err) {
+//     console.error("Errore nel webhook:", err);
+//     res.sendStatus(500);
+//   }
+// });
 
-// Funzione per mandare messaggi
-async function sendMessage(to, text) {
-  const url = `https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`;
+// // Funzione per mandare messaggi
+// async function sendMessage(to, text) {
+//   const url = `https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`;
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to,
-      text: { body: text }
-    })
-  });
+//   const response = await fetch(url, {
+//     method: "POST",
+//     headers: {
+//       "Authorization": `Bearer ${process.env.WHATSAPP_TOKEN}`,
+//       "Content-Type": "application/json"
+//     },
+//     body: JSON.stringify({
+//       messaging_product: "whatsapp",
+//       to,
+//       text: { body: text }
+//     })
+//   });
 
-  const data = await response.json();
-  console.log("Risposta API:", data);
-}
+//   const data = await response.json();
+//   console.log("Risposta API:", data);
+// }
 
 /* ==================== ERROR HANDLING ==================== */
 
