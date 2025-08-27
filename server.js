@@ -253,8 +253,9 @@ app.post("/webhook", async (req, res) => {
         console.log("Testo:", text);
         await sendMessageSafe(from, "Ciao 👋 messaggio di prova ricevuto!");
         // await handleIncomingMessage(from, text, req, res);
-        const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
-        await sendMessageSafe(from, assistantText);
+        // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
+        // await sendMessageSafe(from, assistantText);
+        await handleIncomingMessage(from, text, req, res);
 
       } else {
         console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));

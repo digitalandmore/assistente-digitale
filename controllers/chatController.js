@@ -111,8 +111,7 @@ export const chat = async (req, res) => {
       choices: data.choices,
       usage: data.usage || null
     });
-
-
+    return data;
   } catch (error) {
     console.error('❌ Errore OpenAI Chat:', error.message);
     res.status(500).json({
