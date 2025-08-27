@@ -153,36 +153,37 @@ app.get("/webhook", (req, res) => {
 //     res.sendStatus(500);
 //   }
 // });
+// 3️⃣ Funzione per inviare messaggi
+async function sendMessage(to, text) {
+  const url = `https://graph.facebook.com/v22.0/${process.env.PHONE_NUMBER_ID}/messages`;
+  console.log(to)
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to,
+      text: { body: text },
+    }),
+  });
+
+  const data = await response.json();
+  console.log("Risposta API:", data);
+}
 app.post("/webhook", async (req, res) => {
   const { from, text } = req.body;
 
   console.log(`Messaggio ricevuto da: ${from}, testo: ${text}`);
 
   // Risposta di prova
-  await sendMessageSafe(from, "Ciao 👋 messaggio di prova ricevuto!");
+  await sendMessage(from, "Ciao 👋 messaggio di prova ricevuto!");
 
   res.sendStatus(200);
 });
-// 3️⃣ Funzione per inviare messaggi
-// async function sendMessage(to, text) {
-//   const url = `https://graph.facebook.com/v22.0/${process.env.PHONE_NUMBER_ID}/messages`;
-//   console.log(to)
-//   const response = await fetch(url, {
-//     method: "POST",
-//     headers: {
-//       "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify({
-//       messaging_product: "whatsapp",
-//       to,
-//       text: { body: text },
-//     }),
-//   });
 
-//   const data = await response.json();
-//   console.log("Risposta API:", data);
-// }
 // Endpoint per analisi intento tramite backend
 app.post('/api/ai/analyze-intent', analizeIntent
 );
