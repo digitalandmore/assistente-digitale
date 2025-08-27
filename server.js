@@ -127,7 +127,6 @@ app.get("/webhook", (req, res) => {
     res.sendStatus(403);
   }
 });
-import fetch from "node-fetch"; // o built-in in Node 18+
 
 async function sendMessage(to, text) {
   const phoneNumberId = process.env.PHONE_NUMBER_ID; // ID del numero WhatsApp sandbox
