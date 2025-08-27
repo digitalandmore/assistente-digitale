@@ -127,6 +127,36 @@ app.get("/webhook", (req, res) => {
     res.sendStatus(403);
   }
 });
+import fetch from "node-fetch"; // o built-in in Node 18+
+
+async function sendMessage(to, text) {
+  const phoneNumberId = process.env.PHONE_NUMBER_ID; // ID del numero WhatsApp sandbox
+  const token = process.env.WHATSAPP_TOKEN; // Token generato da Meta
+
+  const res = await fetch(`https://graph.facebook.com/v17.0/${phoneNumberId}/messages`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: to,
+      type: "text",
+      text: { body: text }
+    })
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(JSON.stringify(errorData));
+  }
+
+  const data = await res.json();
+  console.log("Messaggio inviato con successo:", data);
+  return data;
+}
+
 const sandboxNumbers = [
   "15556387167", // numero sandbox di test
   "393516064089" // il tuo numero reale, dopo che lo registri nella sandbox
