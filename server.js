@@ -221,22 +221,60 @@ function htmlToWhatsappText(html) {
     .replace(/\n{3,}/g, '\n\n') // compatta newline
     .trim();
 }
+// async function handleIncomingMessage(from, text, req, res) {
+//   try {
+
+
+//     // 2️⃣ Prepara i messaggi per OpenAI
+//     const messages = [
+//       { role: "system", content: SYSTEM_PROMPT },
+//       { role: "user", content: text }
+//     ];
+
+//     const assistantHtml = await getOpenAIResponse(messages);
+
+//     // Converti HTML → testo leggibile da WhatsApp
+//     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
+
+//     // 4️⃣ Invia la risposta via WhatsApp
+//     await sendMessageSafe(from, assistantText);
+
+//   } catch (err) {
+//     console.error("Errore gestione messaggio entrante:", err);
+//     await sendMessageSafe(from, "❌ Errore interno, riprova più tardi.");
+//   }
+// }
 async function handleIncomingMessage(from, text, req, res) {
   try {
-
-
-    // 2️⃣ Prepara i messaggi per OpenAI
     const messages = [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: text }
     ];
 
     const assistantHtml = await getOpenAIResponse(messages);
-
-    // Converti HTML → testo leggibile da WhatsApp
+     // Converti HTML → testo leggibile da WhatsApp
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
 
-    // 4️⃣ Invia la risposta via WhatsApp
+    // 🔹 Se AI ha confermato un lead
+    if (assistantText === "LEAD_GENERATION_START") {
+      const properties = {
+        email: `${from}@wa-lead.temp`,
+        telefono: from,
+        message: text,
+        source: "WhatsApp"
+      };
+
+      // Fingi una req/res per riusare il controller
+      await hubespostController(
+        { body: { properties, conversationId: req.body.conversationId } },
+        { status: (code) => ({ json: (obj) => console.log('HubSpot res', code, obj) }) }
+      );
+
+      await sendMessageSafe(from, "🎉 Perfetto! Ti ho registrato come lead. Ti contatteremo entro 24 ore.");
+      return;
+    }
+
+    // 🔹 Flusso normale
     await sendMessageSafe(from, assistantText);
 
   } catch (err) {
@@ -244,7 +282,6 @@ async function handleIncomingMessage(from, text, req, res) {
     await sendMessageSafe(from, "❌ Errore interno, riprova più tardi.");
   }
 }
-
 // deve coincidere con quello che hai messo su Meta
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "lamiaverificaclientIP";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || "";
