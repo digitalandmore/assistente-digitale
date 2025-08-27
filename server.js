@@ -128,64 +128,41 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// --- Lista numeri autorizzati in sandbox ---
-const sandboxNumbers = ["15556387167"]; // sostituisci col tuo numero verificato
-
-// --- Funzione per inviare messaggi solo se il numero è autorizzato ---
-async function sendMessageSafe(to, text) {
-  if (!sandboxNumbers.includes(to)) {
-    console.warn(`⚠️ Numero non registrato in sandbox: ${to}`);
-    return;
-  }
-
-  try {
-    // Qui chiami la tua API WhatsApp
-    // Esempio placeholder:
-    console.log(`[API] Messaggio inviato a ${to}: "${text}"`);
-    // await sendMessage(to, text);
-  } catch (err) {
-    console.error("Errore invio messaggio:", err);
-  }
-}
-
-// --- Webhook WhatsApp ---
-app.post("/webhook", async (req, res) => {
-  console.log("📩 Webhook ricevuto:");
-  console.log(JSON.stringify(req.body, null, 2));
-
+app.post("/webhook", (req, res) => {
   const entry = req.body.entry || [];
 
   for (const e of entry) {
     const changes = e.changes || [];
+
     for (const change of changes) {
       const value = change.value;
-      const messages = value?.messages || [];
 
-      if (!messages.length) {
-        console.log("Nessun messaggio da processare in questo evento.");
-        continue;
-      }
+      // Legge i contatti
+      const contacts = value.contacts || [];
+      const contact = contacts[0];
+      const contactName = contact?.profile?.name;
+      const contactWaId = contact?.wa_id;
 
-      for (const msg of messages) {
-        const from = msg.from;
-        const text = msg.text?.body;
+      // Legge i messaggi
+      const messages = value.messages || [];
+      const msg = messages[0];
+      const from = msg?.from;
+      const text = msg?.text?.body;
 
-        if (!from || !text) {
-          console.log("Messaggio incompleto, ignorato:", msg);
-          continue;
-        }
-
-        console.log(`Messaggio ricevuto da ${from}: ${text}`);
-
-        // Risposta di prova
-        await sendMessageSafe(from, "Ciao 👋 messaggio di prova ricevuto!");
+      if (from && text) {
+        console.log("📩 Messaggio ricevuto!");
+        console.log("Mittente (from):", from);
+        console.log("Nome contatto:", contactName);
+        console.log("wa_id:", contactWaId);
+        console.log("Testo:", text);
+      } else {
+        console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
       }
     }
   }
 
   res.sendStatus(200);
 });
-
 // Endpoint per analisi intento tramite backend
 app.post('/api/ai/analyze-intent', analizeIntent
 );
