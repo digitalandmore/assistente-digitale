@@ -189,17 +189,22 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN; // deve coincidere con quello che
 //     res.sendStatus(403);
 //   }
 // });
-app.get("/webhook", (req, res) => {
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
+app.get('/webhook', (req, res) => {
+  const VERIFY_TOKEN = "lamiaverificaclientIP"; // lo stesso token che hai inserito in Meta
 
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificato!");
-    res.status(200).send(challenge); // <-- deve essere solo la stringa
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (mode && token) {
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+      console.log('WEBHOOK VERIFIED');
+      res.status(200).send(challenge);
+    } else {
+      res.sendStatus(403); // token non corrispondente
+    }
   } else {
-    console.log("❌ Verifica fallita");
-    res.sendStatus(403);
+    res.sendStatus(400); // parametri mancanti
   }
 });
 
