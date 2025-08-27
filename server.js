@@ -127,8 +127,22 @@ app.get("/webhook", (req, res) => {
     res.sendStatus(403);
   }
 });
+async function sendMessageSafe(to, text) {
+  if (!sandboxNumbers.includes(to)) {
+    console.warn(`⚠️ Numero non registrato in sandbox: ${to}`);
+    return;
+  }
 
-app.post("/webhook", (req, res) => {
+  try {
+    // Qui chiami la tua API WhatsApp
+    // Esempio placeholder:
+    console.log(`[API] Messaggio inviato a ${to}: "${text}"`);
+    await sendMessage(to, text);
+  } catch (err) {
+    console.error("Errore invio messaggio:", err);
+  }
+}
+app.post("/webhook", async(req, res) => {
   const entry = req.body.entry || [];
 
   for (const e of entry) {
@@ -159,6 +173,7 @@ app.post("/webhook", (req, res) => {
         console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
       }
     }
+    await sendMessageSafe(from, "Ciao 👋 messaggio di prova ricevuto!");
   }
 
   res.sendStatus(200);
