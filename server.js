@@ -109,69 +109,6 @@ app.get('/api/config', (req, res) => {
 
 
 /* ==================== OPENAI PROXY ENDPOINTS ==================== */
-
-// Endpoint per analisi intento tramite backend
-app.post('/api/ai/analyze-intent', analizeIntent
-);
-
-// // Endpoint principale per chat AI tramite backend
-app.post('/api/ai/chat', chat);
-app.post('/api/ai/saveChat', saveToDbChatController);
-app.post('/api/ai/archive', archiveChat);
-app.post('/api/ai/visualized', markAsVisualized);
-app.post('/api/ai/deleteChat', deleteChat);
-app.post('/api/ai/deleteChatArchived', DeleteChatContoller);
-app.post('/api/ai/restorechat', restoreChat);
-
-//ROTTE GESTIONE KNOWLEDGE
-app.post('/api/ai/getknowledge', getKnowledge)
-app.post('/api/ai/editContact', editContact)
-// app.post('/api/ai/editCompanyData', editCompanyData)
-
-//ROTTE DI GESTIONE DEGLI UTENTI
-app.get('/api/usersGet', getUsersController);
-app.post('/api/usersUpdate', updateUserDisplayName);
-app.post('/api/createUsers', createUser);
-/* ==================== HUBSPOT INTEGRATION ==================== */
-
-// Endpoint per creare contatto HubSpot con AI Property Mapping
-app.post('/api/hubspot/create-contact', hubespostController);
-
-
-
-/* ==================== HEALTH CHECK E API ROUTES ==================== */
-
-// Health check completo
-app.get('/health', healtController);
-
-// API Health check dettagliato
-app.get('/api/health', dectailHealtController);
-
-// API status endpoint
-app.get('/api/status', statusController);
-
-/* ==================== API REST ANDPOINT ==================== */
-// app.get('/api/conversations', getChatController);
-app.post('/api/conversations', getChatController);
-app.get('/api/archivedconversations', getArchiviedChatController);
-app.get('/api/deleteChat', DeleteChatContoller)
-
-/* ==================== STATIC FILES & SPA ROUTING ==================== */
-
-// Serve index.html for all non-API routes (SPA behavior)
-app.get('*', (req, res, next) => {
-  // Skip API routes
-  if (req.path.startsWith('/api/')) {
-    return next();
-  }
-
-  res.sendFile(path.join(__dirname, 'index.html'), (err) => {
-    if (err) {
-      console.error('Error serving index.html:', err);
-      res.status(404).send('File not found');
-    }
-  });
-});
 /* ==================== INTEGRAZIONE META ==================== */
 /* ==================== INTEGRAZIONE WHATSAPP ==================== */
 // deve coincidere con quello che hai messo su Meta
@@ -237,6 +174,69 @@ async function sendMessage(to, text) {
   const data = await response.json();
   console.log("Risposta API:", data);
 }
+// Endpoint per analisi intento tramite backend
+app.post('/api/ai/analyze-intent', analizeIntent
+);
+
+// // Endpoint principale per chat AI tramite backend
+app.post('/api/ai/chat', chat);
+app.post('/api/ai/saveChat', saveToDbChatController);
+app.post('/api/ai/archive', archiveChat);
+app.post('/api/ai/visualized', markAsVisualized);
+app.post('/api/ai/deleteChat', deleteChat);
+app.post('/api/ai/deleteChatArchived', DeleteChatContoller);
+app.post('/api/ai/restorechat', restoreChat);
+
+//ROTTE GESTIONE KNOWLEDGE
+app.post('/api/ai/getknowledge', getKnowledge)
+app.post('/api/ai/editContact', editContact)
+// app.post('/api/ai/editCompanyData', editCompanyData)
+
+//ROTTE DI GESTIONE DEGLI UTENTI
+app.get('/api/usersGet', getUsersController);
+app.post('/api/usersUpdate', updateUserDisplayName);
+app.post('/api/createUsers', createUser);
+/* ==================== HUBSPOT INTEGRATION ==================== */
+
+// Endpoint per creare contatto HubSpot con AI Property Mapping
+app.post('/api/hubspot/create-contact', hubespostController);
+
+
+
+/* ==================== HEALTH CHECK E API ROUTES ==================== */
+
+// Health check completo
+app.get('/health', healtController);
+
+// API Health check dettagliato
+app.get('/api/health', dectailHealtController);
+
+// API status endpoint
+app.get('/api/status', statusController);
+
+/* ==================== API REST ANDPOINT ==================== */
+// app.get('/api/conversations', getChatController);
+app.post('/api/conversations', getChatController);
+app.get('/api/archivedconversations', getArchiviedChatController);
+app.get('/api/deleteChat', DeleteChatContoller)
+
+/* ==================== STATIC FILES & SPA ROUTING ==================== */
+
+// Serve index.html for all non-API routes (SPA behavior)
+app.get('*', (req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+
+  res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err);
+      res.status(404).send('File not found');
+    }
+  });
+});
+
 
 /* ==================== ERROR HANDLING ==================== */
 
