@@ -110,25 +110,6 @@ app.get('/api/config', (req, res) => {
 
 /* ==================== OPENAI PROXY ENDPOINTS ==================== */
 /* ==================== INTEGRAZIONE META ==================== */
-/* ==================== INTEGRAZIONE WHATSAPP ==================== */
-async function getOpenAIResponse(messages) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages,
-      max_tokens: 500,
-      temperature: 0.8
-    })
-  });
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
-}
 // async function handleIncomingMessage(from, text, req, res) {
 //   try {
 //     // Prepara il payload come se fosse una richiesta POST al controller
@@ -158,15 +139,83 @@ async function getOpenAIResponse(messages) {
 //     await sendMessageSafe(from, "❌ Errore interno, riprova più tardi.");
 //   }
 // }
+/* ==================== INTEGRAZIONE WHATSAPP ==================== */
+const SYSTEM_PROMPT = `
+Sei l'Assistente Digitale, consulente AI professionale per PMI.
+
+=== INFORMAZIONI AZIENDA ===
+Nome: Assistente Digitale
+Descrizione: Soluzioni di automazione e ottimizzazione per PMI
+Sviluppatore: DIGITAL&MORE - Soluzioni digitali innovative per PMI
+
+=== SERVIZI DISPONIBILI ===
+🟢 E-commerce: Demo LIVE https://assistente-digitale.it/e-commerce-demo/
+🟢 Studio Dentistico: Demo LIVE https://assistente-digitale.it/studio-dentistico-demo/
+
+=== PRICING ===
+Preventivo personalizzato  
+Consulenza gratuita: SÌ - SEMPRE GRATUITA  
+
+=== PROCESSO IMPLEMENTAZIONE ===
+1. Analisi iniziale (1 settimana)
+2. Setup demo (2 settimane)
+3. Personalizzazione (3 settimane)
+4. Go-live (1 settimana)
+
+=== FAQ ===
+Q1: Quanto costa?  
+R1: Dipende dalle funzionalità, offriamo preventivi personalizzati.
+
+=== CONTATTI ===
+Email: info@assistente-digitale.it  
+Telefono: +39 0983 535253  
+WhatsApp: https://wa.me/390983535253  
+Sito Web: https://assistente-digitale.it  
+
+=== LEAD GENERATION ===
+- Fornisci SEMPRE info sui nostri servizi
+- NON dare consigli generici
+- Riporta sempre la conversazione ai nostri servizi
+- Concludi con un invito alla consulenza
+
+QUANDO l'utente conferma esplicitamente l'interesse: rispondi ESATTAMENTE "LEAD_GENERATION_START"
+
+=== FORMATTAZIONE RISPOSTA ===
+- Usa SOLO HTML
+- Titoli con <h3>, liste con <ul>/<ol>, grassetto con <strong>, link con <a href="..." target="_blank" rel="noopener noreferrer">
+- No markdown, no testo semplice
+
+=== COMPORTAMENTO ===
+- Professionale, competente, cordiale
+- Focalizzato sui benefici concreti
+- Non promettere mai risultati irrealistici
+`;
+async function getOpenAIResponse(messages) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 500,
+      temperature: 0.8
+    })
+  });
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
+}
+// 
 async function handleIncomingMessage(from, text, req, res) {
   try {
-    // 1️⃣ Genera il system prompt aggiornato
-    await generateSystemPrompt();
-    const systemPrompt = openAiConfig.systemPromptTemplate;
+
 
     // 2️⃣ Prepara i messaggi per OpenAI
     const messages = [
-      { role: "system", content: systemPrompt },
+      { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: text }
     ];
 
