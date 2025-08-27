@@ -208,7 +208,19 @@ async function getOpenAIResponse(messages) {
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
 }
-// 
+function htmlToWhatsappText(html) {
+  if (!html) return '';
+  // conversione semplice e safe: titoli -> newline, <li> -> •, <br>/<p> -> newline, strip tag
+  return html
+    .replace(/<\/h[1-6]>/gi, '\n')
+    .replace(/<li>\s*/gi, '• ')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/?[^>]+>/g, '') // rimuove gli altri tag
+    .replace(/\n{3,}/g, '\n\n') // compatta newline
+    .trim();
+}
 async function handleIncomingMessage(from, text, req, res) {
   try {
 
@@ -219,8 +231,10 @@ async function handleIncomingMessage(from, text, req, res) {
       { role: "user", content: text }
     ];
 
-    // 3️⃣ Ottieni la risposta da OpenAI
-    const assistantText = await getOpenAIResponse(messages);
+    const assistantHtml = await getOpenAIResponse(messages);
+
+    // Converti HTML → testo leggibile da WhatsApp
+    const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
 
     // 4️⃣ Invia la risposta via WhatsApp
     await sendMessageSafe(from, assistantText);
@@ -278,7 +292,8 @@ async function sendMessage(to, text) {
 
 const sandboxNumbers = [
   "15556387167", // numero sandbox di test
-  "393516064089" // il tuo numero reale, dopo che lo registri nella sandbox
+  "393516064089",
+  "393408447827"
 ];
 
 async function sendMessageSafe(to, text) {
@@ -323,7 +338,7 @@ app.post("/webhook", async (req, res) => {
         console.log("Nome contatto:", contactName);
         console.log("wa_id:", contactWaId);
         console.log("Testo:", text);
-        await sendMessageSafe(from, "Ciao 👋 messaggio di prova ricevuto!");
+        await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
         // await handleIncomingMessage(from, text, req, res);
         // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
         // await sendMessageSafe(from, assistantText);
