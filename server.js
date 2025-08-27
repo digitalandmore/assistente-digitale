@@ -210,49 +210,50 @@ app.get('/webhook', (req, res) => {
 });
 
 // 2. Ricezione messaggi + risposta fissa
-// app.post("/webhook", async (req, res) => {
-//   try {
-//     const entry = req.body.entry?.[0];
-//     const changes = entry?.changes?.[0];
-//     const messages = changes?.value?.messages;
+app.post("/webhook", async (req, res) => {
+  try {
+    const entry = req.body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const messages = changes?.value?.messages;
 
-//     if (messages) {
-//       const msg = messages[0];
-//       const from = msg.from;
+    if (messages) {
+      const msg = messages[0];
+      const from = msg.from;
 
-//       console.log("Messaggio ricevuto da:", from);
+      console.log("Messaggio ricevuto da:", from);
 
-//       // Risposta sempre uguale
-//       await sendMessage(from, "Ciao 👋 questa è una risposta fissa di test!");
-//     }
+      // Risposta sempre uguale
+      await sendMessage(from, "Ciao 👋 questa è una risposta fissa di test!");
+    }
 
-//     res.sendStatus(200);
-//   } catch (err) {
-//     console.error("Errore nel webhook:", err);
-//     res.sendStatus(500);
-//   }
-// });
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Errore nel webhook:", err);
+    res.sendStatus(500);
+  }
+});
 
 // // Funzione per mandare messaggi
-// async function sendMessage(to, text) {
-//   const url = `https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`;
+async function sendMessage(to, text) {
+  // const url = `https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`;
+  const url = `https://graph.facebook.com/v22.0/669493372918582/messages`;
 
-//   const response = await fetch(url, {
-//     method: "POST",
-//     headers: {
-//       "Authorization": `Bearer ${process.env.WHATSAPP_TOKEN}`,
-//       "Content-Type": "application/json"
-//     },
-//     body: JSON.stringify({
-//       messaging_product: "whatsapp",
-//       to,
-//       text: { body: text }
-//     })
-//   });
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.VERIFY_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to,
+      text: { body: text }
+    })
+  });
 
-//   const data = await response.json();
-//   console.log("Risposta API:", data);
-// }
+  const data = await response.json();
+  console.log("Risposta API:", data);
+}
 
 /* ==================== ERROR HANDLING ==================== */
 
