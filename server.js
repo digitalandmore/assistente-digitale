@@ -129,51 +129,60 @@ app.get("/webhook", (req, res) => {
 });
 
 // 2️⃣ Ricezione messaggi (POST)
+// app.post("/webhook", async (req, res) => {
+//   try {
+//     const entry = req.body.entry?.[0];
+//     const changes = entry?.changes?.[0];
+//     const messages = changes?.value?.messages;
+
+//     if (messages) {
+//       const msg = messages[0];
+//       const from = msg.from;
+//       const text = msg.text?.body || "";
+
+//       console.log("Messaggio ricevuto da:", from);
+//       console.log("Testo:", text);
+
+//       // Risposta fissa
+//       await sendMessage(from, "Ciao 👋 questa è una risposta di test!");
+//     }
+
+//     res.sendStatus(200);
+//   } catch (err) {
+//     console.error("Errore nel webhook:", err);
+//     res.sendStatus(500);
+//   }
+// });
 app.post("/webhook", async (req, res) => {
-  try {
-    const entry = req.body.entry?.[0];
-    const changes = entry?.changes?.[0];
-    const messages = changes?.value?.messages;
+  const { from, text } = req.body;
 
-    if (messages) {
-      const msg = messages[0];
-      const from = msg.from;
-      const text = msg.text?.body || "";
+  console.log(`Messaggio ricevuto da: ${from}, testo: ${text}`);
 
-      console.log("Messaggio ricevuto da:", from);
-      console.log("Testo:", text);
+  // Risposta di prova
+  await sendMessageSafe(from, "Ciao 👋 messaggio di prova ricevuto!");
 
-      // Risposta fissa
-      await sendMessage(from, "Ciao 👋 questa è una risposta di test!");
-    }
-
-    res.sendStatus(200);
-  } catch (err) {
-    console.error("Errore nel webhook:", err);
-    res.sendStatus(500);
-  }
+  res.sendStatus(200);
 });
-
 // 3️⃣ Funzione per inviare messaggi
-async function sendMessage(to, text) {
-  const url = `https://graph.facebook.com/v22.0/${process.env.PHONE_NUMBER_ID}/messages`;
+// async function sendMessage(to, text) {
+//   const url = `https://graph.facebook.com/v22.0/${process.env.PHONE_NUMBER_ID}/messages`;
+//   console.log(to)
+//   const response = await fetch(url, {
+//     method: "POST",
+//     headers: {
+//       "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify({
+//       messaging_product: "whatsapp",
+//       to,
+//       text: { body: text },
+//     }),
+//   });
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to,
-      text: { body: text },
-    }),
-  });
-
-  const data = await response.json();
-  console.log("Risposta API:", data);
-}
+//   const data = await response.json();
+//   console.log("Risposta API:", data);
+// }
 // Endpoint per analisi intento tramite backend
 app.post('/api/ai/analyze-intent', analizeIntent
 );
