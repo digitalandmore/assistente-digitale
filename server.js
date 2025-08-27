@@ -175,28 +175,23 @@ app.get('*', (req, res, next) => {
 /* ==================== INTEGRAZIONE META ==================== */
 /* ==================== INTEGRAZIONE WHATSAPP ==================== */
 // deve coincidere con quello che hai messo su Meta
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "lamiaverificaclientIP";
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || "";
+// 1️⃣ Verifica del webhook (GET)
+app.get("/webhook", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
 
-app.get('/webhook', (req, res) => {
-  const VERIFY_TOKEN = "lamiaverificaclientIP"; // lo stesso token che hai inserito in Meta
-
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
-  const text = 'ciao da dev'
-
-  if (mode && token) {
-    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-      console.log('WEBHOOK VERIFIED');
-      res.status(200).send(text);
-    } else {
-      res.sendStatus(403); // token non corrispondente
-    }
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("Webhook verificato ✅");
+    res.status(200).send(challenge);
   } else {
-    res.sendStatus(400); // parametri mancanti
+    res.sendStatus(403);
   }
 });
 
-// 2. Ricezione messaggi + risposta fissa
+// 2️⃣ Ricezione messaggi (POST)
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
@@ -206,11 +201,13 @@ app.post("/webhook", async (req, res) => {
     if (messages) {
       const msg = messages[0];
       const from = msg.from;
+      const text = msg.text?.body || "";
 
       console.log("Messaggio ricevuto da:", from);
+      console.log("Testo:", text);
 
-      // Risposta sempre uguale
-      await sendMessage(from, "Ciao 👋 questa è una risposta fissa di test!");
+      // Risposta fissa
+      await sendMessage(from, "Ciao 👋 questa è una risposta di test!");
     }
 
     res.sendStatus(200);
@@ -220,22 +217,21 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// // Funzione per mandare messaggi
+// 3️⃣ Funzione per inviare messaggi
 async function sendMessage(to, text) {
-  // const url = `https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`;
-  const url = `https://graph.facebook.com/v22.0/669493372918582/messages`;
-const VERIFY_TOKEN = "lamiaverificaclientIP";
+  const url = `https://graph.facebook.com/v22.0/${process.env.PHONE_NUMBER_ID}/messages`;
+
   const response = await fetch(url, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${VERIFY_TOKEN}`,
-      "Content-Type": "application/json"
+      "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       messaging_product: "whatsapp",
       to,
-      text: { body: text }
-    })
+      text: { body: text },
+    }),
   });
 
   const data = await response.json();
