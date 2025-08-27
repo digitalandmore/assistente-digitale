@@ -129,28 +129,51 @@ async function getOpenAIResponse(messages) {
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
 }
+// async function handleIncomingMessage(from, text, req, res) {
+//   try {
+//     // Prepara il payload come se fosse una richiesta POST al controller
+//     const fakeReq = {
+//       body: {
+//         messages: [{ role: 'user', content: text }],
+//         maxTokens: 500,
+//       },
+//       session: req.session || {}
+//     };
+
+//     const fakeRes = {
+//       status: (code) => fakeRes,
+//       json: (obj) => obj
+//     };
+
+//     const openAiResponse = await chat(fakeReq, fakeRes); // restituisce choices ecc.
+
+//     // Prendi il testo della risposta dell'assistente
+//     const assistantText = openAiResponse?.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
+
+//     // Invia la risposta via WhatsApp
+//     await sendMessageSafe(from, assistantText);
+
+//   } catch (err) {
+//     console.error("Errore gestione messaggio entrante:", err);
+//     await sendMessageSafe(from, "❌ Errore interno, riprova più tardi.");
+//   }
+// }
 async function handleIncomingMessage(from, text, req, res) {
   try {
-    // Prepara il payload come se fosse una richiesta POST al controller
-    const fakeReq = {
-      body: {
-        messages: [{ role: 'user', content: text }],
-        maxTokens: 500,
-      },
-      session: req.session || {}
-    };
+    // 1️⃣ Genera il system prompt aggiornato
+    await generateSystemPrompt();
+    const systemPrompt = openAiConfig.systemPromptTemplate;
 
-    const fakeRes = {
-      status: (code) => fakeRes,
-      json: (obj) => obj
-    };
+    // 2️⃣ Prepara i messaggi per OpenAI
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: text }
+    ];
 
-    const openAiResponse = await chat(fakeReq, fakeRes); // restituisce choices ecc.
+    // 3️⃣ Ottieni la risposta da OpenAI
+    const assistantText = await getOpenAIResponse(messages);
 
-    // Prendi il testo della risposta dell'assistente
-    const assistantText = openAiResponse?.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
-
-    // Invia la risposta via WhatsApp
+    // 4️⃣ Invia la risposta via WhatsApp
     await sendMessageSafe(from, assistantText);
 
   } catch (err) {
