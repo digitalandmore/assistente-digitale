@@ -111,6 +111,36 @@ app.get('/api/config', (req, res) => {
 /* ==================== OPENAI PROXY ENDPOINTS ==================== */
 /* ==================== INTEGRAZIONE META ==================== */
 /* ==================== INTEGRAZIONE WHATSAPP ==================== */
+async function handleIncomingMessage(from, text, req, res) {
+  try {
+    // Prepara il payload come se fosse una richiesta POST al controller
+    const fakeReq = {
+      body: {
+        messages: [{ role: 'user', content: text }],
+        maxTokens: 500,
+      },
+      session: req.session || {}
+    };
+
+    const fakeRes = {
+      status: (code) => fakeRes,
+      json: (obj) => obj
+    };
+
+    const openAiResponse = await chat(fakeReq, fakeRes); // restituisce choices ecc.
+
+    // Prendi il testo della risposta dell'assistente
+    const assistantText = openAiResponse?.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
+
+    // Invia la risposta via WhatsApp
+    await sendMessageSafe(from, assistantText);
+
+  } catch (err) {
+    console.error("Errore gestione messaggio entrante:", err);
+    await sendMessageSafe(from, "❌ Errore interno, riprova più tardi.");
+  }
+}
+
 // deve coincidere con quello che hai messo su Meta
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "lamiaverificaclientIP";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || "";
@@ -204,6 +234,7 @@ app.post("/webhook", async(req, res) => {
         console.log("wa_id:", contactWaId);
         console.log("Testo:", text);
         await sendMessageSafe(from, "Ciao 👋 messaggio di prova ricevuto!");
+        await handleIncomingMessage(from, text, req, res);
 
       } else {
         console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
