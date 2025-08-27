@@ -137,7 +137,7 @@ async function sendMessageSafe(to, text) {
     // Qui chiami la tua API WhatsApp
     // Esempio placeholder:
     console.log(`[API] Messaggio inviato a ${to}: "${text}"`);
-    await sendMessage(to, text);
+    // await sendMessage(to, text);
   } catch (err) {
     console.error("Errore invio messaggio:", err);
   }
@@ -169,6 +169,8 @@ app.post("/webhook", async(req, res) => {
         console.log("Nome contatto:", contactName);
         console.log("wa_id:", contactWaId);
         console.log("Testo:", text);
+        await sendMessageSafe(from, "Ciao 👋 messaggio di prova ricevuto!");
+
       } else {
         console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
       }
