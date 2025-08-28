@@ -382,6 +382,19 @@ app.get("/webhookIg", (req, res) => {
     res.sendStatus(403);
   }
 });
+app.get("/webhookIgInstagram", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+  console.log(VERIFY_TOKEN)
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("Webhook verificato ✅");
+    res.status(200).send(challenge);
+  } else {
+    console.log("Verifica webhook fallita ❌", { mode, token, VERIFY_TOKEN });
+    res.sendStatus(403);
+  }
+});
 
 async function sendMessage(to, text) {
   const phoneNumberId = process.env.PHONE_NUMBER_ID; // ID del numero WhatsApp sandbox
