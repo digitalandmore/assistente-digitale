@@ -396,53 +396,32 @@ app.post("/webhookIg", async (req, res) => {
   try {
     const entry = req.body.entry || [];
 
-    console.log("🔹 Webhook ricevuto:", JSON.stringify(req.body, null, 2));
+    console.log("🔹 Webhook Messenger ricevuto:", JSON.stringify(req.body, null, 2));
 
     for (const e of entry) {
-      const changes = e.changes || [];
+      const messagingEvents = e.messaging || [];
 
-      for (const change of changes) {
-        const value = change.value;
+      for (const event of messagingEvents) {
+        const from = event.sender?.id;
+        const text = event.message?.text;
+        const type = event.message ? "text" : "unknown";
 
-        // Legge i contatti
-        const contacts = value.contacts || [];
-        if (contacts.length > 0) {
-          contacts.forEach((contact, idx) => {
-            const name = contact?.profile?.name;
-            const id = contact?.wa_id;
-            console.log(`📇 Contatto[${idx}]: Nome=${name}, ID=${id}`);
-          });
-        }
+        console.log("📩 Messaggio Messenger ricevuto:");
+        console.log("Mittente:", from);
+        console.log("Tipo:", type);
+        console.log("Testo:", text);
 
-        // Legge i messaggi
-        const messages = value.messages || [];
-        if (messages.length > 0) {
-          for (const msg of messages) {
-            const from = msg?.from;
-            const type = msg?.type;
-            const text = msg?.text?.body || null;
+        if (from && text) {
+          try {
+            // Risposta automatica semplice
+            await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo:`);
 
-            console.log("📩 Messaggio ricevuto:");
-            console.log("Mittente (from):", from);
-            console.log("Tipo messaggio:", type);
-            console.log("Testo:", text);
+            // Se vuoi usare OpenAI per generare risposta:
+            await handleIncomingMessageMessanger(from, text, req, res);
 
-            // Risposta base
-            if (from) {
-              await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
-
-              if (type === "audio") {
-                await sendMessageSafe(from, "scusa, attualmente non sono abilitato a gestire audio");
-              }
-
-              // Risposta intelligente via OpenAI (solo se c'è testo)
-              if (text) {
-                await handleIncomingMessageMessanger(from, text, req, res);
-              }
-            }
+          } catch (err) {
+            console.error("❌ Errore invio risposta Messenger:", err);
           }
-        } else {
-          console.log("⚠️ Nessun messaggio trovato in questo evento:", JSON.stringify(value, null, 2));
         }
       }
     }
@@ -450,7 +429,7 @@ app.post("/webhookIg", async (req, res) => {
     res.sendStatus(200);
 
   } catch (err) {
-    console.error("❌ Errore webhookIg:", err);
+    console.error("❌ Errore webhook Messenger:", err);
     res.sendStatus(500);
   }
 });
