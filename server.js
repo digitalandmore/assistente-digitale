@@ -283,7 +283,7 @@ app.get("/webhook", (req, res) => {
     res.sendStatus(403);
   }
 });
-app.get("/webhookig", (req, res) => {
+app.get("/webhookIg", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
