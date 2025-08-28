@@ -127,7 +127,7 @@ async function getOpenAIResponse(messages) {
   });
 
   const data = await response.json();
-  
+
   return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
 }
 /* ==================== INTEGRAZIONE MESSENGER ==================== */
@@ -151,7 +151,7 @@ async function handleIncomingMessageMessanger(from, text, req, res) {
     ];
 
     const assistantHtml = await getOpenAIResponse(messages);
-     // Converti HTML → testo leggibile da WhatsApp
+    // Converti HTML → testo leggibile da WhatsApp
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
 
     // 🔹 Flusso normale
@@ -237,7 +237,7 @@ async function handleIncomingMessage(from, text, req, res) {
     ];
 
     const assistantHtml = await getOpenAIResponse(messages);
-     // Converti HTML → testo leggibile da WhatsApp
+    // Converti HTML → testo leggibile da WhatsApp
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
 
     // 🔹 Se AI ha confermato un lead
@@ -286,12 +286,12 @@ app.get("/webhookIg", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
-
+  console.log(VERIFY_TOKEN)
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
     console.log("Webhook verificato ✅");
     res.status(200).send(challenge);
   } else {
-    console.log("Verifica webhook fallita ❌", { mode, token });
+    console.log("Verifica webhook fallita ❌", { mode, token, VERIFY_TOKEN });
     res.sendStatus(403);
   }
 });
@@ -375,9 +375,9 @@ app.post("/webhook", async (req, res) => {
         console.log("wa_id:", contactWaId);
         console.log("Testo:", text);
         await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
-        if (msg.type == 'audio' ) {
+        if (msg.type == 'audio') {
           await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
-          
+
         }
         // await handleIncomingMessage(from, text, req, res);
         // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
@@ -422,9 +422,9 @@ app.post("/webhookIg", async (req, res) => {
         console.log("wa_id:", contactWaId);
         console.log("Testo:", text);
         await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
-        if (msg.type == 'audio' ) {
+        if (msg.type == 'audio') {
           await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
-          
+
         }
         // await handleIncomingMessage(from, text, req, res);
         // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
