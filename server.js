@@ -131,9 +131,9 @@ async function getOpenAIResponse(messages) {
   return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
 }
 /* ==================== INTEGRAZIONE MESSENGER ==================== */
-const igToken = process.env.IG_TOKEN
+const msgToken = process.env.MSG_TOKEN
 async function sendMessengerMessage(to, text) {
-  const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
+  const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${msgToken}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -267,7 +267,7 @@ async function handleIncomingMessage(from, text, req, res) {
   }
 }
 // deve coincidere con quello che hai messo su Meta
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "lamiaverificaclientIP";
+const VERIFY_TOKEN = "lamiaverificaclientIP";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || "";
 // 1️⃣ Verifica del webhook (GET)
 app.get("/webhook", (req, res) => {
@@ -291,6 +291,7 @@ app.get("/webhookIg", (req, res) => {
     console.log("Webhook verificato ✅");
     res.status(200).send(challenge);
   } else {
+    console.log("Verifica webhook fallita ❌", { mode, token });
     res.sendStatus(403);
   }
 });
