@@ -249,7 +249,7 @@ app.post("/webhookIgInstagram", async (req, res) => {
   }
 });
 
-/* ==================== INTEGRAZIONE WHATSAPP ==================== */ù
+/* ==================== INTEGRAZIONE WHATSAPP ==================== */
 const SYSTEM_PROMPT_WHATSAPP = `
 Sei l'Assistente Digitale, consulente AI professionale per PMI su WhatsApp Business.
 
