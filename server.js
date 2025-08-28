@@ -162,6 +162,93 @@ async function handleIncomingMessageMessanger(from, text, req, res) {
     await sendMessengerMessage(from, "❌ Errore interno, riprova più tardi.");
   }
 }
+
+/* ==================== INTEGRAZIONE INSTAGRAM ==================== */
+// Funzione per inviare messaggi su Instagram tramite API Graph
+async function sendInstagramMessage(to, text) {
+  try {
+    const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${msgToken}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recipient: { id: to },
+        message: { text }
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) {
+      console.error("❌ Errore invio messaggio IG:", data.error);
+    }
+    return data;
+
+  } catch (err) {
+    console.error("❌ Errore fetch invio messaggio IG:", err);
+  }
+}
+
+// Funzione gestione messaggio in arrivo Instagram con OpenAI
+async function handleIncomingMessageInstagram(from, text, req, res) {
+  try {
+    const messages = [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: text }
+    ];
+
+    const assistantHtml = await getOpenAIResponse(messages);
+    const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
+
+    await sendInstagramMessage(from, assistantText);
+
+  } catch (err) {
+    console.error("❌ Errore gestione messaggio IG:", err);
+    await sendInstagramMessage(from, "❌ Errore interno, riprova più tardi.");
+  }
+}
+
+// Webhook solo Instagram
+app.post("/webhookIgInstagram", async (req, res) => {
+  try {
+    const entry = req.body.entry || [];
+    console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
+
+    for (const e of entry) {
+      const changes = e.changes || [];
+
+      for (const change of changes) {
+        const value = change.value;
+        const messages = value.messages || [];
+
+        if (messages.length > 0) {
+          for (const msg of messages) {
+            const from = msg.from;
+            const text = msg.text?.body || msg.text;
+            const type = msg.type || "unknown";
+
+            console.log("📩 Messaggio Instagram ricevuto:");
+            console.log("Mittente:", from);
+            console.log("Tipo:", type);
+            console.log("Testo:", text);
+
+            if (from && text) {
+              await sendInstagramMessage(from, `Ciao 👋 Sto rispondendo: ${text}`);
+              // Se vuoi integrare OpenAI:
+              await handleIncomingMessageInstagram(from, text, req, res);
+            }
+          }
+        } else {
+          console.log("⚠️ Nessun messaggio trovato in questo evento IG:", JSON.stringify(value, null, 2));
+        }
+      }
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Errore webhook Instagram:", err);
+    res.sendStatus(500);
+  }
+});
+
 /* ==================== INTEGRAZIONE WHATSAPP ==================== */
 const SYSTEM_PROMPT = `
 Sei l'Assistente Digitale, consulente AI professionale per PMI.
@@ -433,6 +520,56 @@ app.post("/webhookIg", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
+app.post("/webhookIgInstagram", async (req, res) => {
+  try {
+    const entry = req.body.entry || [];
+
+    console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
+
+    for (const e of entry) {
+      const changes = e.changes || [];
+
+      for (const change of changes) {
+        const value = change.value;
+
+        // Alcuni webhook IG usano `messages` simile a WhatsApp
+        const messages = value.messages || [];
+        if (messages.length > 0) {
+          for (const msg of messages) {
+            const from = msg.from;
+            const text = msg.text?.body || msg.text; // adattamento
+            const type = msg.type || "unknown";
+
+            console.log("📩 Messaggio Instagram ricevuto:");
+            console.log("Mittente:", from);
+            console.log("Tipo:", type);
+            console.log("Testo:", text);
+
+            if (from && text) {
+              try {
+                await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo (IG): ${text}`);
+                // se vuoi integrare OpenAI:
+                // await handleIncomingMessageMessanger(from, text, req, res);
+              } catch (err) {
+                console.error("❌ Errore invio risposta Instagram:", err);
+              }
+            }
+          }
+        } else {
+          console.log("⚠️ Nessun messaggio trovato in questo evento IG:", JSON.stringify(value, null, 2));
+        }
+      }
+    }
+
+    res.sendStatus(200);
+
+  } catch (err) {
+    console.error("❌ Errore webhook Instagram:", err);
+    res.sendStatus(500);
+  }
+});
+
 // Endpoint per analisi intento tramite backend
 app.post('/api/ai/analyze-intent', analizeIntent
 );
