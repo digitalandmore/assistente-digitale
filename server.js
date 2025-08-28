@@ -133,7 +133,6 @@ async function getOpenAIResponse(messages) {
 /* ==================== INTEGRAZIONE MESSENGER ==================== */
 const igToken = process.env.IG_TOKEN
 async function sendMessengerMessage(to, text) {
-  const token = process.env.PAGE_ACCESS_TOKEN;
   const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
