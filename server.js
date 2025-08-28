@@ -130,8 +130,39 @@ async function getOpenAIResponse(messages) {
   
   return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
 }
-/* ==================== INTEGRAZIONE WHATSAPP ==================== */
+/* ==================== INTEGRAZIONE MESSENGER ==================== */
+const igToken = process.env.IG_TOKEN
+async function sendMessengerMessage(to, text) {
+  const token = process.env.PAGE_ACCESS_TOKEN;
+  const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      recipient: { id: to },
+      message: { text }
+    })
+  });
+  return res.json();
+}
+async function handleIncomingMessageMessanger(from, text, req, res) {
+  try {
+    const messages = [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: text }
+    ];
 
+    const assistantHtml = await getOpenAIResponse(messages);
+     // Converti HTML → testo leggibile da WhatsApp
+    const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
+
+    // 🔹 Flusso normale
+    await sendMessengerMessage(from, assistantText);
+
+  } catch (err) {
+    console.error("Errore gestione messaggio entrante:", err);
+    await sendMessengerMessage(from, "❌ Errore interno, riprova più tardi.");
+  }
+}
 /* ==================== INTEGRAZIONE WHATSAPP ==================== */
 const SYSTEM_PROMPT = `
 Sei l'Assistente Digitale, consulente AI professionale per PMI.
@@ -340,6 +371,53 @@ app.post("/webhook", async (req, res) => {
         // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
         // await sendMessageSafe(from, assistantText);
         await handleIncomingMessage(from, text, req, res);
+
+      } else {
+        console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
+      }
+    }
+  }
+
+  res.sendStatus(200);
+});
+app.post("/webhookIg", async (req, res) => {
+  const entry = req.body.entry || [];
+
+  for (const e of entry) {
+    const changes = e.changes || [];
+
+    for (const change of changes) {
+      const value = change.value;
+
+      // Legge i contatti
+      const contacts = value.contacts || [];
+      const contact = contacts[0];
+      const contactName = contact?.profile?.name;
+      const contactWaId = contact?.wa_id;
+
+      // Legge i messaggi
+      const messages = value.messages || [];
+      const msg = messages[0];
+      const from = msg?.from;
+      const text = msg?.text?.body;
+      const type = msg?.type;
+
+      if (from && text) {
+        console.log("📩 Messaggio ricevuto!");
+        console.log("tipo:", type);
+        console.log("Mittente (from):", from);
+        console.log("Nome contatto:", contactName);
+        console.log("wa_id:", contactWaId);
+        console.log("Testo:", text);
+        await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
+        if (msg.type == 'audio' ) {
+          await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
+          
+        }
+        // await handleIncomingMessage(from, text, req, res);
+        // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
+        // await sendMessageSafe(from, assistantText);
+        await handleIncomingMessageMessanger(from, text, req, res);
 
       } else {
         console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
