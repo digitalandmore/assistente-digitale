@@ -393,51 +393,66 @@ app.post("/webhook", async (req, res) => {
   res.sendStatus(200);
 });
 app.post("/webhookIg", async (req, res) => {
-  const entry = req.body.entry || [];
+  try {
+    const entry = req.body.entry || [];
 
-  for (const e of entry) {
-    const changes = e.changes || [];
+    console.log("🔹 Webhook ricevuto:", JSON.stringify(req.body, null, 2));
 
-    for (const change of changes) {
-      const value = change.value;
+    for (const e of entry) {
+      const changes = e.changes || [];
 
-      // Legge i contatti
-      const contacts = value.contacts || [];
-      const contact = contacts[0];
-      const contactName = contact?.profile?.name;
-      const contactWaId = contact?.wa_id;
+      for (const change of changes) {
+        const value = change.value;
 
-      // Legge i messaggi
-      const messages = value.messages || [];
-      const msg = messages[0];
-      const from = msg?.from;
-      const text = msg?.text?.body;
-      const type = msg?.type;
-
-      if (from && text) {
-        console.log("📩 Messaggio ricevuto!");
-        console.log("tipo:", type);
-        console.log("Mittente (from):", from);
-        console.log("Nome contatto:", contactName);
-        console.log("wa_id:", contactWaId);
-        console.log("Testo:", text);
-        await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
-        if (msg.type == 'audio') {
-          await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
-
+        // Legge i contatti
+        const contacts = value.contacts || [];
+        if (contacts.length > 0) {
+          contacts.forEach((contact, idx) => {
+            const name = contact?.profile?.name;
+            const id = contact?.wa_id;
+            console.log(`📇 Contatto[${idx}]: Nome=${name}, ID=${id}`);
+          });
         }
-        // await handleIncomingMessage(from, text, req, res);
-        // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
-        // await sendMessageSafe(from, assistantText);
-        await handleIncomingMessageMessanger(from, text, req, res);
 
-      } else {
-        console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
+        // Legge i messaggi
+        const messages = value.messages || [];
+        if (messages.length > 0) {
+          for (const msg of messages) {
+            const from = msg?.from;
+            const type = msg?.type;
+            const text = msg?.text?.body || null;
+
+            console.log("📩 Messaggio ricevuto:");
+            console.log("Mittente (from):", from);
+            console.log("Tipo messaggio:", type);
+            console.log("Testo:", text);
+
+            // Risposta base
+            if (from) {
+              await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
+
+              if (type === "audio") {
+                await sendMessageSafe(from, "scusa, attualmente non sono abilitato a gestire audio");
+              }
+
+              // Risposta intelligente via OpenAI (solo se c'è testo)
+              if (text) {
+                await handleIncomingMessageMessanger(from, text, req, res);
+              }
+            }
+          }
+        } else {
+          console.log("⚠️ Nessun messaggio trovato in questo evento:", JSON.stringify(value, null, 2));
+        }
       }
     }
-  }
 
-  res.sendStatus(200);
+    res.sendStatus(200);
+
+  } catch (err) {
+    console.error("❌ Errore webhookIg:", err);
+    res.sendStatus(500);
+  }
 });
 // Endpoint per analisi intento tramite backend
 app.post('/api/ai/analyze-intent', analizeIntent
