@@ -111,6 +111,27 @@ app.get('/api/config', (req, res) => {
 
 /* ==================== OPENAI PROXY ENDPOINTS ==================== */
 /* ==================== INTEGRAZIONE META ==================== */
+async function getOpenAIResponse(messages) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 500,
+      temperature: 0.8
+    })
+  });
+
+  const data = await response.json();
+  
+  return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
+}
+/* ==================== INTEGRAZIONE WHATSAPP ==================== */
+
 /* ==================== INTEGRAZIONE WHATSAPP ==================== */
 const SYSTEM_PROMPT = `
 Sei l'Assistente Digitale, consulente AI professionale per PMI.
@@ -163,25 +184,7 @@ QUANDO l'utente conferma esplicitamente l'interesse: rispondi spingendo l'utente
 - Focalizzato sui benefici concreti
 - Non promettere mai risultati irrealistici
 `;
-async function getOpenAIResponse(messages) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages,
-      max_tokens: 500,
-      temperature: 0.8
-    })
-  });
 
-  const data = await response.json();
-  
-  return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
-}
 function htmlToWhatsappText(html) {
   if (!html) return '';
   // conversione semplice e safe: titoli -> newline, <li> -> •, <br>/<p> -> newline, strip tag
@@ -195,58 +198,44 @@ function htmlToWhatsappText(html) {
     .replace(/\n{3,}/g, '\n\n') // compatta newline
     .trim();
 }
-async function handleIncomingMessage(from, text, req, res, channel = "whatsapp") {
-  const messages = [
-    { role: "system", content: SYSTEM_PROMPT },
-    { role: "user", content: text }
-  ];
 
-  const assistantHtml = await getOpenAIResponse(messages);
-  const assistantText = htmlToWhatsappText(assistantHtml);
+async function handleIncomingMessage(from, text, req, res) {
+  try {
+    const messages = [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: text }
+    ];
 
-  if (channel === "whatsapp") {
+    const assistantHtml = await getOpenAIResponse(messages);
+     // Converti HTML → testo leggibile da WhatsApp
+    const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
+
+    // 🔹 Se AI ha confermato un lead
+    if (assistantText === "LEAD_GENERATION_START") {
+      const properties = {
+        email: `${from}@wa-lead.temp`,
+        telefono: from,
+        message: text,
+        source: "WhatsApp"
+      };
+      // Fingi una req/res per riusare il controller
+      await hubespostController(
+        { body: { properties, conversationId: req.body.conversationId } },
+        { status: (code) => ({ json: (obj) => console.log('HubSpot res', code, obj) }) }
+      );
+
+      await sendMessageSafe(from, "🎉 Perfetto! Ti ho registrato come lead. Ti contatteremo entro 24 ore.");
+      return;
+    }
+
+    // 🔹 Flusso normale
     await sendMessageSafe(from, assistantText);
-  } else if (channel === "messenger") {
-    await sendMessengerMessage(from, assistantText);
+
+  } catch (err) {
+    console.error("Errore gestione messaggio entrante:", err);
+    await sendMessageSafe(from, "❌ Errore interno, riprova più tardi.");
   }
 }
-// async function handleIncomingMessage(from, text, req, res) {
-//   try {
-//     const messages = [
-//       { role: "system", content: SYSTEM_PROMPT },
-//       { role: "user", content: text }
-//     ];
-
-//     const assistantHtml = await getOpenAIResponse(messages);
-//      // Converti HTML → testo leggibile da WhatsApp
-//     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-
-//     // 🔹 Se AI ha confermato un lead
-//     if (assistantText === "LEAD_GENERATION_START") {
-//       const properties = {
-//         email: `${from}@wa-lead.temp`,
-//         telefono: from,
-//         message: text,
-//         source: "WhatsApp"
-//       };
-//       // Fingi una req/res per riusare il controller
-//       await hubespostController(
-//         { body: { properties, conversationId: req.body.conversationId } },
-//         { status: (code) => ({ json: (obj) => console.log('HubSpot res', code, obj) }) }
-//       );
-
-//       await sendMessageSafe(from, "🎉 Perfetto! Ti ho registrato come lead. Ti contatteremo entro 24 ore.");
-//       return;
-//     }
-
-//     // 🔹 Flusso normale
-//     await sendMessageSafe(from, assistantText);
-
-//   } catch (err) {
-//     console.error("Errore gestione messaggio entrante:", err);
-//     await sendMessageSafe(from, "❌ Errore interno, riprova più tardi.");
-//   }
-// }
 // deve coincidere con quello che hai messo su Meta
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "lamiaverificaclientIP";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || "";
@@ -313,90 +302,53 @@ async function sendMessageSafe(to, text) {
     console.error("Errore invio messaggio:", err);
   }
 }
-// app.post("/webhook", async (req, res) => {
-//   const entry = req.body.entry || [];
-
-//   for (const e of entry) {
-//     const changes = e.changes || [];
-
-//     for (const change of changes) {
-//       const value = change.value;
-
-//       // Legge i contatti
-//       const contacts = value.contacts || [];
-//       const contact = contacts[0];
-//       const contactName = contact?.profile?.name;
-//       const contactWaId = contact?.wa_id;
-
-//       // Legge i messaggi
-//       const messages = value.messages || [];
-//       const msg = messages[0];
-//       const from = msg?.from;
-//       const text = msg?.text?.body;
-//       const type = msg?.type;
-
-//       if (from && text) {
-//         console.log("📩 Messaggio ricevuto!");
-//         console.log("tipo:", type);
-//         console.log("Mittente (from):", from);
-//         console.log("Nome contatto:", contactName);
-//         console.log("wa_id:", contactWaId);
-//         console.log("Testo:", text);
-//         await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
-//         if (msg.type == 'audio' ) {
-//           await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
-          
-//         }
-//         // await handleIncomingMessage(from, text, req, res);
-//         // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
-//         // await sendMessageSafe(from, assistantText);
-//         await handleIncomingMessage(from, text, req, res);
-
-//       } else {
-//         console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
-//       }
-//     }
-//   }
-
-//   res.sendStatus(200);
-// });
 app.post("/webhook", async (req, res) => {
-  const body = req.body;
+  const entry = req.body.entry || [];
 
-  if (body.object === "whatsapp_business_account") {
-    // WhatsApp
-    const entry = body.entry || [];
-    for (const e of entry) {
-      const changes = e.changes || [];
-      for (const change of changes) {
-        const value = change.value;
-        const msg = value.messages?.[0];
-        const from = msg?.from;
-        const text = msg?.text?.body;
+  for (const e of entry) {
+    const changes = e.changes || [];
 
-        if (from && text) {
-          await handleIncomingMessage(from, text, req, res, "whatsapp");
+    for (const change of changes) {
+      const value = change.value;
+
+      // Legge i contatti
+      const contacts = value.contacts || [];
+      const contact = contacts[0];
+      const contactName = contact?.profile?.name;
+      const contactWaId = contact?.wa_id;
+
+      // Legge i messaggi
+      const messages = value.messages || [];
+      const msg = messages[0];
+      const from = msg?.from;
+      const text = msg?.text?.body;
+      const type = msg?.type;
+
+      if (from && text) {
+        console.log("📩 Messaggio ricevuto!");
+        console.log("tipo:", type);
+        console.log("Mittente (from):", from);
+        console.log("Nome contatto:", contactName);
+        console.log("wa_id:", contactWaId);
+        console.log("Testo:", text);
+        await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
+        if (msg.type == 'audio' ) {
+          await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
+          
         }
-      }
-    }
-  } else if (body.object === "page") {
-    // Messenger / Instagram
-    const entry = body.entry || [];
-    for (const e of entry) {
-      const messaging = e.messaging || [];
-      for (const m of messaging) {
-        const from = m.sender?.id;
-        const text = m.message?.text;
-        if (from && text) {
-          await handleIncomingMessage(from, text, req, res, "messenger");
-        }
+        // await handleIncomingMessage(from, text, req, res);
+        // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
+        // await sendMessageSafe(from, assistantText);
+        await handleIncomingMessage(from, text, req, res);
+
+      } else {
+        console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
       }
     }
   }
 
   res.sendStatus(200);
 });
-
 // Endpoint per analisi intento tramite backend
 app.post('/api/ai/analyze-intent', analizeIntent
 );
