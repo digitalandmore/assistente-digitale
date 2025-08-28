@@ -110,35 +110,6 @@ app.get('/api/config', (req, res) => {
 
 /* ==================== OPENAI PROXY ENDPOINTS ==================== */
 /* ==================== INTEGRAZIONE META ==================== */
-// async function handleIncomingMessage(from, text, req, res) {
-//   try {
-//     // Prepara il payload come se fosse una richiesta POST al controller
-//     const fakeReq = {
-//       body: {
-//         messages: [{ role: 'user', content: text }],
-//         maxTokens: 500,
-//       },
-//       session: req.session || {}
-//     };
-
-//     const fakeRes = {
-//       status: (code) => fakeRes,
-//       json: (obj) => obj
-//     };
-
-//     const openAiResponse = await chat(fakeReq, fakeRes); // restituisce choices ecc.
-
-//     // Prendi il testo della risposta dell'assistente
-//     const assistantText = openAiResponse?.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
-
-//     // Invia la risposta via WhatsApp
-//     await sendMessageSafe(from, assistantText);
-
-//   } catch (err) {
-//     console.error("Errore gestione messaggio entrante:", err);
-//     await sendMessageSafe(from, "❌ Errore interno, riprova più tardi.");
-//   }
-// }
 /* ==================== INTEGRAZIONE WHATSAPP ==================== */
 const SYSTEM_PROMPT = `
 Sei l'Assistente Digitale, consulente AI professionale per PMI.
@@ -179,7 +150,7 @@ Sito Web: https://assistente-digitale.it
 - Concludi con un invito alla consulenza
 
 QUANDO l'utente conferma esplicitamente l'interesse: rispondi spingendo l'utente a prenotare una consulenza compilando il form di contatto
- su https://assistente-digitale.it
+ su https://assistente-digitale.it/form-contatti, nella risposta includi ESATTAMENTE il link al form dei contatti
 
 === FORMATTAZIONE RISPOSTA ===
 - Usa SOLO HTML
@@ -207,6 +178,7 @@ async function getOpenAIResponse(messages) {
   });
 
   const data = await response.json();
+  
   return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
 }
 function htmlToWhatsappText(html) {
@@ -222,29 +194,7 @@ function htmlToWhatsappText(html) {
     .replace(/\n{3,}/g, '\n\n') // compatta newline
     .trim();
 }
-// async function handleIncomingMessage(from, text, req, res) {
-//   try {
 
-
-//     // 2️⃣ Prepara i messaggi per OpenAI
-//     const messages = [
-//       { role: "system", content: SYSTEM_PROMPT },
-//       { role: "user", content: text }
-//     ];
-
-//     const assistantHtml = await getOpenAIResponse(messages);
-
-//     // Converti HTML → testo leggibile da WhatsApp
-//     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-
-//     // 4️⃣ Invia la risposta via WhatsApp
-//     await sendMessageSafe(from, assistantText);
-
-//   } catch (err) {
-//     console.error("Errore gestione messaggio entrante:", err);
-//     await sendMessageSafe(from, "❌ Errore interno, riprova più tardi.");
-//   }
-// }
 async function handleIncomingMessage(from, text, req, res) {
   try {
     const messages = [
@@ -264,7 +214,6 @@ async function handleIncomingMessage(from, text, req, res) {
         message: text,
         source: "WhatsApp"
       };
-
       // Fingi una req/res per riusare il controller
       await hubespostController(
         { body: { properties, conversationId: req.body.conversationId } },
@@ -369,14 +318,20 @@ app.post("/webhook", async (req, res) => {
       const msg = messages[0];
       const from = msg?.from;
       const text = msg?.text?.body;
+      const type = msg?.type;
 
       if (from && text) {
         console.log("📩 Messaggio ricevuto!");
+        console.log("tipo:", type);
         console.log("Mittente (from):", from);
         console.log("Nome contatto:", contactName);
         console.log("wa_id:", contactWaId);
         console.log("Testo:", text);
         await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
+        if (msg.type == 'audio' ) {
+          await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
+          
+        }
         // await handleIncomingMessage(from, text, req, res);
         // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
         // await sendMessageSafe(from, assistantText);
