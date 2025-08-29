@@ -583,6 +583,62 @@ async function sendButtonMessage(to, bodyText, buttonTitle, url) {
     throw error;
   }
 }
+// app.post("/webhook", async (req, res) => {
+//   const entry = req.body.entry || [];
+
+//   for (const e of entry) {
+//     const changes = e.changes || [];
+
+//     for (const change of changes) {
+//       const value = change.value;
+
+//       // Legge i contatti
+//       const contacts = value.contacts || [];
+//       const contact = contacts[0];
+//       const contactName = contact?.profile?.name;
+//       const contactWaId = contact?.wa_id;
+
+//       // Legge i messaggi
+//       const messages = value.messages || [];
+//       const msg = messages[0];
+//       const from = msg?.from;
+//       const text = msg?.text?.body;
+//       const type = msg?.type;
+
+//       if (from && text) {
+//         console.log("📩 Messaggio ricevuto!");
+//         console.log("tipo:", type);
+//         console.log("Mittente (from):", from);
+//         console.log("Nome contatto:", contactName);
+//         console.log("wa_id:", contactWaId);
+//         console.log("Testo:", text);
+//         await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
+//         if (text === "DEMO_CONFIRMED") {
+//           await sendButtonMessage(
+//             from,
+//             "Ecco il link alla demo E-commerce:",
+//             "🚀 Vai alla Demo",
+//             "https://assistente-digitale.it/e-commerce-demo/"
+//           );
+//         }
+
+//         if (msg.type == 'audio') {
+//           await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
+
+//         }
+//         // await handleIncomingMessage(from, text, req, res);
+//         // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
+//         // await sendMessageSafe(from, assistantText);
+//         await handleIncomingMessage(from, text, req, res);
+
+//       } else {
+//         console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
+//       }
+//     }
+//   }
+
+//   res.sendStatus(200);
+// });
 app.post("/webhook", async (req, res) => {
   const entry = req.body.entry || [];
 
@@ -612,7 +668,8 @@ app.post("/webhook", async (req, res) => {
         console.log("Nome contatto:", contactName);
         console.log("wa_id:", contactWaId);
         console.log("Testo:", text);
-        await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
+
+        // PRIMA controlla i casi specifici
         if (text === "DEMO_CONFIRMED") {
           await sendButtonMessage(
             from,
@@ -621,14 +678,15 @@ app.post("/webhook", async (req, res) => {
             "https://assistente-digitale.it/e-commerce-demo/"
           );
         }
-
-        if (msg.type == 'audio') {
-          await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
-
+        else if (msg.type == 'audio') {
+          await sendMessageSafe(from, "Scusa, attualmente non sono abilitato a processare messaggi audio.");
         }
-        // await handleIncomingMessage(from, text, req, res);
-        // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
-        // await sendMessageSafe(from, assistantText);
+        else {
+          // SOLO per messaggi generici, invia la risposta standard
+          await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
+        }
+
+        // Gestisci il messaggio nel sistema (se necessario)
         await handleIncomingMessage(from, text, req, res);
 
       } else {
