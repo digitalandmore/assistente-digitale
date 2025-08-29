@@ -84,7 +84,8 @@ export const chat = async (req, res) => {
         userId,
         progressiveNumber: seq,
         messages: [],
-        nome_completo: req.body.nome_completo || ''
+        nome_completo: req.body.nome_completo || '',
+        source: "web"
       });
       await chatDoc.save();
     }
@@ -213,3 +214,44 @@ export const deleteChat = async (req, res) => {
     res.status(500).json({ error: "Errore eliminazione conversazione" });
   }
 }
+
+
+// Funzione helper per salvare messaggi in MongoDB
+export async function saveMessages(from, userMessage, assistantMessage) {
+  try {
+    // Trova o crea la conversazione
+    let chatDoc = await Conversation.findOne({ userId: from });
+
+    if (!chatDoc) {
+      chatDoc = new Conversation({
+        conversationId: from,
+        userId: from,
+        progressiveNumber: await getNextSeq('conversation'),
+        messages: [],
+        nome_completo: '',
+        source: "WhatsApp"
+      });
+      await chatDoc.save();
+    }
+
+    // Aggiungi messaggi
+    await Conversation.findByIdAndUpdate(
+      chatDoc._id,
+      {
+        $push: {
+          messages: [
+            { role: 'user', content: userMessage },
+            { role: 'assistant', content: assistantMessage }
+          ]
+        }
+      },
+      { new: true }
+    );
+
+    return chatDoc.conversationId;
+  } catch (err) {
+    console.error("Errore salvataggio messaggi:", err);
+    throw err;
+  }
+}
+

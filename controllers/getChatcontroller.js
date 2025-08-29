@@ -44,6 +44,44 @@ const getChatController = async (req, res) => {
     });
   }
 };
+const getChatToThisMonth = async (req, res) => {
+  try {
+    // Calcolo primo giorno del mese corrente (00:00 del giorno 1)
+    const startDate = new Date();
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Data attuale come limite massimo
+    const endDate = new Date();
+
+    // Recupero chat del mese
+    const conversations = await Conversation.find({
+      createdAt: { $gte: startDate, $lte: endDate }
+    });
+
+    // Conteggio totale
+    const totalChats = conversations.length;
+
+    // Conteggio lead (adatta in base al tuo schema!)
+    const totalLeads = conversations.filter(c => c.leadGenerated === true).length;
+    // oppure se hai un campo `type`:
+    // const totalLeads = conversations.filter(c => c.type === 'lead').length;
+
+    res.status(200).json({
+      success: true,
+      totalChats,
+      totalLeads
+    });
+  } catch (error) {
+    console.error("Errore nel recupero delle conversazioni del mese:", error);
+    res.status(500).json({
+      success: false,
+      error: "Errore server nel recupero delle conversazioni del mese"
+    });
+  }
+};
+
+
 
 const getArchiviedChatController = async (req, res) => {
   try {
@@ -133,4 +171,4 @@ const restoreChat = async (req, res) => {
   }
 };
 
-export { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat }
+export { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth }

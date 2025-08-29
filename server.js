@@ -9,8 +9,8 @@ import session from 'express-session';
 import { fileURLToPath } from 'url';
 // Import controllers
 /* ==================== Controllers principali ==================== */
-import { chat, archiveChat, markAsVisualized, deleteChat } from './controllers/chatController.js';
-import { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat } from './controllers/getChatcontroller.js';
+import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages } from './controllers/chatController.js';
+import { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth } from './controllers/getChatcontroller.js';
 import { saveToDbChatController } from './controllers/saveToDbChatController.js';
 
 /* ====================Meta Controllers  ==================== */
@@ -462,7 +462,7 @@ async function handleIncomingMessage(from, text, req, res) {
     const assistantHtml = await getOpenAIResponse(messages);
     // Converti HTML → testo leggibile da WhatsApp
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-
+    await saveMessages(from, text, assistantText);
     // 🔹 Se AI ha confermato un lead
     if (assistantText === "LEAD_GENERATION_START") {
       const properties = {
@@ -701,6 +701,7 @@ app.post("/webhook", async (req, res) => {
         // Gestisci il messaggio nel sistema (se necessario)
         await handleIncomingMessage(from, text, req, res);
 
+
       } else {
         console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
       }
@@ -843,6 +844,7 @@ app.get('/api/status', statusController);
 /* ==================== API REST ANDPOINT ==================== */
 // app.get('/api/conversations', getChatController);
 app.post('/api/conversations', getChatController);
+app.get('/api/chatcount', getChatToThisMonth)
 app.get('/api/archivedconversations', getArchiviedChatController);
 app.get('/api/deleteChat', DeleteChatContoller)
 

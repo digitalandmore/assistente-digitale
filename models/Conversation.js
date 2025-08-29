@@ -22,7 +22,12 @@ const conversationSchema = new Schema({
   leadGenerated: { type: Boolean, default: false },
   sourcedLeads: { type: String, required: false },
   visualized: { type: Boolean, default: false },
-  progressiveNumber: { type: Number, unique: true }
+  progressiveNumber: { type: Number, unique: true },
+  source: {
+    type: String,
+    enum: ["whatsapp", "messenger", "instagram", "web", "altro"],
+    required: true
+  }
 }, { timestamps: true });
 
 export default model("Conversation", conversationSchema);
