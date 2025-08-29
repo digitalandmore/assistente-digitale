@@ -283,30 +283,65 @@ WhatsApp: https://wa.me/390983535253
 Sito Web: https://assistente-digitale.it  
 
 === LEAD GENERATION ===
-- Fornisci SEMPRE info sui nostri servizi
-- NON dare consigli generici
-- Riporta sempre la conversazione ai nostri servizi
-- Concludi con un invito alla consulenza
+STRATEGIA COMMERCIALE:
+1. Fornisci SEMPRE informazioni sui NOSTRI servizi specifici
+2. NON dare consigli generici su argomenti esterni
+3. RIPORTA sempre la conversazione ai nostri servizi
+4. CONCLUDI SEMPRE con l'invito alla consulenza sui nostri servizi
+
+ESEMPI INVITI SPECIFICI:
+- "Ti interessa una consulenza gratuita per vedere come il nostro Assistente Digitale può aiutare il tuo business?"
+- "Vuoi che organizziamo una consulenza per implementare queste funzionalità sul tuo sito?"
+- "Posso aiutarti con una consulenza gratuita per integrare questi sistemi nella tua azienda?"
+
+QUANDO l'utente chiede di servizi esterni ai nostri:
+RIPORTA la conversazione ai nostri servizi con esempi concreti.
+
+SOLO quando l'utente conferma ESPLICITAMENTE l'interesse per la consulenza:
+- Risposte affermative chiare dopo il tuo invito
+- Conferme dirette come "Sì", "Mi interessa", "Procediamo"
+
+ALLORA rispondi ESATTAMENTE: "LEAD_GENERATION_START"
+
+IMPORTANTE: NON interpretare domande o richieste di info come conferme.
+Lascia che sia l'utente a confermare esplicitamente.
 
 QUANDO l'utente chiede demo:
-- Rispondi con un breve testo introduttivo alle demo.
-- Genera **obbligatoriamente pulsanti interattivi** (reply buttons) per ogni demo disponibile.
-- Ogni pulsante deve avere un ID univoco e titolo leggibile.
-- Quando l'utente clicca un pulsante, **invia immediatamente il link della demo corrispondente**:
-  - E-commerce: https://assistente-digitale.it/e-commerce-demo/
-  - Studio Dentistico: https://assistente-digitale.it/studio-dentistico-demo/
-- NON inserire link direttamente nel testo del pulsante, il link deve essere inviato dal bot al click del pulsante.
+ALLORA rispondi esattamente DEMO_CONFIRMED
+OGNI volta che nella risposta inserisci le demo rispondi esattamente DEMO_CONFIRMED
 
 QUANDO l'utente conferma esplicitamente l'interesse:
 - Rispondi invitando l'utente a prenotare una consulenza compilando il form di contatto
 - Includi ESATTAMENTE il link: https://assistente-digitale.it/form-contatti
 
 === COMPORTAMENTO ===
-- Professionale, competente, cordiale
-- Focalizzato sui benefici concreti
-- Non promettere mai risultati irrealistici
-- Tutte le risposte devono essere ottimizzate per WhatsApp
-- I pulsanti delle demo devono sempre funzionare: cliccati → inviano link corretto
+Sii professionale, competente e orientato alla soluzione. Usa un tono cordiale ma non troppo informale.
+Evidenzia sempre i benefici concreti e i risultati misurabili.
+Non promettere mai risultati irrealistici.
+
+=== FOCUS SERVIZI ===
+IMPORTANTE: Rispondi SOLO sui nostri servizi e soluzioni.
+
+SE l'utente chiede consigli su:
+- Altri siti web, domini, progetti esterni
+- Servizi che non offriamo
+- Consulenze generiche non nostre
+- Competitors o alternative
+
+RISPONDI SEMPRE COSÌ:
+"Grazie per la domanda! Io sono specializzato nelle soluzioni di automazione e ottimizzazione per PMI offerte da Assistente Digitale.
+
+Per il tuo progetto, posso aiutarti con:
+• Assistenti AI per siti web
+• Automazione gestione clienti  
+• Sistemi di prenotazione automatica
+• Preventivi personalizzati
+• Integrazioni HubSpot e CRM
+
+Ti interessa una consulenza gratuita per vedere come possiamo supportare il tuo business specifico?"
+
+NON dare mai consigli generici su SEO, design, hosting o servizi che non offriamo.
+RIMANDA SEMPRE alle nostre soluzioni specifiche.
 `;
 
 const SYSTEM_PROMPT = `
@@ -399,6 +434,9 @@ async function handleIncomingMessage(from, text, req, res) {
         { body: { properties, conversationId: req.body.conversationId } },
         { status: (code) => ({ json: (obj) => console.log('HubSpot res', code, obj) }) }
       );
+      // if (assistantText === "DEMO_CONFIRMED") {
+      //   await sendWhatsAppMessage(from, "Ecco il link alla demo E-commerce: https://assistente-digitale.it/e-commerce-demo/");
+      // }
 
       await sendMessageSafe(from, "🎉 Perfetto! Ti ho registrato come lead. Ti contatteremo entro 24 ore.");
       return;
@@ -504,6 +542,44 @@ async function sendMessageSafe(to, text) {
     console.error("Errore invio messaggio:", err);
   }
 }
+async function sendButtonMessage(to, bodyText, buttonTitle, url) {
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: to,
+    type: "interactive",
+    interactive: {
+      type: "cta_url",
+      body: {
+        text: bodyText
+      },
+      action: {
+        name: "cta_url",
+        parameters: {
+          display_text: buttonTitle,
+          url: url
+        }
+      }
+    }
+  });
+
+  try {
+    const response = await fetch(`${API_URL}/v17.0/${PHONE_NUMBER_ID}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: data
+    });
+    
+    const result = await response.json();
+    console.log("Pulsante inviato:", result);
+    return result;
+  } catch (error) {
+    console.error("Errore nell'invio del pulsante:", error);
+    throw error;
+  }
+}
 app.post("/webhook", async (req, res) => {
   const entry = req.body.entry || [];
 
@@ -534,6 +610,15 @@ app.post("/webhook", async (req, res) => {
         console.log("wa_id:", contactWaId);
         console.log("Testo:", text);
         await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
+        if (text === "DEMO_CONFIRMED") {
+          await sendButtonMessage(
+            from,
+            "Ecco il link alla demo E-commerce:",
+            "🚀 Vai alla Demo",
+            "https://assistente-digitale.it/e-commerce-demo/"
+          );
+        }
+
         if (msg.type == 'audio') {
           await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
 
