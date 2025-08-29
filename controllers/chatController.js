@@ -229,7 +229,7 @@ export async function saveMessages(from, userMessage, assistantMessage) {
         progressiveNumber: await getNextSeq('conversation'),
         messages: [],
         nome_completo: '',
-        source: "WhatsApp"
+        source: "whatsapp"
       });
       await chatDoc.save();
     }
