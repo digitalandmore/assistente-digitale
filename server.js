@@ -446,7 +446,18 @@ async function handleIncomingMessage(from, text, req, res) {
     }
 
     // 🔹 Flusso normale
-    await sendMessageSafe(from, assistantText);
+    if (assistantText == 'DEMO_CONFIRMED') {
+      
+      await sendButtonMessage(
+              from,
+              "Ecco il link alla demo E-commerce:",
+              "🚀 Vai alla Demo",
+              "https://assistente-digitale.it/e-commerce-demo/"
+            );
+    }else{
+
+      await sendMessageSafe(from, assistantText);
+    }
 
   } catch (err) {
     console.error("Errore gestione messaggio entrante:", err);
