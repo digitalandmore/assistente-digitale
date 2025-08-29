@@ -412,7 +412,45 @@ function htmlToWhatsappText(html) {
     .replace(/\n{3,}/g, '\n\n') // compatta newline
     .trim();
 }
+async function sendButtonMessage(to, bodyText, buttonTitle, url) {
+  const phoneNumberId = process.env.PHONE_NUMBER_ID;
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: to,
+    type: "interactive",
+    interactive: {
+      type: "cta_url",
+      body: {
+        text: bodyText
+      },
+      action: {
+        name: "cta_url",
+        parameters: {
+          display_text: buttonTitle,
+          url: url
+        }
+      }
+    }
+  });
 
+  try {
+    const response = await fetch(`https://graph.facebook.com/v17.0/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: data
+    });
+    
+    const result = await response.json();
+    console.log("Pulsante inviato:", result);
+    return result;
+  } catch (error) {
+    console.error("Errore nell'invio del pulsante:", error);
+    throw error;
+  }
+}
 async function handleIncomingMessage(from, text, req, res) {
   try {
     const messages = [
@@ -556,44 +594,7 @@ async function sendMessageSafe(to, text) {
     console.error("Errore invio messaggio:", err);
   }
 }
-async function sendButtonMessage(to, bodyText, buttonTitle, url) {
-  const data = JSON.stringify({
-    messaging_product: "whatsapp",
-    to: to,
-    type: "interactive",
-    interactive: {
-      type: "cta_url",
-      body: {
-        text: bodyText
-      },
-      action: {
-        name: "cta_url",
-        parameters: {
-          display_text: buttonTitle,
-          url: url
-        }
-      }
-    }
-  });
 
-  try {
-    const response = await fetch(`${API_URL}/v17.0/${PHONE_NUMBER_ID}/messages`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${ACCESS_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: data
-    });
-    
-    const result = await response.json();
-    console.log("Pulsante inviato:", result);
-    return result;
-  } catch (error) {
-    console.error("Errore nell'invio del pulsante:", error);
-    throw error;
-  }
-}
 // app.post("/webhook", async (req, res) => {
 //   const entry = req.body.entry || [];
 
