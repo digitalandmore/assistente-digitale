@@ -493,12 +493,12 @@ async function handleIncomingMessage(from, text, req, res) {
         "🚀 Vai alla Demo",
         "https://assistente-digitale.it/e-commerce-demo/"
       );
-      await sendButtonMessage(
-        from,
-        "Ecco il link alla demo Assistente studio dentistico:",
-        "🚀 Vai alla Demo",
-        "https://assistente-digitale.it/studio-dentistico-demo/"
-      );
+      // await sendButtonMessage(
+      //   from,
+      //   "Ecco il link alla demo Assistente studio dentistico:",
+      //   "🚀 Vai alla Demo",
+      //   "https://assistente-digitale.it/studio-dentistico-demo/"
+      // );
     }
     else if (assistantText === "LEAD_GENERATION_START") {
       await sendButtonMessage(
@@ -697,23 +697,7 @@ app.post("/webhook", async (req, res) => {
         console.log("wa_id:", contactWaId);
         console.log("Testo:", text);
 
-        // PRIMA controlla i casi specifici
-        if (text === "DEMO_CONFIRMED") {
-          await sendButtonMessage(
-            from,
-            "Ecco il link alla demo E-commerce:",
-            "🚀 Vai alla Demo",
-            "https://assistente-digitale.it/e-commerce-demo/"
-          );
-        }
-        else if (msg.type == 'audio') {
-          await sendMessageSafe(from, "Scusa, attualmente non sono abilitato a processare messaggi audio.");
-        }
-        else {
-          // SOLO per messaggi generici, invia la risposta standard
-          await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
-        }
-
+        await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
         // Gestisci il messaggio nel sistema (se necessario)
         await handleIncomingMessage(from, text, req, res);
 
