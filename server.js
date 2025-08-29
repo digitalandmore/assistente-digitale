@@ -418,7 +418,7 @@ async function sendButtonMessage(to, bodyText, buttonTitle, url) {
   const data = JSON.stringify({
     messaging_product: "whatsapp",
     to: to,
-    type: "interactive",
+    type: "button",
     interactive: {
       type: "cta_url",
       body: {
@@ -443,7 +443,7 @@ async function sendButtonMessage(to, bodyText, buttonTitle, url) {
       },
       body: data
     });
-    
+
     const result = await response.json();
     console.log("Pulsante inviato:", result);
     return result;
@@ -486,14 +486,29 @@ async function handleIncomingMessage(from, text, req, res) {
 
     // 🔹 Flusso normale
     if (assistantText == 'DEMO_CONFIRMED') {
-      
+
       await sendButtonMessage(
-              from,
-              "Ecco il link alla demo E-commerce:",
-              "🚀 Vai alla Demo",
-              "https://assistente-digitale.it/e-commerce-demo/"
-            );
-    }else{
+        from,
+        "Ecco il link alla demo E-commerce:",
+        "🚀 Vai alla Demo",
+        "https://assistente-digitale.it/e-commerce-demo/"
+      );
+      await sendButtonMessage(
+        from,
+        "Ecco il link alla demo Assistente studio dentistico:",
+        "🚀 Vai alla Demo",
+        "https://assistente-digitale.it/studio-dentistico-demo/"
+      );
+    }
+    else if (assistantText === "LEAD_GENERATION_START") {
+      await sendButtonMessage(
+        from,
+        "Ecco il link per prenotare una consulenza grauita:",
+        "🚀 Vai alla Demo",
+        "https://assistente-digitale.it/register-hub-form/"
+      );
+    }
+    else {
 
       await sendMessageSafe(from, assistantText);
     }
