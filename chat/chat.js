@@ -117,7 +117,7 @@ async function loadConfiguration(nomeAssistente) {
         }
 
         const result = await response.json();
-        
+
         // se usi findOne nel backend → arriva un oggetto
         // se usi find → arriva un array
         assistenteConfig = Array.isArray(result) ? result[0] : result;
@@ -580,51 +580,55 @@ async function callOpenAI(messages, maxTokens = 1200) {
 
 /* ==================== LEAD GENERATION ==================== */
 const saveMessageToDB = async (
-  messageData,
-  conversationId,
-  additionalData = {}
+    messageData,
+    conversationId,
+    additionalData = {}
 ) => {
-  try {
-    // Corpo della richiesta verso l’API
-    const requestBody = {
-      conversationId, // se non esiste lato server ne genera uno nuovo
-      messages: [
-        {
-          role: messageData.role || "assistant",
-          content: (messageData.content || "").trim()
+    try {
+        // Corpo della richiesta verso l’API
+        const requestBody = {
+            conversationId, // se non esiste lato server ne genera uno nuovo
+            messages: [
+                {
+                    role: messageData.role || "assistant",
+                    content: (messageData.content || "").trim()
+                }
+            ],
+            // Altri dati opzionali (userId, username, email, telephone…)
+            ...additionalData
+        };
+        const apiUrl = `${getApiBaseUrl()}/api/ai/savechat`;
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Errore HTTP: ${response.status}`);
         }
-      ],
-      // Altri dati opzionali (userId, username, email, telephone…)
-      ...additionalData
-    };
-    const apiUrl = `${getApiBaseUrl()}/api/ai/savechat`;
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody)
-    });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Errore HTTP: ${response.status}`);
+        const result = await response.json();
+
+        console.log("✅ Messaggio salvato nel DB:", result);
+
+        // Ora result.conversationId viene restituito dal server
+        return {
+            ...result,
+            conversationId: result.conversationId || conversationId
+        };
+    } catch (err) {
+        console.error("❌ Errore salvataggio messaggio nel DB:", err);
+        throw err;
     }
-
-    const result = await response.json();
-
-    console.log("✅ Messaggio salvato nel DB:", result);
-
-    // Ora result.conversationId viene restituito dal server
-    return {
-      ...result,
-      conversationId: result.conversationId || conversationId
-    };
-  } catch (err) {
-    console.error("❌ Errore salvataggio messaggio nel DB:", err);
-    throw err;
-  }
 };
 
 async function startLeadGeneration() {
+    if (leadGenState.completed) {
+        debugLog('LEAD', 'Lead generation già completata - IGNORATO');
+        return;
+    }
     if (leadGenState.active) {
         debugLog('LEAD', 'Lead generation già attiva - IGNORATO');
         return;
@@ -672,7 +676,7 @@ async function startLeadGeneration() {
         </div>
     `;
     addMessageToChat(messageContent, 'assistant');
-    await saveMessageToDB({role: "assistant", content: messageContent}, conversationId);
+    await saveMessageToDB({ role: "assistant", content: messageContent }, conversationId);
 }
 
 async function handleLeadGenResponse(userMessage) {
@@ -690,10 +694,10 @@ async function handleLeadGenResponse(userMessage) {
         valid: validation.valid,
         reason: validation.reason || 'OK'
     });
-    await saveMessageToDB({role: "user", content: userMessage }, conversationId, {
+    await saveMessageToDB({ role: "user", content: userMessage }, conversationId, {
         [currentField.key]: userMessage
     });
-    console.log( [currentField.key])
+    console.log([currentField.key])
     if (!validation.valid) {
         const message = addMessageToChat(`
             <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
@@ -750,7 +754,7 @@ async function handleLeadGenResponse(userMessage) {
     // MESSAGGI PROFESSIONALI per ogni campo specifico
     setTimeout(async () => {
         const userName = leadGenState.collectedData.nome_completo ?
-        leadGenState.collectedData.nome_completo.split(' ')[0] : '';
+            leadGenState.collectedData.nome_completo.split(' ')[0] : '';
         let fieldMessage = '';
         let headerMessage = 'Informazione ricevuta';
 
@@ -786,7 +790,7 @@ async function handleLeadGenResponse(userMessage) {
             </div>
         `
         addMessageToChat(messageAssistant, 'assistant');
-        await saveMessageToDB({role : 'assistant', content: messageAssistant }, conversationId);
+        await saveMessageToDB({ role: 'assistant', content: messageAssistant }, conversationId);
     }, 800);
 }
 
@@ -936,6 +940,8 @@ async function showGDPRAndRecap() {
             });
         }
     }, 300);
+    leadGenState.active = false;
+    leadGenState.completed = true;
 }
 
 window.completeLead = async function (uniqueId) {
