@@ -414,6 +414,7 @@ function htmlToWhatsappText(html) {
 }
 async function sendButtonMessage(to, bodyText, buttonTitle, url) {
   const phoneNumberId = process.env.PHONE_NUMBER_ID;
+  const token = process.env.WHATSAPP_TOKEN;
   const data = JSON.stringify({
     messaging_product: "whatsapp",
     to: to,
@@ -437,7 +438,7 @@ async function sendButtonMessage(to, bodyText, buttonTitle, url) {
     const response = await fetch(`https://graph.facebook.com/v17.0/${phoneNumberId}/messages`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${ACCESS_TOKEN}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
       body: data
