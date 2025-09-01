@@ -106,18 +106,19 @@ export const saveToDbChatController = async (req, res) => {
 //saveLead
 export const setLeadGenerationTrue = async (req, res) => {
   try {
-    const { conversationId } = req.body; // lo ricevi dal frontend
+    const { conversationId } = req.body; // viene dal frontend (localStorage)
 
     if (!conversationId) {
       return res.status(400).json({ message: 'conversationId mancante' });
     }
 
-    // Aggiorna il campo leadGeneration
+    // cerca per campo conversationId (non per _id)
     const updatedConversation = await Conversation.findOneAndUpdate(
-      { conversationId },               // cerca per conversationId custom
-      { leadGeneration: true },
-      { new: true }
+      { conversationId },              // filtro
+      { leadGeneration: true },        // update
+      { new: true }                    // restituisce il documento aggiornato
     );
+
     if (!updatedConversation) {
       return res.status(404).json({ message: 'Conversazione non trovata' });
     }
