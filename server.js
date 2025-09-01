@@ -846,7 +846,7 @@ app.post('/api/conversations', getChatController);
 app.get('/api/chatcount', getChatToThisMonth)
 app.get('/api/archivedconversations', getArchiviedChatController);
 app.get('/api/deleteChat', DeleteChatContoller)
-.put('/lead', setLeadGenerationTrue);
+.put('/api/lead', setLeadGenerationTrue);
 /* ==================== STATIC FILES & SPA ROUTING ==================== */
 
 // Serve index.html for all non-API routes (SPA behavior)
