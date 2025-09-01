@@ -5,9 +5,9 @@ import Conversation from '../models/Conversation.js';
 
 export const saveToDbChatController = async (req, res) => {
   try {
-    const { 
-      messages, 
-      conversationId: incomingConversationId, 
+    const {
+      messages,
+      conversationId: incomingConversationId,
       userId,
       nome_completo,
       email,
@@ -16,7 +16,7 @@ export const saveToDbChatController = async (req, res) => {
       qualifica,
       settore,
       sito_web,
-      messaggio 
+      messaggio
     } = req.body;
 
     // Genera un nuovo conversationId se non fornito
@@ -35,15 +35,15 @@ export const saveToDbChatController = async (req, res) => {
 
     // Salva solo l'ultimo messaggio
     const lastMessage = messages[messages.length - 1];
-    
+
     // Prepara l'update object
     const updateObject = {
-      $push: { 
-        messages: { 
-          role: lastMessage.role, 
+      $push: {
+        messages: {
+          role: lastMessage.role,
           content: lastMessage.content,
           timestamp: new Date()
-        } 
+        }
       },
       $set: { updatedAt: new Date() }
     };
@@ -113,12 +113,11 @@ export const setLeadGenerationTrue = async (req, res) => {
     }
 
     // Aggiorna il campo leadGeneration
-    const updatedConversation = await Conversation.findByIdAndUpdate(
-      conversationId,
+    const updatedConversation = await Conversation.findOneAndUpdate(
+      { conversationId },               // cerca per conversationId custom
       { leadGeneration: true },
-      { new: true } // restituisce il documento aggiornato
+      { new: true }
     );
-
     if (!updatedConversation) {
       return res.status(404).json({ message: 'Conversazione non trovata' });
     }
