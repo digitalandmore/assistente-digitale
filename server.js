@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 /* ==================== Controllers principali ==================== */
 import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages } from './controllers/chatController.js';
 import { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth } from './controllers/getChatcontroller.js';
-import { saveToDbChatController } from './controllers/saveToDbChatController.js';
+import { saveToDbChatController, setLeadGenerationTrue } from './controllers/saveToDbChatController.js';
 
 /* ====================Meta Controllers  ==================== */
 /* ==================== Controllers ==================== */
@@ -24,7 +24,6 @@ import statusController from './controllers/statusController.js';
 import errorController from './controllers/errorController.js';
 import globalErrorController from './controllers/globalErrorController.js';
 import { getUsersController, updateUserDisplayName, createUser, } from './controllers/usersController.js';
-
 import { editContact, getKnowledge } from './controllers/KnowledgeController.js'
 
 // Load environment variables
@@ -847,7 +846,7 @@ app.post('/api/conversations', getChatController);
 app.get('/api/chatcount', getChatToThisMonth)
 app.get('/api/archivedconversations', getArchiviedChatController);
 app.get('/api/deleteChat', DeleteChatContoller)
-
+.put('/lead', setLeadGenerationTrue);
 /* ==================== STATIC FILES & SPA ROUTING ==================== */
 
 // Serve index.html for all non-API routes (SPA behavior)

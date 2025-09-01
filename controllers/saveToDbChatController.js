@@ -103,3 +103,33 @@ export const saveToDbChatController = async (req, res) => {
     });
   }
 };
+//saveLead
+export const setLeadGenerationTrue = async (req, res) => {
+  try {
+    const { conversationId } = req.body; // lo ricevi dal frontend
+
+    if (!conversationId) {
+      return res.status(400).json({ message: 'conversationId mancante' });
+    }
+
+    // Aggiorna il campo leadGeneration
+    const updatedConversation = await Conversation.findByIdAndUpdate(
+      conversationId,
+      { leadGeneration: true },
+      { new: true } // restituisce il documento aggiornato
+    );
+
+    if (!updatedConversation) {
+      return res.status(404).json({ message: 'Conversazione non trovata' });
+    }
+
+    return res.status(200).json({
+      message: 'leadGeneration impostato a true',
+      conversation: updatedConversation
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Errore del server', error });
+  }
+};

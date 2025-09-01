@@ -791,6 +791,11 @@ async function handleLeadGenResponse(userMessage) {
         `
         addMessageToChat(messageAssistant, 'assistant');
         await saveMessageToDB({ role: 'assistant', content: messageAssistant }, conversationId);
+        await fetch('http://localhost/api/conversations/lead', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversationId: 'conversationId' })
+        });
     }, 800);
 }
 
