@@ -115,7 +115,7 @@ export const setLeadGenerationTrue = async (req, res) => {
     // cerca per campo conversationId (non per _id)
     const updatedConversation = await Conversation.findOneAndUpdate(
       { conversationId },              // filtro
-      { leadGeneration: true },        // update
+      { leadGenerated: true },        // update
       { new: true }                    // restituisce il documento aggiornato
     );
 
