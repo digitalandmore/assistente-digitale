@@ -791,11 +791,11 @@ async function handleLeadGenResponse(userMessage) {
         `
         addMessageToChat(messageAssistant, 'assistant');
         await saveMessageToDB({ role: 'assistant', content: messageAssistant }, conversationId);
-        await fetch('http://localhost/api/lead', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ conversationId: 'conversationId' })
-        });
+        // await fetch('http://localhost/api/lead', {
+        //     method: 'PUT',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify({ conversationId: 'conversationId' })
+        // });
     }, 800);
 }
 
@@ -874,7 +874,12 @@ async function showGDPRAndRecap() {
     });
 
     leadGenState.collectedData = cleanData;
-
+    conversationId = localStorage.getItem("conversationId") || null;
+    await fetch('https://assistente-digitale.onrender.com/api/lead', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId: 'conversationId' })
+    });
     const uniqueId = Date.now();
     const recap = `
         <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #007bff; border-radius: 12px; padding: 25px; margin: 15px 0;">
