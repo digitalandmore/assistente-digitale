@@ -9,7 +9,7 @@ import session from 'express-session';
 import { fileURLToPath } from 'url';
 // Import controllers
 /* ==================== Controllers principali ==================== */
-import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages } from './controllers/chatController.js';
+import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages,saveMessagesFb } from './controllers/chatController.js';
 import { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth } from './controllers/getChatcontroller.js';
 import { saveToDbChatController, setLeadGenerationTrue } from './controllers/saveToDbChatController.js';
 
@@ -188,59 +188,7 @@ async function sendInstagramMessage(to, text) {
     throw err;
   }
 }
-// const greetedUsers = new Set();
-// async function handleIncomingMessageMessanger(from, text, req, res) {
-//   try {
-//     const messages = [
-//       { role: "system", content: SYSTEM_PROMPT_FB },
-//       { role: "user", content: text }
-//     ];
 
-//     const assistantHtml = await getOpenAIResponse(messages);
-//     // Converti HTML → testo leggibile da WhatsApp
-//     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-//     const buttons = [
-//       {
-//         type: "web_url",
-//         url: "https://assistente-digitale.it/e-commerce-demo/",
-//         title: "e-commerce Demo"
-//       },
-//       {
-//         type: "web_url",
-//         url: "https://assistente-digitale.it/studio-dentistico-demo/",
-//         title: "Studio Dentistico Demo"
-//       }
-//     ];
-//     const welcomeMessage = `Benvenuto!
-//       Sono il tuo consulente AI specializzato in soluzioni digitali per PMI. Ti aiuto ad automatizzare processi, migliorare l'efficienza e aumentare le vendite.
-//       Cosa ti interessa?`
-//     const WelocomButton = [
-//       { type: "postback", title: "Automazione processi", payload: "AUTOMAZIONE_PROCESSI" },
-//       { type: "postback", title: "Migliorare vendite", payload: "MIGLIORARE_VENDITE" },
-//       { type: "postback", title: "Efficienza aziendale", payload: "EFFICIENZA_AZIENDALE" }
-//     ]
-//     if (!greetedUsers.has(from)) {
-//       greetedUsers.add(from);
-//       await sendMessengerButton(from, welcomeMessage, WelocomButton);
-//     }
-//     else if (assistantText == 'DEMO_CONFIRMED') {
-//       await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
-//     } else if (req.body.postback) {
-//       const payload = req.body.postback.payload;
-//       sendMessengerMessage(from, payload);
-
-//     }
-//     else {
-//       // 🔹 Flusso normale
-//       await sendMessengerMessage(from, assistantText);
-//     }
-
-//   } catch (err) {
-//     console.error("Errore gestione messaggio entrante:", err);
-//     await sendMessengerMessage(from, "❌ Errore interno, riprova più tardi.");
-//   }
-// }
-// const greetedUsers = new Set();
 
 async function handleIncomingMessageMessanger(from, text, req, res) {
   try {
@@ -251,7 +199,7 @@ async function handleIncomingMessageMessanger(from, text, req, res) {
 
     const assistantHtml = await getOpenAIResponse(messages);
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-
+    await saveMessagesFb(from, text, assistantText);
     const welcomeMessage = `Benvenuto!
 Sono il tuo consulente AI specializzato in soluzioni digitali per PMI.
 Cosa ti interessa?`;
@@ -290,29 +238,7 @@ Cosa ti interessa?`;
 }
 
 /* ==================== INTEGRAZIONE INSTAGRAM ==================== */
-// Funzione per inviare messaggi su Instagram tramite API Graph
-// async function sendInstagramMessage(to, text) {
-//   try {
-//     const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${msgToken}`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({
-//         recipient: { id: to },
-//         message: { text }
-//       })
-//     });
-
-//     const data = await res.json();
-//     if (data.error) {
-//       console.error("❌ Errore invio messaggio IG:", data.error);
-//     }
-//     return data;
-
-//   } catch (err) {
-//     console.error("❌ Errore fetch invio messaggio IG:", err);
-//   }
-// }
-
+/
 // Funzione gestione messaggio in arrivo Instagram con OpenAI
 async function handleIncomingMessageInstagram(from, text, req, res) {
   try {
