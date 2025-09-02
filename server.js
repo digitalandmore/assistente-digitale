@@ -780,7 +780,7 @@ app.post("/webhookIgInstagram", async (req, res) => {
 
         if (from && text) {
           try {
-            await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo (IG): ${text}`);
+            await sendInstagramMessage(from, `Ciao 👋 Sto rispondendo (IG): ${text}`);
             // oppure integra OpenAI qui
           } catch (err) {
             console.error("❌ Errore invio risposta Instagram:", err);
