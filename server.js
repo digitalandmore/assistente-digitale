@@ -240,7 +240,7 @@ async function sendInstagramMessage(to, text) {
 //     await sendMessengerMessage(from, "❌ Errore interno, riprova più tardi.");
 //   }
 // }
-const greetedUsers = new Set();
+// const greetedUsers = new Set();
 
 async function handleIncomingMessageMessanger(from, text, req, res) {
   try {
@@ -271,11 +271,11 @@ Cosa ti interessa?`;
     ];
 
     // ✅ Primo messaggio
-    if (!greetedUsers.has(from)) {
-      greetedUsers.add(from);
-      await sendMessengerButton(from, welcomeMessage, welcomeButtons);
-      return;
-    }
+    // if (!greetedUsers.has(from)) {
+    //   greetedUsers.add(from);
+    //   await sendMessengerButton(from, welcomeMessage, welcomeButtons);
+    //   return;
+    // }
 
     // ✅ Controllo DEMO_CONFIRMED
     if (assistantText === 'DEMO_CONFIRMED') {
