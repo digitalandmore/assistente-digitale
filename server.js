@@ -238,7 +238,7 @@ Cosa ti interessa?`;
 }
 
 /* ==================== INTEGRAZIONE INSTAGRAM ==================== */
-/
+
 // Funzione gestione messaggio in arrivo Instagram con OpenAI
 async function handleIncomingMessageInstagram(from, text, req, res) {
   try {
