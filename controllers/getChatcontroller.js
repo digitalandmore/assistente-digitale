@@ -102,28 +102,62 @@ const getArchiviedChatController = async (req, res) => {
   }
 }
 
-const DeleteChatContoller = async (req, res) => {
+// const DeleteChatContoller = async (req, res) => {
+//   try {
+//     const { conversationId } = req.body;
+//     console.log('request body:', req.body);
+//     if (!conversationId) {
+//       return res.status(400).json({ error: "conversationId mancante" });
+//     }
+
+//     // recupera la conversazione originale
+//     const conversation = await ArchiviedConversation.findOne({ conversationId });
+//     if (!conversation) {
+//       return res.status(404).json({ error: "Conversazione non trovata" });
+//     }
+//     await ArchiviedConversation.findOneAndDelete(conversationId)
+//   } catch (error) {
+//     console.error('Errore nel recupero delle conversazioni:', error);
+//     res.status(500).json({
+//       success: false,
+//       error: 'Errore server nel recupero delle conversazioni'
+//     });
+//   }
+// }
+const DeleteChatController = async (req, res) => {
   try {
     const { conversationId } = req.body;
     console.log('request body:', req.body);
+
     if (!conversationId) {
       return res.status(400).json({ error: "conversationId mancante" });
     }
 
-    // recupera la conversazione originale
+    // Verifica che la conversazione esista
     const conversation = await ArchiviedConversation.findOne({ conversationId });
     if (!conversation) {
       return res.status(404).json({ error: "Conversazione non trovata" });
     }
-    await ArchiviedConversation.findOneAndDelete(conversationId)
+
+    // Soft delete → aggiorna flag invece di cancellare
+    conversation.deleted = true;
+    conversation.deletedAt = new Date();
+    await conversation.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Conversazione eliminata (soft delete)",
+      conversation
+    });
+
   } catch (error) {
-    console.error('Errore nel recupero delle conversazioni:', error);
+    console.error('Errore nel soft delete conversazione:', error);
     res.status(500).json({
       success: false,
-      error: 'Errore server nel recupero delle conversazioni'
+      error: 'Errore server nel soft delete della conversazione'
     });
   }
-}
+};
 
 
 const restoreChat = async (req, res) => {
@@ -173,4 +207,4 @@ const restoreChat = async (req, res) => {
   }
 };
 
-export { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth }
+export { getChatController, getArchiviedChatController, DeleteChatController, restoreChat, getChatToThisMonth }

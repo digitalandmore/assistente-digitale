@@ -497,7 +497,8 @@ async function analyzeUserIntent(message) {
 
         const result = await response.json();
         if (data.conversationId) {
-            localStorage.setItem("conversationId", data.conversationId);
+            // localStorage.setItem("conversationId", data.conversationId);
+            sessionStorage.setItem("conversationId", data.conversationId);
         }
         if (result.success && result.intent) {
             return result.intent;
@@ -550,7 +551,8 @@ async function callOpenAI(messages, maxTokens = 1200) {
             messages: messages,
             maxTokens: maxTokens || 1200,
             temperature: openAiConfig.temperature || 0.8,
-            conversationId: localStorage.getItem("conversationId")
+            // conversationId: localStorage.getItem("conversationId")
+            conversationId: sessionStorage.getItem("conversationId")
         })
     });
 
@@ -562,7 +564,8 @@ async function callOpenAI(messages, maxTokens = 1200) {
 
     const data = await response.json();
     if (data.conversationId) {
-        localStorage.setItem("conversationId", data.conversationId);
+        // localStorage.setItem("conversationId", data.conversationId);
+        sessionStorage.setItem("conversationId", data.conversationId);
     }
     // Controlla se la risposta ha il formato corretto
     if (!data.success || !data.choices || !data.choices[0]) {
@@ -638,7 +641,8 @@ async function startLeadGeneration() {
     leadGenState.fieldIndex = 0;
     leadGenState.collectedData = {};
     leadGenState.currentField = leadGenState.requiredFields[0];
-    conversationId = localStorage.getItem("conversationId") || null;
+    // conversationId = localStorage.getItem("conversationId") || null;
+    conversationId = sessionStorage.getItem("conversationId") || null;
     // CERCA EMAIL REALE NELLA CONVERSAZIONE (non "nome@email.com")
     const emailPattern = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
     const recentMessages = conversationHistory.slice(-10).map(msg => msg.content).join(' ');
@@ -680,7 +684,8 @@ async function startLeadGeneration() {
 }
 
 async function handleLeadGenResponse(userMessage) {
-    conversationId = localStorage.getItem("conversationId") || null;
+    // conversationId = localStorage.getItem("conversationId") || null;
+    conversationId = sessionStorage.getItem("conversationId") || null;
     if (!leadGenState.active) {
         debugLog('LEAD', 'Lead generation NON attiva - ignorato');
         return;
@@ -715,7 +720,8 @@ async function handleLeadGenResponse(userMessage) {
     leadGenState.collectedData[currentField.key] = userMessage.trim();
     leadGenState.fieldIndex++;
     // Aggiorna DB in tempo reale
-    conversationId = localStorage.getItem("conversationId") || null;
+    // conversationId = localStorage.getItem("conversationId") || null;
+    conversationId = sessionStorage.getItem("conversationId") || null;
     console.log('LEAD', 'Conversation ID:', conversationId);
 
 
@@ -919,12 +925,15 @@ async function showGDPRAndRecap() {
     `;
 
     addMessageToChat(recap, 'assistant');
-    // conversationId = localStorage.getItem("conversationId") || null;
-    // await fetch('https://assistente-digitale.onrender.com/api/lead', {
-    //     method: 'PUT',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ conversationId: 'conversationId' })
-    // });
+
+    await fetch('https://assistente-digitale.onrender.com/api/lead', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            // conversationId: localStorage.getItem("conversationId")
+            conversationId: sessionStorage.getItem("conversationId")
+        })
+    });
     // Setup GDPR checkbox
     setTimeout(() => {
         const checkbox = document.getElementById(`gdpr_${uniqueId}`);
