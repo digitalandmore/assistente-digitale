@@ -207,8 +207,8 @@ async function handleIncomingMessageMessanger(from, text, req, res) {
       },
       {
         type: "web_url",
-        title: "https://assistente-digitale.it/studio-dentistico-demo/",
-        payload: "Studio Dentistico Demo"
+        url: "https://assistente-digitale.it/studio-dentistico-demo/",
+        title: "Studio Dentistico Demo"
       }
     ];
     if (assistantText == 'DEMO_CONFIRMED') {
