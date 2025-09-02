@@ -142,30 +142,78 @@ async function sendMessengerMessage(to, text) {
   });
   return res.json();
 }
-const igToken = process.env.IG_TOKEN;
-const igUserId = process.env.IG_USER_ID;
-async function sendInstagramMessage(to, text) {
-  const res = await fetch(`https://graph.facebook.com/v17.0/${igUserId}/messages?access_token=${igToken}`, {
+async function sendMessengerButton(to, text, buttons = []) {
+  const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${msgToken}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       recipient: { id: to },
-      message: { text }
+      message: {
+        attachment: {
+          type: "template",
+          payload: {
+            template_type: "button",
+            text: text,      // testo del messaggio
+            buttons: buttons // array di pulsanti
+          }
+        }
+      }
     })
   });
+
   return res.json();
 }
+const igToken = process.env.IG_TOKEN;
+const igUserId = process.env.IG_USER_ID;
+async function sendInstagramMessage(to, text) {
+  try {
+    const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messaging_product: "instagram",  // Obbligatorio per IG
+        recipient: { id: to },           // Instagram User ID del destinatario
+        message: { text }
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      console.error("❌ Errore invio messaggio Instagram:", data);
+    }
+    return data;
+
+  } catch (err) {
+    console.error("❌ Fetch error Instagram:", err);
+    throw err;
+  }
+}
+
 async function handleIncomingMessageMessanger(from, text, req, res) {
   try {
     const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: SYSTEM_PROMPT_FB },
       { role: "user", content: text }
     ];
 
     const assistantHtml = await getOpenAIResponse(messages);
     // Converti HTML → testo leggibile da WhatsApp
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-
+    const buttons = [
+      {
+        type: "web_url",
+        url: "https://example.com",
+        title: "Visita sito"
+      },
+      {
+        type: "postback",
+        title: "Rispondi con sì",
+        payload: "SÌ"
+      }
+    ];
+    if (assistantText == 'DEMO_CONFIRMED') {
+      await sendMessengerButton(from, "Ciao! Scegli un'opzione:", buttons);
+    }
     // 🔹 Flusso normale
     await sendMessengerMessage(from, assistantText);
 
@@ -263,6 +311,102 @@ app.post("/webhookIgInstagram", async (req, res) => {
 
 /* ==================== INTEGRAZIONE WHATSAPP ==================== */
 const SYSTEM_PROMPT_WHATSAPP = `
+Sei l'Assistente Digitale, consulente AI professionale per PMI su WhatsApp Business.
+
+=== INFORMAZIONI AZIENDA ===
+Nome: Assistente Digitale
+Descrizione: Soluzioni di automazione e ottimizzazione per PMI
+Sviluppatore: DIGITAL&MORE - Soluzioni digitali innovative per PMI
+
+=== SERVIZI DISPONIBILI ===
+🟢 E-commerce: Demo LIVE https://assistente-digitale.it/e-commerce-demo/
+🟢 Studio Dentistico: Demo LIVE https://assistente-digitale.it/studio-dentistico-demo/
+
+=== PRICING ===
+Preventivo personalizzato  
+Consulenza gratuita: SÌ - SEMPRE GRATUITA  
+
+=== PROCESSO IMPLEMENTAZIONE ===
+1. Analisi iniziale (1 settimana)
+2. Setup demo (2 settimane)
+3. Personalizzazione (3 settimane)
+4. Go-live (1 settimana)
+
+=== FAQ ===
+Q1: Quanto costa?  
+R1: Dipende dalle funzionalità, offriamo preventivi personalizzati.
+
+=== CONTATTI ===
+Email: info@assistente-digitale.it  
+Telefono: +39 0983 535253  
+WhatsApp: https://wa.me/390983535253  
+Sito Web: https://assistente-digitale.it  
+
+=== LEAD GENERATION ===
+STRATEGIA COMMERCIALE:
+1. Fornisci SEMPRE informazioni sui NOSTRI servizi specifici
+2. NON dare consigli generici su argomenti esterni
+3. RIPORTA sempre la conversazione ai nostri servizi
+4. CONCLUDI SEMPRE con l'invito alla consulenza sui nostri servizi
+
+ESEMPI INVITI SPECIFICI:
+- "Ti interessa una consulenza gratuita per vedere come il nostro Assistente Digitale può aiutare il tuo business?"
+- "Vuoi che organizziamo una consulenza per implementare queste funzionalità sul tuo sito?"
+- "Posso aiutarti con una consulenza gratuita per integrare questi sistemi nella tua azienda?"
+
+QUANDO l'utente chiede di servizi esterni ai nostri:
+RIPORTA la conversazione ai nostri servizi con esempi concreti.
+
+SOLO quando l'utente conferma ESPLICITAMENTE l'interesse per la consulenza:
+- Risposte affermative chiare dopo il tuo invito
+- Conferme dirette come "Sì", "Mi interessa", "Procediamo"
+
+ALLORA rispondi ESATTAMENTE: "LEAD_GENERATION_START"
+
+IMPORTANTE: NON interpretare domande o richieste di info come conferme.
+Lascia che sia l'utente a confermare esplicitamente.
+
+QUANDO l'utente chiede demo:
+- ALLORA rispondi esattamente DEMO_CONFIRMED
+- OGNI volta che nella risposta inserisci le demo rispondi esattamente DEMO_CONFIRMED
++ NON fornire nessun altro testo oltre a DEMO_CONFIRMED
++ NON includere link, frasi aggiuntive o spiegazioni
++ Rispondi SOLO con la stringa DEMO_CONFIRMED
+
+QUANDO l'utente conferma esplicitamente l'interesse:
+- Rispondi invitando l'utente a prenotare una consulenza compilando il form di contatto
+- Includi ESATTAMENTE il link: https://assistente-digitale.it/form-contatti
+
+=== COMPORTAMENTO ===
+Sii professionale, competente e orientato alla soluzione. Usa un tono cordiale ma non troppo informale.
+Evidenzia sempre i benefici concreti e i risultati misurabili.
+Non promettere mai risultati irrealistici.
+
+=== FOCUS SERVIZI ===
+IMPORTANTE: Rispondi SOLO sui nostri servizi e soluzioni.
+
+SE l'utente chiede consigli su:
+- Altri siti web, domini, progetti esterni
+- Servizi che non offriamo
+- Consulenze generiche non nostre
+- Competitors o alternative
+
+RISPONDI SEMPRE COSÌ:
+"Grazie per la domanda! Io sono specializzato nelle soluzioni di automazione e ottimizzazione per PMI offerte da Assistente Digitale.
+
+Per il tuo progetto, posso aiutarti con:
+• Assistenti AI per siti web
+• Automazione gestione clienti  
+• Sistemi di prenotazione automatica
+• Preventivi personalizzati
+• Integrazioni HubSpot e CRM
+
+Ti interessa una consulenza gratuita per vedere come possiamo supportare il tuo business specifico?"
+
+NON dare mai consigli generici su SEO, design, hosting o servizi che non offriamo.
+RIMANDA SEMPRE alle nostre soluzioni specifiche.
+`;
+const SYSTEM_PROMPT_FB = `
 Sei l'Assistente Digitale, consulente AI professionale per PMI su WhatsApp Business.
 
 === INFORMAZIONI AZIENDA ===
@@ -623,62 +767,6 @@ async function sendMessageSafe(to, text) {
   }
 }
 
-// app.post("/webhook", async (req, res) => {
-//   const entry = req.body.entry || [];
-
-//   for (const e of entry) {
-//     const changes = e.changes || [];
-
-//     for (const change of changes) {
-//       const value = change.value;
-
-//       // Legge i contatti
-//       const contacts = value.contacts || [];
-//       const contact = contacts[0];
-//       const contactName = contact?.profile?.name;
-//       const contactWaId = contact?.wa_id;
-
-//       // Legge i messaggi
-//       const messages = value.messages || [];
-//       const msg = messages[0];
-//       const from = msg?.from;
-//       const text = msg?.text?.body;
-//       const type = msg?.type;
-
-//       if (from && text) {
-//         console.log("📩 Messaggio ricevuto!");
-//         console.log("tipo:", type);
-//         console.log("Mittente (from):", from);
-//         console.log("Nome contatto:", contactName);
-//         console.log("wa_id:", contactWaId);
-//         console.log("Testo:", text);
-//         await sendMessageSafe(from, "Ciao 👋 Sto rispondendo!");
-//         if (text === "DEMO_CONFIRMED") {
-//           await sendButtonMessage(
-//             from,
-//             "Ecco il link alla demo E-commerce:",
-//             "🚀 Vai alla Demo",
-//             "https://assistente-digitale.it/e-commerce-demo/"
-//           );
-//         }
-
-//         if (msg.type == 'audio') {
-//           await sendMessageSafe(from, "scusa, attualmente non sono abilitato a ");
-
-//         }
-//         // await handleIncomingMessage(from, text, req, res);
-//         // const assistantText = await getOpenAIResponse([{ role: 'user', content: text }]);
-//         // await sendMessageSafe(from, assistantText);
-//         await handleIncomingMessage(from, text, req, res);
-
-//       } else {
-//         console.log("Evento ricevuto ma senza messaggio:", JSON.stringify(msg, null, 2));
-//       }
-//     }
-//   }
-
-//   res.sendStatus(200);
-// });
 app.post("/webhook", async (req, res) => {
   const entry = req.body.entry || [];
 
@@ -726,6 +814,7 @@ app.post("/webhookIg", async (req, res) => {
   try {
     const entry = req.body.entry || [];
     console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
+
     for (const e of entry) {
       // 👉 Caso 1: MESSENGER (usa e.messaging)
       if (e.messaging) {
@@ -742,12 +831,18 @@ app.post("/webhookIg", async (req, res) => {
               await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo da Messenger:`);
 
               await handleIncomingMessageMessanger(from, text, req, res);
+              if (assistantText == 'DEMO_CONFIRMED') {
+                await sendMessengerButton(from, "Ciao! Scegli un'opzione:", buttons);
+              }
             } catch (err) {
               console.error("❌ Errore invio risposta Messenger:", err);
             }
           }
         }
       }
+
+
+      // invio messaggio con pulsanti
 
       // 👉 Caso 2: INSTAGRAM (usa e.changes)
       if (e.changes) {
@@ -762,6 +857,7 @@ app.post("/webhookIg", async (req, res) => {
 
             if (from && text) {
               try {
+                await sendInstagramMessage(from, 'ciao sono instagram')
                 await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo da Instagram:`);
 
                 await handleIncomingMessageMessanger(from, text, req, res);
