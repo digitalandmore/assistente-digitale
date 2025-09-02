@@ -188,6 +188,59 @@ async function sendInstagramMessage(to, text) {
     throw err;
   }
 }
+// const greetedUsers = new Set();
+// async function handleIncomingMessageMessanger(from, text, req, res) {
+//   try {
+//     const messages = [
+//       { role: "system", content: SYSTEM_PROMPT_FB },
+//       { role: "user", content: text }
+//     ];
+
+//     const assistantHtml = await getOpenAIResponse(messages);
+//     // Converti HTML → testo leggibile da WhatsApp
+//     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
+//     const buttons = [
+//       {
+//         type: "web_url",
+//         url: "https://assistente-digitale.it/e-commerce-demo/",
+//         title: "e-commerce Demo"
+//       },
+//       {
+//         type: "web_url",
+//         url: "https://assistente-digitale.it/studio-dentistico-demo/",
+//         title: "Studio Dentistico Demo"
+//       }
+//     ];
+//     const welcomeMessage = `Benvenuto!
+//       Sono il tuo consulente AI specializzato in soluzioni digitali per PMI. Ti aiuto ad automatizzare processi, migliorare l'efficienza e aumentare le vendite.
+//       Cosa ti interessa?`
+//     const WelocomButton = [
+//       { type: "postback", title: "Automazione processi", payload: "AUTOMAZIONE_PROCESSI" },
+//       { type: "postback", title: "Migliorare vendite", payload: "MIGLIORARE_VENDITE" },
+//       { type: "postback", title: "Efficienza aziendale", payload: "EFFICIENZA_AZIENDALE" }
+//     ]
+//     if (!greetedUsers.has(from)) {
+//       greetedUsers.add(from);
+//       await sendMessengerButton(from, welcomeMessage, WelocomButton);
+//     }
+//     else if (assistantText == 'DEMO_CONFIRMED') {
+//       await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
+//     } else if (req.body.postback) {
+//       const payload = req.body.postback.payload;
+//       sendMessengerMessage(from, payload);
+
+//     }
+//     else {
+//       // 🔹 Flusso normale
+//       await sendMessengerMessage(from, assistantText);
+//     }
+
+//   } catch (err) {
+//     console.error("Errore gestione messaggio entrante:", err);
+//     await sendMessengerMessage(from, "❌ Errore interno, riprova più tardi.");
+//   }
+// }
+const greetedUsers = new Set();
 
 async function handleIncomingMessageMessanger(from, text, req, res) {
   try {
@@ -197,26 +250,49 @@ async function handleIncomingMessageMessanger(from, text, req, res) {
     ];
 
     const assistantHtml = await getOpenAIResponse(messages);
-    // Converti HTML → testo leggibile da WhatsApp
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-    const buttons = [
-      {
-        type: "web_url",
-        url: "https://assistente-digitale.it/e-commerce-demo/",
-        title: "e-commerce Demo"
-      },
-      {
-        type: "web_url",
-        url: "https://assistente-digitale.it/studio-dentistico-demo/",
-        title: "Studio Dentistico Demo"
-      }
+
+    const welcomeMessage = `Benvenuto!
+Sono il tuo consulente AI specializzato in soluzioni digitali per PMI.
+Cosa ti interessa?`;
+
+    const welcomeButtons = [
+      { type: "postback", title: "Come funziona", payload: "Come funziona il vostro servizio?" },
+      { type: "postback", title: "Vedi Demo", payload: "Vorrei vedere le demo disponibili" },
+      { type: "postback", title: "Consulenza Gratuita", payload: "Richiedo informazioni per una consulenza" },
+      { type: "postback", title: "Settori", payload: "Che settori seguite?" },
+      { type: "postback", title: "Prezzi", payload: "Quali sono i costi?" },
+      { type: "postback", title: "Integrazioni", payload: "Integrazione con i miei strumenti" },
     ];
-    if (assistantText == 'DEMO_CONFIRMED') {
-      await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
-    } else {
-      // 🔹 Flusso normale
-      await sendMessengerMessage(from, assistantText);
+
+    const buttons = [
+      { type: "web_url", url: "https://assistente-digitale.it/e-commerce-demo/", title: "E-commerce Demo" },
+      { type: "web_url", url: "https://assistente-digitale.it/studio-dentistico-demo/", title: "Studio Dentistico Demo" }
+    ];
+
+    // ✅ Primo messaggio
+    if (!greetedUsers.has(from)) {
+      greetedUsers.add(from);
+      await sendMessengerButton(from, welcomeMessage, welcomeButtons);
+      return;
     }
+
+    // ✅ Controllo DEMO_CONFIRMED
+    if (assistantText === 'DEMO_CONFIRMED') {
+      await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
+      return;
+    }
+
+    // ✅ Controllo payload dei pulsanti postback
+    const messagingEvent = req.body.entry?.[0]?.messaging?.[0];
+    if (messagingEvent?.postback) {
+      const payload = messagingEvent.postback.payload;
+      await sendMessengerMessage(from, `Hai scelto: ${payload}`);
+      return;
+    }
+
+    // 🔹 Flusso normale
+    await sendMessengerMessage(from, assistantText);
 
   } catch (err) {
     console.error("Errore gestione messaggio entrante:", err);
