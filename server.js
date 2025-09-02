@@ -202,20 +202,21 @@ async function handleIncomingMessageMessanger(from, text, req, res) {
     const buttons = [
       {
         type: "web_url",
-        url: "https://example.com",
-        title: "Visita sito"
+        url: "https://assistente-digitale.it/e-commerce-demo/",
+        title: "e-commerce Demo"
       },
       {
-        type: "postback",
-        title: "Rispondi con sì",
-        payload: "SÌ"
+        type: "web_url",
+        title: "https://assistente-digitale.it/studio-dentistico-demo/",
+        payload: "Studio Dentistico Demo"
       }
     ];
     if (assistantText == 'DEMO_CONFIRMED') {
       await sendMessengerButton(from, "Ciao! Scegli un'opzione:", buttons);
+    } else {
+      // 🔹 Flusso normale
+      await sendMessengerMessage(from, assistantText);
     }
-    // 🔹 Flusso normale
-    await sendMessengerMessage(from, assistantText);
 
   } catch (err) {
     console.error("Errore gestione messaggio entrante:", err);
@@ -830,10 +831,10 @@ app.post("/webhookIg", async (req, res) => {
             try {
               await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo da Messenger:`);
 
+
               await handleIncomingMessageMessanger(from, text, req, res);
-              if (assistantText == 'DEMO_CONFIRMED') {
-                await sendMessengerButton(from, "Ciao! Scegli un'opzione:", buttons);
-              }
+
+
             } catch (err) {
               console.error("❌ Errore invio risposta Messenger:", err);
             }
