@@ -120,7 +120,7 @@ async function getOpenAIResponse(messages) {
     body: JSON.stringify({
       model: 'gpt-4o-mini',
       messages,
-      max_tokens: 500,
+      max_tokens: 150,
       temperature: 0.8
     })
   });
@@ -726,51 +726,48 @@ app.post("/webhookIg", async (req, res) => {
   try {
     const entry = req.body.entry || [];
     console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
-    if (e.messaging) {
-      for (const e of entry) {
-        const messagingEvents = e.messaging || []; // NOT changes
-        console.log(messagingEvents)
-        for (const msg of messagingEvents) {
+    for (const e of entry) {
+      // 👉 Caso 1: MESSENGER (usa e.messaging)
+      if (e.messaging) {
+        for (const msg of e.messaging) {
           const from = msg.sender?.id;
           const text = msg.message?.text;
 
-          console.log("📩 Messaggio fb ricevuto:");
+          console.log("📩 Messaggio Messenger ricevuto:");
           console.log("Mittente:", from);
           console.log("Testo:", text);
 
-
           if (from && text) {
             try {
-              // Risposta automatica semplice
-              await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo:`);
+              await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo da Messenger:`);
 
-              // Se vuoi usare OpenAI per generare risposta:
               await handleIncomingMessageMessanger(from, text, req, res);
-
             } catch (err) {
               console.error("❌ Errore invio risposta Messenger:", err);
             }
           }
         }
       }
-    }
-    if (e.changes) {
-      for (const change of e.changes) {
-        if (change.field === "messages") {
-          const from = change.value?.from?.id;
-          const text = change.value?.message;
 
-          console.log("📩 Messaggio Instagram ricevuto:");
-          console.log("Mittente:", from);
-          console.log("Testo:", text);
+      // 👉 Caso 2: INSTAGRAM (usa e.changes)
+      if (e.changes) {
+        for (const change of e.changes) {
+          if (change.field === "messages") {
+            const from = change.value?.from?.id;
+            const text = change.value?.message;
 
-          if (from && text) {
-            try {
-              await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo da Instagram:`);
+            console.log("📩 Messaggio Instagram ricevuto:");
+            console.log("Mittente:", from);
+            console.log("Testo:", text);
 
-              await handleIncomingMessageMessanger(from, text, req, res);
-            } catch (err) {
-              console.error("❌ Errore invio risposta Instagram:", err);
+            if (from && text) {
+              try {
+                await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo da Instagram:`);
+
+                await handleIncomingMessageMessanger(from, text, req, res);
+              } catch (err) {
+                console.error("❌ Errore invio risposta Instagram:", err);
+              }
             }
           }
         }
