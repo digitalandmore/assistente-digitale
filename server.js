@@ -269,10 +269,9 @@ Cosa ti interessa?`;
       { type: "web_url", url: "https://assistente-digitale.it/e-commerce-demo/", title: "E-commerce Demo" },
       { type: "web_url", url: "https://assistente-digitale.it/studio-dentistico-demo/", title: "Studio Dentistico Demo" }
     ];
-
-    // ✅ Primo messaggio
-    // if (!greetedUsers.has(from)) {
-    //   greetedUsers.add(from);
+    // let flag = false;
+    // // ✅ Primo messaggio
+    // if (!flag) {
     //   await sendMessengerButton(from, welcomeMessage, welcomeButtons);
     //   return;
     // }
@@ -902,11 +901,28 @@ app.post("/webhookIg", async (req, res) => {
           console.log("📩 Messaggio Messenger ricevuto:");
           console.log("Mittente:", from);
           console.log("Testo:", text);
+          const welcomeMessage = `Benvenuto!
+              Sono il tuo consulente AI specializzato in soluzioni digitali per PMI.
+              Cosa ti interessa?`;
 
+          const welcomeButtons = [
+            { type: "postback", title: "Come funziona", payload: "Come funziona il vostro servizio?" },
+            { type: "postback", title: "Vedi Demo", payload: "Vorrei vedere le demo disponibili" },
+            { type: "postback", title: "Consulenza Gratuita", payload: "Richiedo informazioni per una consulenza" },
+            { type: "postback", title: "Settori", payload: "Che settori seguite?" },
+            { type: "postback", title: "Prezzi", payload: "Quali sono i costi?" },
+            { type: "postback", title: "Integrazioni", payload: "Integrazione con i miei strumenti" },
+          ];
           if (from && text) {
             try {
               // await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo da Messenger:`);
-
+              let flag = false;
+              // ✅ Primo messaggio
+              if (!flag) {
+                await sendMessengerButton(from, welcomeMessage, welcomeButtons);
+                flag = true
+                return;
+              }
 
               await handleIncomingMessageMessanger(from, text, req, res);
 
