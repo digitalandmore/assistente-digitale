@@ -269,17 +269,16 @@ Cosa ti interessa?`;
       { type: "web_url", url: "https://assistente-digitale.it/e-commerce-demo/", title: "E-commerce Demo" },
       { type: "web_url", url: "https://assistente-digitale.it/studio-dentistico-demo/", title: "Studio Dentistico Demo" }
     ];
-    // let flag = false;
-    // // ✅ Primo messaggio
-    // if (!flag) {
-    //   await sendMessengerButton(from, welcomeMessage, welcomeButtons);
-    //   return;
-    // }
+    const hubspot = [
+      {type:"web_url", url:"https://assistente-digitale.it", title:'Consulenza'}
+    ]
 
-    // ✅ Controllo DEMO_CONFIRMED
     if (assistantText === 'DEMO_CONFIRMED') {
       await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
       return;
+    }
+    else if (assistantText == 'LEAD_GENERATION_START'){
+      await sendMessengerButton(from, "Prenota subito una consulenza:", hubspot);
     }
 
     // ✅ Controllo payload dei pulsanti postback
