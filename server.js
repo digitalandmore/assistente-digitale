@@ -764,48 +764,32 @@ app.post("/webhookIg", async (req, res) => {
 });
 
 app.post("/webhookIgInstagram", async (req, res) => {
-  try {
+   try {
     const entry = req.body.entry || [];
-
     console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
 
     for (const e of entry) {
-      const changes = e.changes || [];
+      const messagingEvents = e.messaging || []; // NOT changes
+      for (const msg of messagingEvents) {
+        const from = msg.sender?.id;
+        const text = msg.message?.text;
 
-      for (const change of changes) {
-        const value = change.value;
+        console.log("📩 Messaggio Instagram ricevuto:");
+        console.log("Mittente:", from);
+        console.log("Testo:", text);
 
-        // Alcuni webhook IG usano `messages` simile a WhatsApp
-        const messages = value.messages || [];
-        if (messages.length > 0) {
-          for (const msg of messages) {
-            const from = msg.from;
-            const text = msg.text?.body || msg.text; // adattamento
-            const type = msg.type || "unknown";
-
-            console.log("📩 Messaggio Instagram ricevuto:");
-            console.log("Mittente:", from);
-            console.log("Tipo:", type);
-            console.log("Testo:", text);
-
-            if (from && text) {
-              try {
-                await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo (IG): ${text}`);
-                // se vuoi integrare OpenAI:
-                // await handleIncomingMessageMessanger(from, text, req, res);
-              } catch (err) {
-                console.error("❌ Errore invio risposta Instagram:", err);
-              }
-            }
+        if (from && text) {
+          try {
+            await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo (IG): ${text}`);
+            // oppure integra OpenAI qui
+          } catch (err) {
+            console.error("❌ Errore invio risposta Instagram:", err);
           }
-        } else {
-          console.log("⚠️ Nessun messaggio trovato in questo evento IG:", JSON.stringify(value, null, 2));
         }
       }
     }
 
     res.sendStatus(200);
-
   } catch (err) {
     console.error("❌ Errore webhook Instagram:", err);
     res.sendStatus(500);
