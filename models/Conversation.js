@@ -25,7 +25,7 @@ const conversationSchema = new Schema({
   progressiveNumber: { type: Number, unique: true },
   source: {
     type: String,
-    enum: ["whatsapp", "messenger", "instagram", "web", "altro"],
+    enum: ["whatsapp", "facebook", "instagram", "web", "altro"],
     required: true
   }
 }, { timestamps: true });
