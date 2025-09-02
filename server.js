@@ -232,13 +232,13 @@ async function handleHubSpotQuestions(senderId, messageText) {
   if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
     const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
     session.currentQuestion += 1;
-    await sendMessengerMessage(senderId, currentQuestionText);
+    await sendMessengerMessage(senderId, currentQuestionText);  
     return;
   }
 
   // Tutte le domande completate → processa il lead
   try {
-    const response = await fetch('https://tuo-backend.it/api/hubspot-lead', {
+    const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
