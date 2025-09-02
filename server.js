@@ -916,13 +916,13 @@ app.post("/webhookIg", async (req, res) => {
           if (from && text) {
             try {
               // await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo da Messenger:`);
-              let flag = false;
-              // ✅ Primo messaggio
-              if (!flag) {
-                await sendMessengerButton(from, welcomeMessage, welcomeButtons);
-                flag = true
-                return;
-              }
+              // let flag = false;
+              // // ✅ Primo messaggio
+              // if (!flag) {
+              //   await sendMessengerButton(from, welcomeMessage, welcomeButtons);
+              //   flag = true
+              //   return;
+              // }
 
               await handleIncomingMessageMessanger(from, text, req, res);
 
