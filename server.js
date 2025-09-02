@@ -19,13 +19,12 @@ import analizeIntent from './controllers/analizeIntentController.js';
 import hubespostController from './controllers/hubspotController.js';
 import healtController from './controllers/healtController.js';
 import dectailHealtController from './controllers/dectailHealtController.js';
-import { getHubSpotProperties } from './services/hubespostService.js';
+import { getHubSpotProperties, mapPropertiesWithAI } from './services/hubespostService.js';
 import statusController from './controllers/statusController.js';
 import errorController from './controllers/errorController.js';
 import globalErrorController from './controllers/globalErrorController.js';
 import { getUsersController, updateUserDisplayName, createUser, } from './controllers/usersController.js';
 import { editContact, getKnowledge } from './controllers/KnowledgeController.js'
-
 // Load environment variables
 dotenv.config();
 
@@ -239,7 +238,16 @@ async function handleHubSpotQuestions(senderId, messageText) {
 
   // Tutte le domande completate → processa il lead
   try {
-    const result = await processLead(senderId, session.data);
+    const response = await fetch('https://tuo-backend.it/api/hubspot-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        properties: session.data,
+        conversationId: senderId   // oppure il tuo conversationId se lo gestisci
+      })
+    });
+
+    const result = await response.json();
 
     if (result.success) {
       await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
@@ -253,7 +261,7 @@ async function handleHubSpotQuestions(senderId, messageText) {
   }
 }
 
-
+//||-------------------------------FACEBOOK----------------------------||\\
 async function handleIncomingMessageMessanger(from, text, req, res) {
   try {
     const messages = [

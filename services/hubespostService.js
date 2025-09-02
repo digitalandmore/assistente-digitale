@@ -51,7 +51,7 @@ export async function getHubSpotProperties() {
 }
 
 // AI Property Mapper - Mappa dati a proprietà HubSpot con AI
-async function mapPropertiesWithAI(inputData, availableProperties) {
+ async function mapPropertiesWithAI(inputData, availableProperties) {
     try {
         if (!process.env.OPENAI_API_KEY) {
             throw new Error('OpenAI API Key non disponibile per mapping');
