@@ -725,23 +725,19 @@ app.post("/webhook", async (req, res) => {
 app.post("/webhookIg", async (req, res) => {
   try {
     const entry = req.body.entry || [];
-
-    console.log("🔹 Webhook Messenger ricevuto:", JSON.stringify(req.body, null, 2));
+    console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
 
     for (const e of entry) {
-      const messagingEvents = e.messaging || [];
-      const isInstagram = msg.recipient.id && e.id === process.env.IG_USER_ID;
+      const messagingEvents = e.messaging || []; // NOT changes
+      console.log(messagingEvents)
+      for (const msg of messagingEvents) {
+        const from = msg.sender?.id;
+        const text = msg.message?.text;
 
-      console.log(isInstagram ? "Messaggio IG" : "Messaggio Messenger");
-      for (const event of messagingEvents) {
-        const from = event.sender?.id;
-        const text = event.message?.text;
-        const type = event.message ? "text" : "unknown";
-
-        console.log("📩 Messaggio Messenger ricevuto:");
+        console.log("📩 Messaggio Instagram ricevuto:");
         console.log("Mittente:", from);
-        console.log("Tipo:", type);
         console.log("Testo:", text);
+
 
         if (from && text) {
           try {
@@ -773,6 +769,7 @@ app.post("/webhookIgInstagram", async (req, res) => {
 
     for (const e of entry) {
       const messagingEvents = e.messaging || []; // NOT changes
+      console.log(messagingEvents)
       for (const msg of messagingEvents) {
         const from = msg.sender?.id;
         const text = msg.message?.text;
