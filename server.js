@@ -142,6 +142,18 @@ async function sendMessengerMessage(to, text) {
   });
   return res.json();
 }
+const igToken = process.env.IG_TOKEN; 
+async function sendInstagramMessage(to, text) {
+  const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      recipient: { id: to },
+      message: { text }
+    })
+  });
+  return res.json();
+}
 async function handleIncomingMessageMessanger(from, text, req, res) {
   try {
     const messages = [
