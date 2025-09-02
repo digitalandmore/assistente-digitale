@@ -283,10 +283,10 @@ const HUBSPOT_QUESTIONS = [
 //   );
 // }
 export async function handleHubSpotQuestions(senderId, messageText) {
-  // Se non esiste sessione, la creo e genero un conversationId unico
+  // Crea sessione se non esiste
   if (!userSessions.has(senderId)) {
     const conversationId = uuidv4();
-    userSessions.set(senderId, { data: {}, currentQuestion: 0, conversationId });
+    userSessions.set(senderId, { data: {}, currentQuestion: 0, conversationId, leadCompleted: false });
   }
 
   const session = userSessions.get(senderId);
@@ -404,64 +404,71 @@ export async function handleHubSpotQuestions(senderId, messageText) {
 //     await sendMessengerMessage(from, "❌ Errore interno, riprova più tardi.");
 //   }
 // }
-async function handleIncomingMessageMessanger(from, text, postbackPayload) {
+export async function handleIncomingMessageMessanger(from, text, payload) {
   try {
-    let conversationId;
-    if (userSessions.has(from)) {
-      conversationId = userSessions.get(from).conversationId;
-    }
-
-    // Se è un postback
-    if (postbackPayload) {
-      if (postbackPayload === "CONFIRM_LEAD") {
-        const session = userSessions.get(from);
-        if (session) {
-          await sendMessengerMessage(from, "⏳ Invio in corso...");
-          try {
-            const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                properties: session.data,
-                conversationId: session.conversationId
-              })
-            });
-            const result = await response.json();
-            if (result.success) {
-              await sendMessengerMessage(from, "✅ Grazie! La tua richiesta è stata inviata con successo.");
-            } else {
-              await sendMessengerMessage(from, "❌ C'è stato un problema nell'invio della richiesta.");
-            }
-          } catch (err) {
-            await sendMessengerMessage(from, `❌ Errore: ${err.message}`);
-          } finally {
-            userSessions.delete(from);
-          }
-        }
-        return;
-      } 
-      else if (postbackPayload === "CANCEL_LEAD") {
-        await sendMessengerMessage(from, "❌ Invio annullato. I tuoi dati non sono stati salvati.");
-        userSessions.delete(from);
-        return;
-      }
-    }
-
-    // Messaggio normale → invia ad AI
     const messages = [
       { role: "system", content: SYSTEM_PROMPT_FB },
       { role: "user", content: text }
     ];
+
+    // Ottieni sessione se esiste
+    let session = userSessions.get(from);
+
     const assistantHtml = await getOpenAIResponse(messages);
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
 
-    await saveMessagesFb(from, text, assistantText, conversationId || uuidv4());
+    // Salva messaggio con conversationId esistente o nuovo
+    await saveMessagesFb(from, text, assistantText, session?.conversationId || uuidv4());
 
-    if (assistantText === 'LEAD_GENERATION_START' || userSessions.has(from)) {
+    // Flow DEMO
+    if (assistantText === 'DEMO_CONFIRMED') {
+      const buttons = [
+        { type: "web_url", url: "https://assistente-digitale.it/e-commerce-demo/", title: "E-commerce Demo" },
+        { type: "web_url", url: "https://assistente-digitale.it/studio-dentistico-demo/", title: "Studio Dentistico Demo" }
+      ];
+      await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
+      return;
+    }
+
+    // Flow LEAD GENERATION
+    if ((assistantText === 'LEAD_GENERATION_START' || session) && !session?.leadCompleted) {
       await handleHubSpotQuestions(from, text);
       return;
     }
 
+    // Conferma lead
+    if (payload === "CONFIRM_LEAD" && session) {
+      await sendMessengerMessage(from, "⏳ Invio in corso...");
+      try {
+        const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            properties: session.data,
+            conversationId: session.conversationId
+          })
+        });
+        const result = await response.json();
+        if (result.success) {
+          session.leadCompleted = true; // il lead è completato, ma la sessione resta
+          await sendMessengerMessage(from, "✅ Grazie! La tua richiesta è stata inviata con successo.");
+        } else {
+          await sendMessengerMessage(from, "❌ C'è stato un problema nell'invio della richiesta.");
+        }
+      } catch (err) {
+        await sendMessengerMessage(from, `❌ Errore: ${err.message}`);
+      }
+      return;
+    }
+
+    // Annulla lead
+    if (payload === "CANCEL_LEAD" && session) {
+      await sendMessengerMessage(from, "❌ Invio annullato. I tuoi dati non sono stati salvati.");
+      userSessions.delete(from);
+      return;
+    }
+
+    // Risposta normale
     await sendMessengerMessage(from, assistantText);
 
   } catch (err) {
