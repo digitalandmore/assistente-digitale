@@ -142,9 +142,10 @@ async function sendMessengerMessage(to, text) {
   });
   return res.json();
 }
-const igToken = process.env.IG_TOKEN; 
+const igToken = process.env.IG_TOKEN;
+const igUserId = process.env.IG_USER_ID;
 async function sendInstagramMessage(to, text) {
-  const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
+  const res = await fetch(`https://graph.facebook.com/v17.0/${igUserId}/messages?access_token=${igToken}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -729,7 +730,9 @@ app.post("/webhookIg", async (req, res) => {
 
     for (const e of entry) {
       const messagingEvents = e.messaging || [];
+      const isInstagram = msg.recipient.id && e.id === process.env.IG_USER_ID;
 
+      console.log(isInstagram ? "Messaggio IG" : "Messaggio Messenger");
       for (const event of messagingEvents) {
         const from = event.sender?.id;
         const text = event.message?.text;
@@ -764,7 +767,7 @@ app.post("/webhookIg", async (req, res) => {
 });
 
 app.post("/webhookIgInstagram", async (req, res) => {
-   try {
+  try {
     const entry = req.body.entry || [];
     console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
 
