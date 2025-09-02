@@ -212,7 +212,7 @@ async function handleIncomingMessageMessanger(from, text, req, res) {
       }
     ];
     if (assistantText == 'DEMO_CONFIRMED') {
-      await sendMessengerButton(from, "Ciao! Scegli un'opzione:", buttons);
+      await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
     } else {
       // 🔹 Flusso normale
       await sendMessengerMessage(from, assistantText);
@@ -829,7 +829,7 @@ app.post("/webhookIg", async (req, res) => {
 
           if (from && text) {
             try {
-              await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo da Messenger:`);
+              // await sendMessengerMessage(from, `Ciao 👋 Sto rispondendo da Messenger:`);
 
 
               await handleIncomingMessageMessanger(from, text, req, res);
