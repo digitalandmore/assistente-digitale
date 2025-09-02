@@ -7,6 +7,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import session from 'express-session';
 import { fileURLToPath } from 'url';
+import { v4 as uuidv4 } from 'uuid';
 // Import controllers
 /* ==================== Controllers principali ==================== */
 import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages, saveMessagesFb } from './controllers/chatController.js';
