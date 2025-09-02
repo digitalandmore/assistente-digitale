@@ -176,27 +176,27 @@ async function handleIncomingMessageMessanger(from, text, req, res) {
 
 /* ==================== INTEGRAZIONE INSTAGRAM ==================== */
 // Funzione per inviare messaggi su Instagram tramite API Graph
-async function sendInstagramMessage(to, text) {
-  try {
-    const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${msgToken}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        recipient: { id: to },
-        message: { text }
-      })
-    });
+// async function sendInstagramMessage(to, text) {
+//   try {
+//     const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${msgToken}`, {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         recipient: { id: to },
+//         message: { text }
+//       })
+//     });
 
-    const data = await res.json();
-    if (data.error) {
-      console.error("❌ Errore invio messaggio IG:", data.error);
-    }
-    return data;
+//     const data = await res.json();
+//     if (data.error) {
+//       console.error("❌ Errore invio messaggio IG:", data.error);
+//     }
+//     return data;
 
-  } catch (err) {
-    console.error("❌ Errore fetch invio messaggio IG:", err);
-  }
-}
+//   } catch (err) {
+//     console.error("❌ Errore fetch invio messaggio IG:", err);
+//   }
+// }
 
 // Funzione gestione messaggio in arrivo Instagram con OpenAI
 async function handleIncomingMessageInstagram(from, text, req, res) {

@@ -124,7 +124,7 @@ const getArchiviedChatController = async (req, res) => {
 //     });
 //   }
 // }
-const DeleteChatController = async (req, res) => {
+const DeleteChatContoller = async (req, res) => {
   try {
     const { conversationId } = req.body;
     console.log('request body:', req.body);
@@ -207,4 +207,4 @@ const restoreChat = async (req, res) => {
   }
 };
 
-export { getChatController, getArchiviedChatController, DeleteChatController, restoreChat, getChatToThisMonth }
+export { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth }
