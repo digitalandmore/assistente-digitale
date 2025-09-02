@@ -189,7 +189,63 @@ async function sendInstagramMessage(to, text) {
   }
 }
 
+const userSessions = new Map();
 
+// Definisci le domande e le proprietà HubSpot corrispondenti
+const HUBSPOT_QUESTIONS = [
+  { key: 'nome', question: 'Qual è il tuo nome?' },
+  { key: 'cognome', question: 'Qual è il tuo cognome?' },
+  { key: 'email', question: 'Qual è la tua email aziendale?' },
+  { key: 'telefono', question: 'Il tuo numero di telefono?' },
+  { key: 'azienda', question: 'Qual è il nome della tua azienda?' },
+  { key: 'sito_web', question: 'Qual è il sito web della tua azienda?' },
+  { key: 'qualifica', question: 'Qual è il tuo ruolo in azienda?' },
+  { key: 'settore', question: 'In quale settore operi?' },
+  { key: 'messaggio', question: 'Descrivi brevemente le tue esigenze o richieste.' }
+];
+
+// Funzione principale per gestire le risposte dell’utente
+async function handleHubSpotQuestions(senderId, messageText) {
+  // Se non esiste una sessione per l'utente, iniziala
+  if (!userSessions.has(senderId)) {
+    userSessions.set(senderId, { data: {}, currentQuestion: 0 });
+  }
+
+  const session = userSessions.get(senderId);
+
+  // Salva la risposta alla domanda precedente (se non è la prima)
+  if (session.currentQuestion > 0) {
+    const prevKey = HUBSPOT_QUESTIONS[session.currentQuestion - 1].key;
+    session.data[prevKey] = messageText;
+  }
+
+  // Se ci sono altre domande da fare
+  if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
+    const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
+    session.currentQuestion += 1;
+
+    // Invia la prossima domanda all’utente su Messenger
+    await sendMessengerMessage(senderId, currentQuestionText);
+    return;
+  }
+
+  // Tutte le domande completate → invia a HubSpot + Formspree
+  try {
+    const hubspotResult = await submitToHubSpotAPI(session.data);
+    const formspreeResult = await submitToFormspree(session.data);
+
+    if (hubspotResult.success && formspreeResult.success) {
+      await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
+    } else {
+      await sendMessengerMessage(senderId, "❌ C'è stato un problema nell'invio della richiesta. Riprova più tardi.");
+    }
+  } catch (err) {
+    await sendMessengerMessage(senderId, `❌ Errore: ${err.message}`);
+  } finally {
+    // Pulisci la sessione
+    userSessions.delete(senderId);
+  }
+}
 async function handleIncomingMessageMessanger(from, text, req, res) {
   try {
     const messages = [
@@ -226,7 +282,8 @@ Cosa ti interessa?`;
       return;
     }
     else if (assistantText == 'LEAD_GENERATION_START') {
-      await sendMessengerButton(from, "Prenota subito una consulenza:", hubspot);
+      // await sendMessengerButton(from, "Prenota subito una consulenza:", hubspot);
+      await handleHubSpotQuestions(from, "");
     } else {
       await sendMessengerMessage(from, assistantText);
     }
