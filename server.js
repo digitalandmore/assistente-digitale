@@ -270,27 +270,18 @@ Cosa ti interessa?`;
       { type: "web_url", url: "https://assistente-digitale.it/studio-dentistico-demo/", title: "Studio Dentistico Demo" }
     ];
     const hubspot = [
-      {type:"web_url", url:"https://assistente-digitale.it", title:'Consulenza'}
+      { type: "web_url", url: "https://assistente-digitale.it/#contact", title: 'Consulenza' }
     ]
 
     if (assistantText === 'DEMO_CONFIRMED') {
       await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
       return;
     }
-    else if (assistantText == 'LEAD_GENERATION_START'){
+    else if (assistantText == 'LEAD_GENERATION_START') {
       await sendMessengerButton(from, "Prenota subito una consulenza:", hubspot);
+    } else {
+      await sendMessengerMessage(from, assistantText);
     }
-
-    // ✅ Controllo payload dei pulsanti postback
-    const messagingEvent = req.body.entry?.[0]?.messaging?.[0];
-    if (messagingEvent?.postback) {
-      const payload = messagingEvent.postback.payload;
-      await sendMessengerMessage(from, `Hai scelto: ${payload}`);
-      return;
-    }
-
-    // 🔹 Flusso normale
-    await sendMessengerMessage(from, assistantText);
 
   } catch (err) {
     console.error("Errore gestione messaggio entrante:", err);
