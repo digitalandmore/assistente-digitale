@@ -203,38 +203,45 @@ const HUBSPOT_QUESTIONS = [
   { key: 'settore', question: 'In quale settore operi?' },
   { key: 'messaggio', question: 'Descrivi brevemente le tue esigenze o richieste.' }
 ];
+async function processLead(senderId, leadData) {
+  // 1. Ottieni proprietà HubSpot
+  const properties = await getHubSpotProperties();
 
-// Funzione principale per gestire le risposte dell’utente
+  // 2. Mappa i dati con AI (o fallback)
+  const mappedData = await mapPropertiesWithAI(leadData, properties);
+
+  // 3. Invia a HubSpot
+  const result = await submitToHubSpotAPI(mappedData);
+
+  return result;
+}
+
 async function handleHubSpotQuestions(senderId, messageText) {
-  // Se non esiste una sessione per l'utente, iniziala
   if (!userSessions.has(senderId)) {
     userSessions.set(senderId, { data: {}, currentQuestion: 0 });
   }
 
   const session = userSessions.get(senderId);
 
-  // Salva la risposta alla domanda precedente (se non è la prima)
+  // Salva la risposta precedente
   if (session.currentQuestion > 0) {
     const prevKey = HUBSPOT_QUESTIONS[session.currentQuestion - 1].key;
     session.data[prevKey] = messageText;
   }
 
-  // Se ci sono altre domande da fare
+  // Se ci sono altre domande → invia la prossima
   if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
     const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
     session.currentQuestion += 1;
-
-    // Invia la prossima domanda all’utente su Messenger
     await sendMessengerMessage(senderId, currentQuestionText);
     return;
   }
 
-  // Tutte le domande completate → invia a HubSpot + Formspree
+  // Tutte le domande completate → processa il lead
   try {
-    const hubspotResult = await submitToHubSpotAPI(session.data);
-    const formspreeResult = await submitToFormspree(session.data);
+    const result = await processLead(senderId, session.data);
 
-    if (hubspotResult.success && formspreeResult.success) {
+    if (result.success) {
       await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
     } else {
       await sendMessengerMessage(senderId, "❌ C'è stato un problema nell'invio della richiesta. Riprova più tardi.");
@@ -242,10 +249,11 @@ async function handleHubSpotQuestions(senderId, messageText) {
   } catch (err) {
     await sendMessengerMessage(senderId, `❌ Errore: ${err.message}`);
   } finally {
-    // Pulisci la sessione
     userSessions.delete(senderId);
   }
 }
+
+
 async function handleIncomingMessageMessanger(from, text, req, res) {
   try {
     const messages = [
