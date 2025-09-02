@@ -9,7 +9,7 @@ import session from 'express-session';
 import { fileURLToPath } from 'url';
 // Import controllers
 /* ==================== Controllers principali ==================== */
-import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages,saveMessagesFb } from './controllers/chatController.js';
+import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages, saveMessagesFb } from './controllers/chatController.js';
 import { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth } from './controllers/getChatcontroller.js';
 import { saveToDbChatController, setLeadGenerationTrue } from './controllers/saveToDbChatController.js';
 
@@ -277,14 +277,28 @@ Cosa ti interessa?`;
       { type: "web_url", url: "https://assistente-digitale.it/#contact", title: 'Consulenza' }
     ]
 
+    // if (assistantText === 'DEMO_CONFIRMED') {
+    //   await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
+    //   return;
+    // }
+    // else if (assistantText == 'LEAD_GENERATION_START') {
+    //   // await sendMessengerButton(from, "Prenota subito una consulenza:", hubspot);
+    //   await handleHubSpotQuestions(from, "");
+    // } else {
+    //   await sendMessengerMessage(from, assistantText);
+    // }
     if (assistantText === 'DEMO_CONFIRMED') {
       await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
       return;
     }
-    else if (assistantText == 'LEAD_GENERATION_START') {
-      // await sendMessengerButton(from, "Prenota subito una consulenza:", hubspot);
-      await handleHubSpotQuestions(from, "");
-    } else {
+
+    // Se inizia lead generation o l'utente è già in sessione
+    else if (assistantText === 'LEAD_GENERATION_START' || userSessions.has(from)) {
+      await handleHubSpotQuestions(from, text); // qui text è la risposta dell'utente
+      return;
+    }
+
+    else {
       await sendMessengerMessage(from, assistantText);
     }
 
