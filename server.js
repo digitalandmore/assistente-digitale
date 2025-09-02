@@ -203,107 +203,265 @@ const HUBSPOT_QUESTIONS = [
   { key: 'messaggio', question: 'Descrivi brevemente le tue esigenze o richieste.' }
 ];
 
-async function handleHubSpotQuestions(senderId, messageText) {
+// async function handleHubSpotQuestions(senderId, messageText) {
+//   if (!userSessions.has(senderId)) {
+//     userSessions.set(senderId, { data: {}, currentQuestion: 0 });
+//   }
+
+//   const session = userSessions.get(senderId);
+
+//   // Salva la risposta precedente
+//   if (session.currentQuestion > 0) {
+//     const prevKey = HUBSPOT_QUESTIONS[session.currentQuestion - 1].key;
+//     session.data[prevKey] = messageText;
+//   }
+
+//   // Se ci sono altre domande → invia la prossima
+//   if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
+//     const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
+//     session.currentQuestion += 1;
+//     await sendMessengerMessage(senderId, currentQuestionText);  
+//     return;
+//   }
+
+//   // Tutte le domande completate → processa il lead
+//   try {
+//     await sendMessengerButton(senderId, 
+//       `Ecco i dati che hai inserito:\n\n${summary}\n\nVuoi confermare l'invio?`,
+//       [
+//         { type: "postback", title: "✅ Conferma", payload: "CONFIRM_LEAD" },
+//         { type: "postback", title: "❌ Annulla", payload: "CANCEL_LEAD" }
+//       ]
+//     );
+
+//     const result = await response.json();
+
+//     if (result.success) {
+//       await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
+//     } else {
+//       await sendMessengerMessage(senderId, "❌ C'è stato un problema nell'invio della richiesta. Riprova più tardi.");
+//     }
+//   } catch (err) {
+//     await sendMessengerMessage(senderId, `❌ Errore: ${err.message}`);
+//   } finally {
+//     userSessions.delete(senderId);
+//   }
+// }
+// async function handleHubSpotQuestions(senderId, messageText) {
+//   if (!userSessions.has(senderId)) {
+//     userSessions.set(senderId, { data: {}, currentQuestion: 0 });
+//   }
+
+//   const session = userSessions.get(senderId);
+
+//   // Salva risposta precedente
+//   if (session.currentQuestion > 0) {
+//     const prevKey = HUBSPOT_QUESTIONS[session.currentQuestion - 1].key;
+//     session.data[prevKey] = messageText;
+//   }
+
+//   // Se ci sono altre domande → invia la prossima
+//   if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
+//     const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
+//     session.currentQuestion += 1;
+//     await sendMessengerMessage(senderId, currentQuestionText);
+//     return;
+//   }
+
+//   // Tutte le domande completate → mostra riepilogo e chiedi conferma
+//   const summary = Object.entries(session.data)
+//     .map(([k, v]) => `• ${k}: ${v}`)
+//     .join("\n");
+
+//   await sendMessengerButton(senderId,
+//     `Ecco i dati che hai inserito:\n\n${summary}\n\nVuoi confermare l'invio?`,
+//     [
+//       { type: "postback", title: "✅ Conferma", payload: "CONFIRM_LEAD" },
+//       { type: "postback", title: "❌ Annulla", payload: "CANCEL_LEAD" }
+//     ]
+//   );
+// }
+export async function handleHubSpotQuestions(senderId, messageText) {
+  // Se non esiste sessione, la creo e genero un conversationId unico
   if (!userSessions.has(senderId)) {
-    userSessions.set(senderId, { data: {}, currentQuestion: 0 });
+    const conversationId = uuidv4();
+    userSessions.set(senderId, { data: {}, currentQuestion: 0, conversationId });
   }
 
   const session = userSessions.get(senderId);
 
-  // Salva la risposta precedente
+  // Salva risposta precedente
   if (session.currentQuestion > 0) {
     const prevKey = HUBSPOT_QUESTIONS[session.currentQuestion - 1].key;
     session.data[prevKey] = messageText;
   }
 
-  // Se ci sono altre domande → invia la prossima
+  // Invia prossima domanda se ci sono ancora domande
   if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
     const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
     session.currentQuestion += 1;
-    await sendMessengerMessage(senderId, currentQuestionText);  
+    await sendMessengerMessage(senderId, currentQuestionText);
     return;
   }
 
-  // Tutte le domande completate → processa il lead
-  try {
-    await sendMessengerButton(senderId, 
-      `Ecco i dati che hai inserito:\n\n${summary}\n\nVuoi confermare l'invio?`,
-      [
-        { type: "postback", title: "✅ Conferma", payload: "CONFIRM_LEAD" },
-        { type: "postback", title: "❌ Annulla", payload: "CANCEL_LEAD" }
-      ]
-    );
+  // Tutte le domande completate → mostra riepilogo e chiedi conferma
+  const summary = Object.entries(session.data)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join('\n');
 
-    const result = await response.json();
-
-    if (result.success) {
-      await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
-    } else {
-      await sendMessengerMessage(senderId, "❌ C'è stato un problema nell'invio della richiesta. Riprova più tardi.");
-    }
-  } catch (err) {
-    await sendMessengerMessage(senderId, `❌ Errore: ${err.message}`);
-  } finally {
-    userSessions.delete(senderId);
-  }
+  await sendMessengerButton(senderId,
+    `Ecco i dati che hai inserito:\n\n${summary}\n\nVuoi confermare l'invio?`,
+    [
+      { type: "postback", title: "✅ Conferma", payload: "CONFIRM_LEAD" },
+      { type: "postback", title: "❌ Annulla", payload: "CANCEL_LEAD" }
+    ]
+  );
 }
-
 //||-------------------------------FACEBOOK----------------------------||\\
-async function handleIncomingMessageMessanger(from, text, req, res) {
+// async function handleIncomingMessageMessanger(from, text, req, res) {
+//   try {
+//     const messages = [
+//       { role: "system", content: SYSTEM_PROMPT_FB },
+//       { role: "user", content: text }
+//     ];
+//     let conversationId;
+//     if (userSessions.has(from)) {
+//       conversationId = userSessions.get(from).conversationId;
+//     }
+//     const assistantHtml = await getOpenAIResponse(messages);
+//     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
+//     await saveMessagesFb(from, text, assistantText, conversationId || uuidv4());
+//     const welcomeMessage = `Benvenuto!
+// Sono il tuo consulente AI specializzato in soluzioni digitali per PMI.
+// Cosa ti interessa?`;
+
+//     const welcomeButtons = [
+//       { type: "postback", title: "Come funziona", payload: "Come funziona il vostro servizio?" },
+//       { type: "postback", title: "Vedi Demo", payload: "Vorrei vedere le demo disponibili" },
+//       { type: "postback", title: "Consulenza Gratuita", payload: "Richiedo informazioni per una consulenza" },
+//       { type: "postback", title: "Settori", payload: "Che settori seguite?" },
+//       { type: "postback", title: "Prezzi", payload: "Quali sono i costi?" },
+//       { type: "postback", title: "Integrazioni", payload: "Integrazione con i miei strumenti" },
+//     ];
+
+//     const buttons = [
+//       { type: "web_url", url: "https://assistente-digitale.it/e-commerce-demo/", title: "E-commerce Demo" },
+//       { type: "web_url", url: "https://assistente-digitale.it/studio-dentistico-demo/", title: "Studio Dentistico Demo" }
+//     ];
+//     const hubspot = [
+//       { type: "web_url", url: "https://assistente-digitale.it/#contact", title: 'Consulenza' }
+//     ]
+
+
+//     if (assistantText === 'DEMO_CONFIRMED') {
+//       await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
+//       return;
+//     }
+
+//     // Se inizia lead generation o l'utente è già in sessione
+//     else if (assistantText === 'LEAD_GENERATION_START' || userSessions.has(from)) {
+//       await handleHubSpotQuestions(from, text); // qui text è la risposta dell'utente
+//       return;
+//     }
+//     else if (payload === "CONFIRM_LEAD") {
+//       const session = userSessions.get(from);
+//       if (session) {
+//         await sendMessengerMessage(from, "⏳ Invio in corso...");
+//         try {
+//           const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({
+//               properties: session.data,
+//               conversationId: session.conversationId
+//             })
+//           });
+//           const result = await response.json();
+//           if (result.success) {
+//             await sendMessengerMessage(from, "✅ Grazie! La tua richiesta è stata inviata con successo.");
+//           } else {
+//             await sendMessengerMessage(from, "❌ C'è stato un problema nell'invio della richiesta.");
+//           }
+//         } catch (err) {
+//           await sendMessengerMessage(from, `❌ Errore: ${err.message}`);
+//         } finally {
+//           userSessions.delete(from);
+//         }
+//       }
+//     }
+
+//     else if (payload === "CANCEL_LEAD") {
+//       await sendMessengerMessage(from, "❌ Invio annullato. I tuoi dati non sono stati salvati.");
+//       userSessions.delete(from);
+//     }
+//     else {
+//       await sendMessengerMessage(from, assistantText);
+//     }
+
+//   } catch (err) {
+//     console.error("Errore gestione messaggio entrante:", err);
+//     await sendMessengerMessage(from, "❌ Errore interno, riprova più tardi.");
+//   }
+// }
+async function handleIncomingMessageMessanger(from, text, postbackPayload) {
   try {
+    let conversationId;
+    if (userSessions.has(from)) {
+      conversationId = userSessions.get(from).conversationId;
+    }
+
+    // Se è un postback
+    if (postbackPayload) {
+      if (postbackPayload === "CONFIRM_LEAD") {
+        const session = userSessions.get(from);
+        if (session) {
+          await sendMessengerMessage(from, "⏳ Invio in corso...");
+          try {
+            const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                properties: session.data,
+                conversationId: session.conversationId
+              })
+            });
+            const result = await response.json();
+            if (result.success) {
+              await sendMessengerMessage(from, "✅ Grazie! La tua richiesta è stata inviata con successo.");
+            } else {
+              await sendMessengerMessage(from, "❌ C'è stato un problema nell'invio della richiesta.");
+            }
+          } catch (err) {
+            await sendMessengerMessage(from, `❌ Errore: ${err.message}`);
+          } finally {
+            userSessions.delete(from);
+          }
+        }
+        return;
+      } 
+      else if (postbackPayload === "CANCEL_LEAD") {
+        await sendMessengerMessage(from, "❌ Invio annullato. I tuoi dati non sono stati salvati.");
+        userSessions.delete(from);
+        return;
+      }
+    }
+
+    // Messaggio normale → invia ad AI
     const messages = [
       { role: "system", content: SYSTEM_PROMPT_FB },
       { role: "user", content: text }
     ];
-
     const assistantHtml = await getOpenAIResponse(messages);
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-    await saveMessagesFb(from, text, assistantText);
-    const welcomeMessage = `Benvenuto!
-Sono il tuo consulente AI specializzato in soluzioni digitali per PMI.
-Cosa ti interessa?`;
 
-    const welcomeButtons = [
-      { type: "postback", title: "Come funziona", payload: "Come funziona il vostro servizio?" },
-      { type: "postback", title: "Vedi Demo", payload: "Vorrei vedere le demo disponibili" },
-      { type: "postback", title: "Consulenza Gratuita", payload: "Richiedo informazioni per una consulenza" },
-      { type: "postback", title: "Settori", payload: "Che settori seguite?" },
-      { type: "postback", title: "Prezzi", payload: "Quali sono i costi?" },
-      { type: "postback", title: "Integrazioni", payload: "Integrazione con i miei strumenti" },
-    ];
+    await saveMessagesFb(from, text, assistantText, conversationId || uuidv4());
 
-    const buttons = [
-      { type: "web_url", url: "https://assistente-digitale.it/e-commerce-demo/", title: "E-commerce Demo" },
-      { type: "web_url", url: "https://assistente-digitale.it/studio-dentistico-demo/", title: "Studio Dentistico Demo" }
-    ];
-    const hubspot = [
-      { type: "web_url", url: "https://assistente-digitale.it/#contact", title: 'Consulenza' }
-    ]
-
-
-    if (assistantText === 'DEMO_CONFIRMED') {
-      await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
+    if (assistantText === 'LEAD_GENERATION_START' || userSessions.has(from)) {
+      await handleHubSpotQuestions(from, text);
       return;
     }
 
-    // Se inizia lead generation o l'utente è già in sessione
-    else if (assistantText === 'LEAD_GENERATION_START' || userSessions.has(from)) {
-      await handleHubSpotQuestions(from, text); // qui text è la risposta dell'utente
-      return;
-    }
-    else if (assistantText === "CONFIRM_LEAD") {
-    const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        properties: session.data,
-        conversationId: senderId   // oppure il tuo conversationId se lo gestisci
-      })
-    });
-  }
-    else {
-      await sendMessengerMessage(from, assistantText);
-    }
+    await sendMessengerMessage(from, assistantText);
 
   } catch (err) {
     console.error("Errore gestione messaggio entrante:", err);
