@@ -204,53 +204,7 @@ const HUBSPOT_QUESTIONS = [
   { key: 'messaggio', question: 'Descrivi brevemente le tue esigenze o richieste.' }
 ];
 
-// export async function handleHubSpotQuestions(senderId, messageText) {
-//   // Crea sessione se non esiste
-//   if (!userSessions.has(senderId)) {
-//     const conversationId = uuidv4();
-//     userSessions.set(senderId, { data: {}, currentQuestion: 0, conversationId, leadCompleted: false });
-//   }
 
-//   const session = userSessions.get(senderId);
-
-//   // Salva risposta precedente
-//   if (session.currentQuestion > 0) {
-//     const prevKey = HUBSPOT_QUESTIONS[session.currentQuestion - 1].key;
-//     session.data[prevKey] = messageText;
-//   }
-
-//   // Invia prossima domanda se ci sono ancora domande
-//   if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
-//     const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
-//     session.currentQuestion += 1;
-//     await saveMessagesFb(senderId, null, currentQuestionText, session.conversationId);
-//     await sendMessengerMessage(senderId, currentQuestionText);
-//     return;
-//   }
-
-//   // Tutte le domande completate → processa il lead
-//   try {
-//     const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({
-//         properties: session.data,
-//         conversationId: senderId   // oppure il tuo conversationId se lo gestisci
-//       })
-//     });
-
-//     const result = await response.json();
-//     if (result.success) {
-//       await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
-//     } else {
-//       await sendMessengerMessage(senderId, "❌ C'è stato un problema nell'invio della richiesta. Riprova più tardi.");
-//     }
-//   } catch (err) {
-//     await sendMessengerMessage(senderId, `❌ Errore: ${err.message}`);
-//   } finally {
-//     userSessions.delete(senderId);
-//   }
-// }
 
 export async function handleHubSpotQuestions(senderId, messageText) {
   // Crea sessione se non esiste
@@ -268,7 +222,7 @@ export async function handleHubSpotQuestions(senderId, messageText) {
     const prevQuestion = HUBSPOT_QUESTIONS[prevIndex].question;
 
     session.data[prevKey] = messageText;
-    
+
     // Salva domanda + risposta su DB
     await saveMessagesFb(senderId, prevQuestion, messageText, session.conversationId);
   }
@@ -325,7 +279,7 @@ export async function handleIncomingMessageMessanger(from, text, payload) {
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
 
     // Salva messaggio con conversationId esistente o nuovo
-  
+
     await saveMessagesFb(from, text, assistantText, session?.conversationId || uuidv4());
 
     // Flow DEMO
@@ -801,13 +755,21 @@ async function handleIncomingMessage(from, text, req, res) {
       { role: "system", content: SYSTEM_PROMPT_WHATSAPP },
       { role: "user", content: text }
     ];
-
+    let session = userSessions.get(from);
+    if (!session) {
+      const conversationId = uuidv4();
+      session = { data: {}, currentQuestion: 0, conversationId, leadCompleted: false };
+      userSessions.set(from, session);
+    }
     const assistantHtml = await getOpenAIResponse(messages);
     // Converti HTML → testo leggibile da WhatsApp
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
     await saveMessages(from, text, assistantText);
     // 🔹 Se AI ha confermato un lead
-
+    if (assistantText === "LEAD_GENERATION_START") {
+      await handleHubSpotQuestionsWp(from, assistantText, session);
+      return;
+    }
     if (assistantText == 'DEMO_CONFIRMED') {
 
       await sendButtonMessage(
@@ -816,15 +778,7 @@ async function handleIncomingMessage(from, text, req, res) {
         "🚀 Vai alla Demo",
         "https://assistente-digitale.it/e-commerce-demo/"
       );
-      // await sendButtonMessage(
-      //   from,
-      //   "Ecco il link alla demo Assistente studio dentistico:",
-      //   "🚀 Vai alla Demo",
-      //   "https://assistente-digitale.it/studio-dentistico-demo/"
-      // );
-    }
-    else if (assistantText === "LEAD_GENERATION_START") {
-      handleHubSpotQuestionsWp(from, assistantText)
+
     }
     else {
 
