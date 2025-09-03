@@ -279,7 +279,7 @@ export async function handleHubSpotQuestions(senderId, messageText) {
     session.currentQuestion += 1;
 
     // Salva solo la domanda inviata, risposta ancora non disponibile
-    await saveMessagesFb(senderId, null, currentQuestionText, session.conversationId);
+    // await saveMessagesFb(senderId, null, currentQuestionText, session.conversationId);
 
     await sendMessengerMessage(senderId, currentQuestionText);
     return;
