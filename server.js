@@ -204,39 +204,42 @@ const HUBSPOT_QUESTIONS = [
   { key: 'messaggio', question: 'Descrivi brevemente le tue esigenze o richieste.' }
 ];
 
-// async function handleHubSpotQuestions(senderId, messageText) {
+// export async function handleHubSpotQuestions(senderId, messageText) {
+//   // Crea sessione se non esiste
 //   if (!userSessions.has(senderId)) {
-//     userSessions.set(senderId, { data: {}, currentQuestion: 0 });
+//     const conversationId = uuidv4();
+//     userSessions.set(senderId, { data: {}, currentQuestion: 0, conversationId, leadCompleted: false });
 //   }
 
 //   const session = userSessions.get(senderId);
 
-//   // Salva la risposta precedente
+//   // Salva risposta precedente
 //   if (session.currentQuestion > 0) {
 //     const prevKey = HUBSPOT_QUESTIONS[session.currentQuestion - 1].key;
 //     session.data[prevKey] = messageText;
 //   }
 
-//   // Se ci sono altre domande → invia la prossima
+//   // Invia prossima domanda se ci sono ancora domande
 //   if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
 //     const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
 //     session.currentQuestion += 1;
-//     await sendMessengerMessage(senderId, currentQuestionText);  
+//     await saveMessagesFb(senderId, null, currentQuestionText, session.conversationId);
+//     await sendMessengerMessage(senderId, currentQuestionText);
 //     return;
 //   }
 
 //   // Tutte le domande completate → processa il lead
 //   try {
-//     await sendMessengerButton(senderId, 
-//       `Ecco i dati che hai inserito:\n\n${summary}\n\nVuoi confermare l'invio?`,
-//       [
-//         { type: "postback", title: "✅ Conferma", payload: "CONFIRM_LEAD" },
-//         { type: "postback", title: "❌ Annulla", payload: "CANCEL_LEAD" }
-//       ]
-//     );
+//     const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({
+//         properties: session.data,
+//         conversationId: senderId   // oppure il tuo conversationId se lo gestisci
+//       })
+//     });
 
 //     const result = await response.json();
-
 //     if (result.success) {
 //       await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
 //     } else {
@@ -248,40 +251,7 @@ const HUBSPOT_QUESTIONS = [
 //     userSessions.delete(senderId);
 //   }
 // }
-// async function handleHubSpotQuestions(senderId, messageText) {
-//   if (!userSessions.has(senderId)) {
-//     userSessions.set(senderId, { data: {}, currentQuestion: 0 });
-//   }
 
-//   const session = userSessions.get(senderId);
-
-//   // Salva risposta precedente
-//   if (session.currentQuestion > 0) {
-//     const prevKey = HUBSPOT_QUESTIONS[session.currentQuestion - 1].key;
-//     session.data[prevKey] = messageText;
-//   }
-
-//   // Se ci sono altre domande → invia la prossima
-//   if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
-//     const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
-//     session.currentQuestion += 1;
-//     await sendMessengerMessage(senderId, currentQuestionText);
-//     return;
-//   }
-
-//   // Tutte le domande completate → mostra riepilogo e chiedi conferma
-//   const summary = Object.entries(session.data)
-//     .map(([k, v]) => `• ${k}: ${v}`)
-//     .join("\n");
-
-//   await sendMessengerButton(senderId,
-//     `Ecco i dati che hai inserito:\n\n${summary}\n\nVuoi confermare l'invio?`,
-//     [
-//       { type: "postback", title: "✅ Conferma", payload: "CONFIRM_LEAD" },
-//       { type: "postback", title: "❌ Annulla", payload: "CANCEL_LEAD" }
-//     ]
-//   );
-// }
 export async function handleHubSpotQuestions(senderId, messageText) {
   // Crea sessione se non esiste
   if (!userSessions.has(senderId)) {
@@ -291,16 +261,26 @@ export async function handleHubSpotQuestions(senderId, messageText) {
 
   const session = userSessions.get(senderId);
 
-  // Salva risposta precedente
+  // Salva risposta precedente con la domanda associata
   if (session.currentQuestion > 0) {
-    const prevKey = HUBSPOT_QUESTIONS[session.currentQuestion - 1].key;
+    const prevIndex = session.currentQuestion - 1;
+    const prevKey = HUBSPOT_QUESTIONS[prevIndex].key;
+    const prevQuestion = HUBSPOT_QUESTIONS[prevIndex].question;
+
     session.data[prevKey] = messageText;
+    
+    // Salva domanda + risposta su DB
+    await saveMessagesFb(senderId, prevQuestion, messageText, session.conversationId);
   }
 
   // Invia prossima domanda se ci sono ancora domande
   if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
     const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
     session.currentQuestion += 1;
+
+    // Salva solo la domanda inviata, risposta ancora non disponibile
+    await saveMessagesFb(senderId, null, currentQuestionText, session.conversationId);
+
     await sendMessengerMessage(senderId, currentQuestionText);
     return;
   }
@@ -312,12 +292,11 @@ export async function handleHubSpotQuestions(senderId, messageText) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         properties: session.data,
-        conversationId: senderId   // oppure il tuo conversationId se lo gestisci
+        conversationId: session.conversationId
       })
     });
 
     const result = await response.json();
-
     if (result.success) {
       await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
     } else {
@@ -346,6 +325,7 @@ export async function handleIncomingMessageMessanger(from, text, payload) {
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
 
     // Salva messaggio con conversationId esistente o nuovo
+  
     await saveMessagesFb(from, text, assistantText, session?.conversationId || uuidv4());
 
     // Flow DEMO
@@ -768,6 +748,53 @@ async function sendButtonMessage(to, bodyText, buttonTitle, url) {
     throw error;
   }
 }
+export async function handleHubSpotQuestionsWp(senderId, messageText) {
+  // Crea sessione se non esiste
+  if (!userSessions.has(senderId)) {
+    const conversationId = uuidv4();
+    userSessions.set(senderId, { data: {}, currentQuestion: 0, conversationId, leadCompleted: false });
+  }
+
+  const session = userSessions.get(senderId);
+
+  // Salva risposta precedente
+  if (session.currentQuestion > 0) {
+    const prevKey = HUBSPOT_QUESTIONS[session.currentQuestion - 1].key;
+    session.data[prevKey] = messageText;
+  }
+
+  // Invia prossima domanda se ci sono ancora domande
+  if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
+    const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
+    session.currentQuestion += 1;
+    await sendMessageSafe(senderId, currentQuestionText);
+    return;
+  }
+
+  // Tutte le domande completate → processa il lead
+  try {
+    const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        properties: session.data,
+        conversationId: senderId   // oppure il tuo conversationId se lo gestisci
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      await sendMessageSafe(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
+    } else {
+      await sendMessageSafe(senderId, "❌ C'è stato un problema nell'invio della richiesta. Riprova più tardi.");
+    }
+  } catch (err) {
+    await sendMessageSafe(senderId, `❌ Errore: ${err.message}`);
+  } finally {
+    userSessions.delete(senderId);
+  }
+}
 async function handleIncomingMessage(from, text, req, res) {
   try {
     const messages = [
@@ -780,27 +807,7 @@ async function handleIncomingMessage(from, text, req, res) {
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
     await saveMessages(from, text, assistantText);
     // 🔹 Se AI ha confermato un lead
-    if (assistantText === "LEAD_GENERATION_START") {
-      const properties = {
-        email: `${from}@wa-lead.temp`,
-        telefono: from,
-        message: text,
-        source: "WhatsApp"
-      };
-      // Fingi una req/res per riusare il controller
-      await hubespostController(
-        { body: { properties, conversationId: req.body.conversationId } },
-        { status: (code) => ({ json: (obj) => console.log('HubSpot res', code, obj) }) }
-      );
-      // if (assistantText === "DEMO_CONFIRMED") {
-      //   await sendWhatsAppMessage(from, "Ecco il link alla demo E-commerce: https://assistente-digitale.it/e-commerce-demo/");
-      // }
 
-      await sendMessageSafe(from, "🎉 Perfetto! Ti ho registrato come lead. Ti contatteremo entro 24 ore.");
-      return;
-    }
-
-    // 🔹 Flusso normale
     if (assistantText == 'DEMO_CONFIRMED') {
 
       await sendButtonMessage(
@@ -817,12 +824,7 @@ async function handleIncomingMessage(from, text, req, res) {
       // );
     }
     else if (assistantText === "LEAD_GENERATION_START") {
-      await sendButtonMessage(
-        from,
-        "Ecco il link per prenotare una consulenza grauita:",
-        "🚀 Vai alla Demo",
-        "https://assistente-digitale.it/register-hub-form/"
-      );
+      handleHubSpotQuestionsWp(from, assistantText)
     }
     else {
 
