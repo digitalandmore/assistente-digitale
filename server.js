@@ -305,19 +305,31 @@ export async function handleHubSpotQuestions(senderId, messageText) {
     return;
   }
 
-  // Tutte le domande completate → mostra riepilogo e chiedi conferma
-  const summary = Object.entries(session.data)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join('\n');
+  // Tutte le domande completate → processa il lead
+  try {
+    const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        properties: session.data,
+        conversationId: senderId   // oppure il tuo conversationId se lo gestisci
+      })
+    });
 
-  await sendMessengerButton(senderId,
-    `Ecco i dati che hai inserito:\n\n${summary}\n\nVuoi confermare l'invio?`,
-    [
-      { type: "postback", title: "✅ Conferma", payload: "CONFIRM_LEAD" },
-      { type: "postback", title: "❌ Annulla", payload: "CANCEL_LEAD" }
-    ]
-  );
+    const result = await response.json();
+
+    if (result.success) {
+      await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
+    } else {
+      await sendMessengerMessage(senderId, "❌ C'è stato un problema nell'invio della richiesta. Riprova più tardi.");
+    }
+  } catch (err) {
+    await sendMessengerMessage(senderId, `❌ Errore: ${err.message}`);
+  } finally {
+    userSessions.delete(senderId);
+  }
 }
+
 //||-------------------------------FACEBOOK----------------------------||\\
 
 export async function handleIncomingMessageMessanger(from, text, payload) {
