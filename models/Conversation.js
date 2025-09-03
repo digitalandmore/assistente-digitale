@@ -23,6 +23,7 @@ const conversationSchema = new Schema({
   sourcedLeads: { type: String, required: false },
   visualized: { type: Boolean, default: false },
   progressiveNumber: { type: Number, unique: true },
+  leadCompleted:{type : Boolean, default:false},
   source: {
     type: String,
     enum: ["whatsapp", "facebook", "instagram", "web", "altro"],

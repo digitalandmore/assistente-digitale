@@ -109,301 +109,6 @@ app.get('/api/config', (req, res) => {
 
 
 /* ==================== OPENAI PROXY ENDPOINTS ==================== */
-/* ==================== INTEGRAZIONE META ==================== */
-async function getOpenAIResponse(messages) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages,
-      max_tokens: 150,
-      temperature: 0.8
-    })
-  });
-
-  const data = await response.json();
-
-  return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
-}
-/* ==================== INTEGRAZIONE MESSENGER ==================== */
-const msgToken = process.env.MSG_TOKEN
-async function sendMessengerMessage(to, text) {
-  const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${msgToken}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      recipient: { id: to },
-      message: { text }
-    })
-  });
-  return res.json();
-}
-async function sendMessengerButton(to, text, buttons = []) {
-  const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${msgToken}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      recipient: { id: to },
-      message: {
-        attachment: {
-          type: "template",
-          payload: {
-            template_type: "button",
-            text: text,      // testo del messaggio
-            buttons: buttons // array di pulsanti
-          }
-        }
-      }
-    })
-  });
-
-  return res.json();
-}
-const igToken = process.env.IG_TOKEN;
-const igUserId = process.env.IG_USER_ID;
-async function sendInstagramMessage(to, text) {
-  try {
-    const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messaging_product: "instagram",  // Obbligatorio per IG
-        recipient: { id: to },           // Instagram User ID del destinatario
-        message: { text }
-      })
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      console.error("❌ Errore invio messaggio Instagram:", data);
-    }
-    return data;
-
-  } catch (err) {
-    console.error("❌ Fetch error Instagram:", err);
-    throw err;
-  }
-}
-
-const userSessions = new Map();
-
-// Definisci le domande e le proprietà HubSpot corrispondenti
-const HUBSPOT_QUESTIONS = [
-  { key: 'nome', question: 'Qual è il tuo nome?' },
-  { key: 'cognome', question: 'Qual è il tuo cognome?' },
-  { key: 'email', question: 'Qual è la tua email aziendale?' },
-  { key: 'telefono', question: 'Il tuo numero di telefono?' },
-  { key: 'azienda', question: 'Qual è il nome della tua azienda?' },
-  { key: 'sito_web', question: 'Qual è il sito web della tua azienda?' },
-  { key: 'qualifica', question: 'Qual è il tuo ruolo in azienda?' },
-  { key: 'settore', question: 'In quale settore operi?' },
-  { key: 'messaggio', question: 'Descrivi brevemente le tue esigenze o richieste.' }
-];
-
-
-
-export async function handleHubSpotQuestions(senderId, messageText) {
-  // Crea sessione se non esiste
-  if (!userSessions.has(senderId)) {
-    const conversationId = uuidv4();
-    userSessions.set(senderId, { data: {}, currentQuestion: 0, conversationId, leadCompleted: false });
-  }
-
-  const session = userSessions.get(senderId);
-
-  // Salva risposta precedente con la domanda associata
-  if (session.currentQuestion > 0) {
-    const prevIndex = session.currentQuestion - 1;
-    const prevKey = HUBSPOT_QUESTIONS[prevIndex].key;
-    const prevQuestion = HUBSPOT_QUESTIONS[prevIndex].question;
-
-    session.data[prevKey] = messageText;
-
-    // Salva domanda + risposta su DB
-    await saveMessagesFb(senderId, prevQuestion, messageText, session.conversationId);
-  }
-
-  // Invia prossima domanda se ci sono ancora domande
-  if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
-    const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
-    session.currentQuestion += 1;
-
-    // Salva solo la domanda inviata, risposta ancora non disponibile
-    // await saveMessagesFb(senderId, null, currentQuestionText, session.conversationId);
-
-    await sendMessengerMessage(senderId, currentQuestionText);
-    return;
-  }
-
-  // Tutte le domande completate → processa il lead
-  try {
-    const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        properties: session.data,
-        conversationId: session.conversationId
-      })
-    });
-
-    const result = await response.json();
-    if (result.success) {
-      await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
-    } else {
-      await sendMessengerMessage(senderId, "❌ C'è stato un problema nell'invio della richiesta. Riprova più tardi.");
-    }
-  } catch (err) {
-    await sendMessengerMessage(senderId, `❌ Errore: ${err.message}`);
-  } finally {
-    userSessions.delete(senderId);
-  }
-}
-
-//||-------------------------------FACEBOOK----------------------------||\\
-
-export async function handleIncomingMessageMessanger(from, text, payload) {
-  try {
-    const messages = [
-      { role: "system", content: SYSTEM_PROMPT_FB },
-      { role: "user", content: text }
-    ];
-
-    // Ottieni sessione se esiste
-    let session = userSessions.get(from);
-
-    const assistantHtml = await getOpenAIResponse(messages);
-    const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-
-    // Salva messaggio con conversationId esistente o nuovo
-
-    await saveMessagesFb(from, text, assistantText, session?.conversationId || uuidv4());
-
-    // Flow DEMO
-    if (assistantText === 'DEMO_CONFIRMED') {
-      const buttons = [
-        { type: "web_url", url: "https://assistente-digitale.it/e-commerce-demo/", title: "E-commerce Demo" },
-        { type: "web_url", url: "https://assistente-digitale.it/studio-dentistico-demo/", title: "Studio Dentistico Demo" }
-      ];
-      await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
-      return;
-    }
-
-    // Flow LEAD GENERATION
-    if ((assistantText === 'LEAD_GENERATION_START' || session) && !session?.leadCompleted) {
-      await handleHubSpotQuestions(from, text);
-      return;
-    }
-
-    // Conferma lead
-    if (payload === "CONFIRM_LEAD" && session) {
-      await sendMessengerMessage(from, "⏳ Invio in corso...");
-      try {
-        const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            properties: session.data,
-            conversationId: session.conversationId
-          })
-        });
-        const result = await response.json();
-        if (result.success) {
-          session.leadCompleted = true; // il lead è completato, ma la sessione resta
-          await sendMessengerMessage(from, "✅ Grazie! La tua richiesta è stata inviata con successo.");
-        } else {
-          await sendMessengerMessage(from, "❌ C'è stato un problema nell'invio della richiesta.");
-        }
-      } catch (err) {
-        await sendMessengerMessage(from, `❌ Errore: ${err.message}`);
-      }
-      return;
-    }
-
-    // Annulla lead
-    if (payload === "CANCEL_LEAD" && session) {
-      await sendMessengerMessage(from, "❌ Invio annullato. I tuoi dati non sono stati salvati.");
-      userSessions.delete(from);
-      return;
-    }
-
-    // Risposta normale
-    await sendMessengerMessage(from, assistantText);
-
-  } catch (err) {
-    console.error("Errore gestione messaggio entrante:", err);
-    await sendMessengerMessage(from, "❌ Errore interno, riprova più tardi.");
-  }
-}
-
-/* ==================== INTEGRAZIONE INSTAGRAM ==================== */
-
-// Funzione gestione messaggio in arrivo Instagram con OpenAI
-async function handleIncomingMessageInstagram(from, text, req, res) {
-  try {
-    const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: text }
-    ];
-
-    const assistantHtml = await getOpenAIResponse(messages);
-    const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-
-    await sendInstagramMessage(from, assistantText);
-
-  } catch (err) {
-    console.error("❌ Errore gestione messaggio IG:", err);
-    await sendInstagramMessage(from, "❌ Errore interno, riprova più tardi.");
-  }
-}
-
-// Webhook solo Instagram
-app.post("/webhookIgInstagram", async (req, res) => {
-  try {
-    const entry = req.body.entry || [];
-    console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
-
-    for (const e of entry) {
-      const changes = e.changes || [];
-
-      for (const change of changes) {
-        const value = change.value;
-        const messages = value.messages || [];
-
-        if (messages.length > 0) {
-          for (const msg of messages) {
-            const from = msg.from;
-            const text = msg.text?.body || msg.text;
-            const type = msg.type || "unknown";
-
-            console.log("📩 Messaggio Instagram ricevuto:");
-            console.log("Mittente:", from);
-            console.log("Tipo:", type);
-            console.log("Testo:", text);
-
-            if (from && text) {
-              await sendInstagramMessage(from, `Ciao 👋 Sto rispondendo: ${text}`);
-              // Se vuoi integrare OpenAI:
-              await handleIncomingMessageInstagram(from, text, req, res);
-            }
-          }
-        } else {
-          console.log("⚠️ Nessun messaggio trovato in questo evento IG:", JSON.stringify(value, null, 2));
-        }
-      }
-    }
-
-    res.sendStatus(200);
-  } catch (err) {
-    console.error("❌ Errore webhook Instagram:", err);
-    res.sendStatus(500);
-  }
-});
-
-/* ==================== INTEGRAZIONE WHATSAPP ==================== */
 const SYSTEM_PROMPT_WHATSAPP = `
 Sei l'Assistente Digitale, consulente AI professionale per PMI su WhatsApp Business.
 
@@ -649,6 +354,302 @@ QUANDO l'utente conferma esplicitamente l'interesse: rispondi spingendo l'utente
 - Non promettere mai risultati irrealistici
 `;
 
+/* ==================== INTEGRAZIONE META ==================== */
+async function getOpenAIResponse(messages) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 150,
+      temperature: 0.8
+    })
+  });
+
+  const data = await response.json();
+
+  return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
+}
+/* ==================== INTEGRAZIONE MESSENGER ==================== */
+const msgToken = process.env.MSG_TOKEN
+async function sendMessengerMessage(to, text) {
+  const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${msgToken}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      recipient: { id: to },
+      message: { text }
+    })
+  });
+  return res.json();
+}
+async function sendMessengerButton(to, text, buttons = []) {
+  const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${msgToken}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      recipient: { id: to },
+      message: {
+        attachment: {
+          type: "template",
+          payload: {
+            template_type: "button",
+            text: text,      // testo del messaggio
+            buttons: buttons // array di pulsanti
+          }
+        }
+      }
+    })
+  });
+
+  return res.json();
+}
+const igToken = process.env.IG_TOKEN;
+const igUserId = process.env.IG_USER_ID;
+async function sendInstagramMessage(to, text) {
+  try {
+    const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messaging_product: "instagram",  // Obbligatorio per IG
+        recipient: { id: to },           // Instagram User ID del destinatario
+        message: { text }
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      console.error("❌ Errore invio messaggio Instagram:", data);
+    }
+    return data;
+
+  } catch (err) {
+    console.error("❌ Fetch error Instagram:", err);
+    throw err;
+  }
+}
+
+const userSessions = new Map();
+
+// Definisci le domande e le proprietà HubSpot corrispondenti
+const HUBSPOT_QUESTIONS = [
+  { key: 'nome', question: 'Qual è il tuo nome?' },
+  { key: 'cognome', question: 'Qual è il tuo cognome?' },
+  { key: 'email', question: 'Qual è la tua email aziendale?' },
+  { key: 'telefono', question: 'Il tuo numero di telefono?' },
+  { key: 'azienda', question: 'Qual è il nome della tua azienda?' },
+  { key: 'sito_web', question: 'Qual è il sito web della tua azienda?' },
+  { key: 'qualifica', question: 'Qual è il tuo ruolo in azienda?' },
+  { key: 'settore', question: 'In quale settore operi?' },
+  { key: 'messaggio', question: 'Descrivi brevemente le tue esigenze o richieste.' }
+];
+
+
+
+export async function handleHubSpotQuestions(senderId, messageText) {
+  // Crea sessione se non esiste
+  if (!userSessions.has(senderId)) {
+    const conversationId = uuidv4();
+    userSessions.set(senderId, { data: {}, currentQuestion: 0, conversationId, leadCompleted: false });
+  }
+
+  const session = userSessions.get(senderId);
+
+  // Salva risposta precedente con la domanda associata
+  if (session.currentQuestion > 0) {
+    const prevIndex = session.currentQuestion - 1;
+    const prevKey = HUBSPOT_QUESTIONS[prevIndex].key;
+    const prevQuestion = HUBSPOT_QUESTIONS[prevIndex].question;
+
+    session.data[prevKey] = messageText;
+
+    // Salva domanda + risposta su DB
+    await saveMessagesFb(senderId, prevQuestion, messageText, session.conversationId);
+  }
+
+  // Invia prossima domanda se ci sono ancora domande
+  if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
+    const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
+    session.currentQuestion += 1;
+
+    // Salva solo la domanda inviata, risposta ancora non disponibile
+    // await saveMessagesFb(senderId, null, currentQuestionText, session.conversationId);
+
+    await sendMessengerMessage(senderId, currentQuestionText);
+    return;
+  }
+
+  // Tutte le domande completate → processa il lead
+  try {
+    const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        properties: session.data,
+        conversationId: session.conversationId
+      })
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      await sendMessengerMessage(senderId, "✅ Grazie! La tua richiesta è stata inviata con successo.");
+    } else {
+      await sendMessengerMessage(senderId, "❌ C'è stato un problema nell'invio della richiesta. Riprova più tardi.");
+    }
+  } catch (err) {
+    await sendMessengerMessage(senderId, `❌ Errore: ${err.message}`);
+  } finally {
+    userSessions.delete(senderId);
+  }
+}
+/* ==================== INTEGRAZIONE INSTAGRAM ==================== */
+
+// Funzione gestione messaggio in arrivo Instagram con OpenAI
+async function handleIncomingMessageInstagram(from, text, req, res) {
+  try {
+    const messages = [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: text }
+    ];
+
+    const assistantHtml = await getOpenAIResponse(messages);
+    const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
+
+    await sendInstagramMessage(from, assistantText);
+
+  } catch (err) {
+    console.error("❌ Errore gestione messaggio IG:", err);
+    await sendInstagramMessage(from, "❌ Errore interno, riprova più tardi.");
+  }
+}
+
+// Webhook solo Instagram
+app.post("/webhookIgInstagram", async (req, res) => {
+  try {
+    const entry = req.body.entry || [];
+    console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
+
+    for (const e of entry) {
+      const changes = e.changes || [];
+
+      for (const change of changes) {
+        const value = change.value;
+        const messages = value.messages || [];
+
+        if (messages.length > 0) {
+          for (const msg of messages) {
+            const from = msg.from;
+            const text = msg.text?.body || msg.text;
+            const type = msg.type || "unknown";
+
+            console.log("📩 Messaggio Instagram ricevuto:");
+            console.log("Mittente:", from);
+            console.log("Tipo:", type);
+            console.log("Testo:", text);
+
+            if (from && text) {
+              await sendInstagramMessage(from, `Ciao 👋 Sto rispondendo: ${text}`);
+              // Se vuoi integrare OpenAI:
+              await handleIncomingMessageInstagram(from, text, req, res);
+            }
+          }
+        } else {
+          console.log("⚠️ Nessun messaggio trovato in questo evento IG:", JSON.stringify(value, null, 2));
+        }
+      }
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Errore webhook Instagram:", err);
+    res.sendStatus(500);
+  }
+});
+//||-------------------------------FACEBOOK----------------------------||\\
+
+export async function handleIncomingMessageMessanger(from, text, payload) {
+  try {
+    const messages = [
+      { role: "system", content: SYSTEM_PROMPT_FB },
+      { role: "user", content: text }
+    ];
+
+    // Ottieni sessione se esiste
+    let session = userSessions.get(from);
+
+    const assistantHtml = await getOpenAIResponse(messages);
+    const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
+
+    // Salva messaggio con conversationId esistente o nuovo
+
+    await saveMessagesFb(from, text, assistantText, session?.conversationId || uuidv4());
+
+    // Flow DEMO
+    if (assistantText === 'DEMO_CONFIRMED') {
+      const buttons = [
+        { type: "web_url", url: "https://assistente-digitale.it/e-commerce-demo/", title: "E-commerce Demo" },
+        { type: "web_url", url: "https://assistente-digitale.it/studio-dentistico-demo/", title: "Studio Dentistico Demo" }
+      ];
+      await sendMessengerButton(from, "Certo! Scegli un'opzione:", buttons);
+      return;
+    }
+
+    // Flow LEAD GENERATION
+    if ((assistantText === 'LEAD_GENERATION_START' || session) && !session?.leadCompleted) {
+      await handleHubSpotQuestions(from, text);
+      return;
+    }
+
+    // Conferma lead
+    if (payload === "CONFIRM_LEAD" && session) {
+      await sendMessengerMessage(from, "⏳ Invio in corso...");
+      try {
+        const response = await fetch('https://assistente-digitale.onrender.com/api/hubspot/create-contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            properties: session.data,
+            conversationId: session.conversationId
+          })
+        });
+        const result = await response.json();
+        if (result.success) {
+          session.leadCompleted = true; // il lead è completato, ma la sessione resta
+          await sendMessengerMessage(from, "✅ Grazie! La tua richiesta è stata inviata con successo.");
+        } else {
+          await sendMessengerMessage(from, "❌ C'è stato un problema nell'invio della richiesta.");
+        }
+      } catch (err) {
+        await sendMessengerMessage(from, `❌ Errore: ${err.message}`);
+      }
+      return;
+    }
+
+    // Annulla lead
+    if (payload === "CANCEL_LEAD" && session) {
+      await sendMessengerMessage(from, "❌ Invio annullato. I tuoi dati non sono stati salvati.");
+      userSessions.delete(from);
+      return;
+    }
+
+    // Risposta normale
+    await sendMessengerMessage(from, assistantText);
+
+  } catch (err) {
+    console.error("Errore gestione messaggio entrante:", err);
+    await sendMessengerMessage(from, "❌ Errore interno, riprova più tardi.");
+  }
+}
+
+
+
+/* ==================== INTEGRAZIONE WHATSAPP ==================== */
+
 function htmlToWhatsappText(html) {
   if (!html) return '';
   // conversione semplice e safe: titoli -> newline, <li> -> •, <br>/<p> -> newline, strip tag
@@ -717,13 +718,14 @@ export async function handleHubSpotQuestionsWp(senderId, messageText) {
     session.data[prevKey] = messageText;
   }
 
-  // Invia prossima domanda se ci sono ancora domande
+  // Invia domanda successiva prima di incrementare currentQuestion
   if (session.currentQuestion < HUBSPOT_QUESTIONS.length) {
     const currentQuestionText = HUBSPOT_QUESTIONS[session.currentQuestion].question;
-    session.currentQuestion += 1;
     await sendMessageSafe(senderId, currentQuestionText);
+    session.currentQuestion += 1;
     return;
   }
+
 
   // Tutte le domande completate → processa il lead
   try {
@@ -766,8 +768,8 @@ async function handleIncomingMessage(from, text, req, res) {
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
     await saveMessages(from, text, assistantText);
     // 🔹 Se AI ha confermato un lead
-    if (assistantText === "LEAD_GENERATION_START") {
-      await handleHubSpotQuestionsWp(from, assistantText, session);
+    if ((assistantText === 'LEAD_GENERATION_START' || session) && !session?.leadCompleted) {
+      await handleHubSpotQuestionsWp(from, text);
       return;
     }
     if (assistantText == 'DEMO_CONFIRMED') {
