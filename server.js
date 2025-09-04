@@ -798,9 +798,8 @@ app.post("/webhookIgInstagram", async (req, res) => {
 
 export async function handleIncomingMessageMessanger(from, text, payload) {
   try {
-    prompt = generateSystemPrompt();
     const messages = [
-      { role: "system", content: prompt },
+      { role: "system", content: SYSTEM_PROMPT_FB },
       { role: "user", content: text }
     ];
 
