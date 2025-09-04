@@ -301,6 +301,56 @@ Ti interessa una consulenza gratuita per vedere come possiamo supportare il tuo 
 NON dare mai consigli generici su SEO, design, hosting o servizi che non offriamo.
 RIMANDA SEMPRE alle nostre soluzioni specifiche.
 `;
+// assistenteConfig.js
+export const assistenteConfig = {
+  assistente: {
+    nome: "Assistente Digitale",
+    descrizione: "Soluzioni di automazione e ottimizzazione per PMI",
+    sito_web: "https://assistente-digitale.it/",
+    sviluppatore: {
+      nome: "DIGITAL&MORE",
+      sito: "https://digitalandmore.it/",
+      specializzazione: "Soluzioni digitali innovative per PMI"
+    }
+  },
+  settori_sviluppati: {
+    ecommerce: {
+      nome: "E-commerce",
+      descrizione: "Piattaforma di vendita online automatizzata",
+      demo_url: "https://assistente-digitale.it/e-commerce-demo/",
+      funzionalita: ["Catalogo dinamico", "Gestione ordini", "Pagamenti online"],
+      benefici: ["Più vendite", "Automazione ordini"],
+      status: "Demo Disponibile"
+    },
+    dentistico: {
+      nome: "Studio Dentistico",
+      descrizione: "Sistema prenotazioni e gestione pazienti",
+      demo_url: "https://assistente-digitale.it/studio-dentistico-demo/",
+      funzionalita: ["Prenotazioni online", "Reminder automatici"],
+      benefici: ["Riduzione assenze", "Maggiore efficienza"],
+      status: "Demo Disponibile"
+    }
+  },
+  pricing: {
+    policy: "Preventivo personalizzato in base alle esigenze",
+    consulenza_gratuita: true,
+    trial_disponibile: "Demo live su richiesta"
+  },
+  processo_implementazione: [
+    { fase: "Analisi", descrizione: "Studio esigenze aziendali", durata: "1 settimana" },
+    { fase: "Setup", descrizione: "Configurazione sistemi", durata: "2 settimane" },
+    { fase: "Test", descrizione: "Verifica e ottimizzazione", durata: "1 settimana" }
+  ],
+  faq: [
+    { domanda: "Offrite assistenza post-installazione?", risposta: "Sì, sempre inclusa." },
+    { domanda: "Quanto dura l’implementazione?", risposta: "In media 3-4 settimane." }
+  ],
+  contatti: {
+    email_commerciale: "info@assistente-digitale.it",
+    telefono: "+39 0983 535253"
+  }
+};
+
 let leadGenState = {
     active: false,
     currentField: null,
