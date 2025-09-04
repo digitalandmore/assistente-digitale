@@ -368,28 +368,7 @@ let leadGenState = {
     ]
 };
 async function generateSystemPrompt() {
-    const oggi = new Date().toLocaleDateString('it-IT');
-
-    if (!assistenteConfig || typeof assistenteConfig !== 'object') {
-        debugLog('ERROR', 'assistenteConfig non disponibile per generateSystemPrompt');
-        throw new Error('Configurazione assistente non caricata');
-    }
-
-    const {
-        assistente,
-        settori_sviluppati = {},
-        contatti = {},
-        pricing = {},
-        processo_implementazione = [],
-        faq = []
-    } = assistenteConfig;
-
-    if (!assistente) {
-        debugLog('ERROR', 'Sezione assistente mancante nella configurazione');
-        throw new Error('Configurazione assistente incompleta');
-    }
-
-    openAiConfig.systemPromptTemplate = `
+    const prompt = `
 Sei ${assistente.nome}, un consulente AI professionale per PMI.
 
 === INFORMAZIONI AZIENDA ===
@@ -517,6 +496,7 @@ Ti interessa una CONSULENZA GRATUITA per vedere come possiamo supportare il tuo 
 NON dare mai consigli generici su SEO, design, hosting o servizi che non offriamo.
 RIMANDA SEMPRE alle nostre soluzioni specifiche.
 `;
+return prompt
 }
 const SYSTEM_PROMPT = `
 Sei l'Assistente Digitale, consulente AI professionale per PMI.
@@ -568,7 +548,8 @@ QUANDO l'utente conferma esplicitamente l'interesse: rispondi spingendo l'utente
 - Professionale, competente, cordiale
 - Focalizzato sui benefici concreti
 - Non promettere mai risultati irrealistici
-`;
+`
+;
 
 /* ==================== INTEGRAZIONE META ==================== */
 async function getOpenAIResponse(messages) {
