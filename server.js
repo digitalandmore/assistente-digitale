@@ -793,7 +793,7 @@ async function handleIncomingMessage(from, text, req, res) {
     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
     await saveMessages(from, text, assistantText);
     // 🔹 Se AI ha confermato un lead
-    if ((assistantText === 'LEAD_GENERATION_START' || session) && !session?.leadCompleted) {
+    if ((assistantText === 'LEAD_GENERATION_START' && !session?.leadCompleted) {
       await handleHubSpotQuestionsWp(from, text);
       return;
     }
