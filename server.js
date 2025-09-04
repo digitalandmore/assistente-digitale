@@ -434,24 +434,35 @@ const igUserId = process.env.IG_USER_ID;
 //   }
 // }
 async function sendInstagramMessage(recipientId, text) {
-  const PAGE_ID = process.env.IG_PAGE_ID;
 
   try {
-    await axios.post(
+    const response = await fetch(
       `https://graph.facebook.com/v21.0/${igUserId}/messages`,
       {
-        recipient: { id: recipientId },
-        message: { text }
-      },
-      {
-        headers: { Authorization: `Bearer ${igToken}` }
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${igToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          recipient: { id: recipientId },
+          message: { text }
+        })
       }
     );
-    console.log("✅ Risposta inviata a IG:", text);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(JSON.stringify(errorData, null, 2));
+    }
+
+    const data = await response.json();
+    console.log("✅ Risposta inviata a IG:", data);
   } catch (err) {
-    console.error("❌ Errore invio messaggio IG:", err.response?.data || err.message);
+    console.error("❌ Errore invio messaggio IG:", err.message);
   }
 }
+
 
 
 const userSessions = new Map();
