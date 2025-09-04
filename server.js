@@ -408,8 +408,7 @@ async function sendMessengerButton(to, text, buttons = []) {
 
   return res.json();
 }
-const igToken = process.env.IG_TOKEN;
-const igUserId = process.env.IG_USER_ID;
+
 // async function sendInstagramMessage(to, text) {
 //   try {
 //     const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
@@ -433,11 +432,12 @@ const igUserId = process.env.IG_USER_ID;
 //     throw err;
 //   }
 // }
+const igToken = process.env.IG_TOKEN;
+const igUserId = process.env.IG_USER_ID;
 async function sendInstagramMessage(recipientId, text) {
-
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/${igUserId}/messages`,
+      `https://graph.facebook.com/v21.0/${msgToken}/messages`,
       {
         method: "POST",
         headers: {
