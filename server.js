@@ -433,18 +433,19 @@ async function sendMessengerButton(to, text, buttons = []) {
 //   }
 // }
 const igToken = process.env.IG_TOKEN;
-const igUserId = process.env.IG_USER_ID;
+const pageIgId = process.env.IG_USER_ID;
 async function sendInstagramMessage(recipientId, text) {
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v21.0/${msgToken}/messages`,
+      `https://graph.facebook.com/v21.0/${pageIgId}/messages`,
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${igToken}`,
+          "Authorization": `Bearer ${msgToken}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          messaging_product: "instagram",
           recipient: { id: recipientId },
           message: { text }
         })
@@ -462,6 +463,7 @@ async function sendInstagramMessage(recipientId, text) {
     console.error("❌ Errore invio messaggio IG:", err.message);
   }
 }
+
 
 
 
