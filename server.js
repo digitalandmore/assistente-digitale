@@ -410,29 +410,49 @@ async function sendMessengerButton(to, text, buttons = []) {
 }
 const igToken = process.env.IG_TOKEN;
 const igUserId = process.env.IG_USER_ID;
-async function sendInstagramMessage(to, text) {
+// async function sendInstagramMessage(to, text) {
+//   try {
+//     const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         messaging_product: "instagram",  // Obbligatorio per IG
+//         recipient: { id: to },           // Instagram User ID del destinatario
+//         message: { text }
+//       })
+//     });
+
+//     const data = await res.json();
+//     if (!res.ok) {
+//       console.error("❌ Errore invio messaggio Instagram:", data);
+//     }
+//     return data;
+
+//   } catch (err) {
+//     console.error("❌ Fetch error Instagram:", err);
+//     throw err;
+//   }
+// }
+async function sendInstagramMessage(recipientId, text) {
+  const PAGE_ID = process.env.IG_PAGE_ID;
+
   try {
-    const res = await fetch(`https://graph.facebook.com/v17.0/me/messages?access_token=${igToken}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messaging_product: "instagram",  // Obbligatorio per IG
-        recipient: { id: to },           // Instagram User ID del destinatario
+    await axios.post(
+      `https://graph.facebook.com/v21.0/${igUserId}/messages`,
+      {
+        recipient: { id: recipientId },
         message: { text }
-      })
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      console.error("❌ Errore invio messaggio Instagram:", data);
-    }
-    return data;
-
+      },
+      {
+        headers: { Authorization: `Bearer ${igToken}` }
+      }
+    );
+    console.log("✅ Risposta inviata a IG:", text);
   } catch (err) {
-    console.error("❌ Fetch error Instagram:", err);
-    throw err;
+    console.error("❌ Errore invio messaggio IG:", err.response?.data || err.message);
   }
 }
+
 
 const userSessions = new Map();
 
@@ -535,31 +555,24 @@ app.post("/webhookIgInstagram", async (req, res) => {
     console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
 
     for (const e of entry) {
-      const changes = e.changes || [];
+      const messagingEvents = e.messaging || [];
 
-      for (const change of changes) {
-        const value = change.value;
-        const messages = value.messages || [];
+      for (const event of messagingEvents) {
+        const senderId = event.sender?.id;
+        const recipientId = event.recipient?.id;
+        const text = event.message?.text;
 
-        if (messages.length > 0) {
-          for (const msg of messages) {
-            const from = msg.from;
-            const text = msg.text?.body || msg.text;
-            const type = msg.type || "unknown";
+        console.log("📩 Messaggio Instagram ricevuto:");
+        console.log("Mittente:", senderId);
+        console.log("Destinatario (pagina IG):", recipientId);
+        console.log("Testo:", text);
 
-            console.log("📩 Messaggio Instagram ricevuto:");
-            console.log("Mittente:", from);
-            console.log("Tipo:", type);
-            console.log("Testo:", text);
+        if (senderId && text) {
+          // Risposta automatica
+          await sendInstagramMessage(senderId, `Ciao 👋 Sto rispondendo: ${text}`);
 
-            if (from && text) {
-              await sendInstagramMessage(from, `Ciao 👋 Sto rispondendo: ${text}`);
-              // Se vuoi integrare OpenAI:
-              await handleIncomingMessageInstagram(from, text, req, res);
-            }
-          }
-        } else {
-          console.log("⚠️ Nessun messaggio trovato in questo evento IG:", JSON.stringify(value, null, 2));
+          // Se vuoi integrare GPT
+          await handleIncomingMessageInstagram(senderId, text, req, res);
         }
       }
     }
@@ -570,6 +583,7 @@ app.post("/webhookIgInstagram", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 //||-------------------------------FACEBOOK----------------------------||\\
 
 export async function handleIncomingMessageMessanger(from, text, payload) {
