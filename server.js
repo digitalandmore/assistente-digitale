@@ -781,12 +781,6 @@ app.post("/webhookIg", async (req, res) => {
 
           if (from && text) {
             try {
-              await saveMessagesFb({
-                userId: from,
-                message: text,
-                conversationId: id,
-                timestamp: new Date()
-              });
               let reply = "Sorry, I didn’t understand.";
               await saveMessagesFb(from, text, id);
               if (text.toLowerCase().includes("hello")) {
