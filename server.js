@@ -375,7 +375,7 @@ app.post("/webhookIgInstagram", async (req, res) => {
 
         if (senderId && text) {
           // Risposta automatica
-          await sendInstagramMessage(senderId, `Ciao 👋 Sto rispondendo: ${text}`);
+          // await sendInstagramMessage(senderId, `Ciao 👋 Sto rispondendo: ${text}`);
 
           // Se vuoi integrare GPT
           await handleIncomingMessageInstagram(senderId, text, req, res);
