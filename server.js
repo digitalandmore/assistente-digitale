@@ -767,7 +767,7 @@ app.post("/webhookIg", async (req, res) => {
   try {
     const entry = req.body.entry || [];
     console.log("🔹 Webhook Instagram ricevuto:", JSON.stringify(req.body, null, 2));
-
+    const id = 123546456
     for (const e of entry) {
       // 👉 Caso 1: MESSENGER (usa e.messaging)
       if (e.messaging) {
@@ -781,17 +781,23 @@ app.post("/webhookIg", async (req, res) => {
 
           if (from && text) {
             try {
+              await saveMessagesFb({
+                userId: from,
+                message: text,
+                conversationId: id,
+                timestamp: new Date()
+              });
               let reply = "Sorry, I didn’t understand.";
-
+              await saveMessagesFb(id, prevQuestion, messageText, session.conversationId);
               if (text.toLowerCase().includes("hello")) {
                 reply = "Hello, I'm your digital assistant!";
               } else if (text.toLowerCase().includes("can i book a consultation?")) {
                 reply = "Yes, of course! You can send me your email or phone number, and our operator will call you soon.";
               }
-               else if (text.toLowerCase().includes("test@email.it")) {
+              else if (text.toLowerCase().includes("test@email.it")) {
                 reply = "Great, our operator will contact you soon.";
               }
-               else if (text.toLowerCase().includes("thanks")) {
+              else if (text.toLowerCase().includes("thanks")) {
                 reply = "Thank you for choosing us! See you soon.";
               }
 
