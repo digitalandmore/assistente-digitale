@@ -218,8 +218,10 @@ export async function getOpenAIResponse(messages, onToken) {
 
   return assistantText; // testo completo al termine
 }
+  const data = await response.json();
 
-
+  return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
+}
 /* ==================== INTEGRAZIONE MESSENGER ==================== */
 const msgToken = process.env.MSG_TOKEN
 async function sendMessengerMessage(to, text) {
@@ -361,88 +363,30 @@ export async function handleHubSpotQuestions(senderId, messageText) {
 }
 /* ==================== INTEGRAZIONE INSTAGRAM ==================== */
 // Funzione gestione messaggio in arrivo Instagram con OpenAI
-// async function handleIncomingMessageInstagram(from, text, req, res) {
-//   const assistenteConfig = await loadConfiguration('Assistente Digitale');
-//   if (!assistenteConfig) {
-//     throw new Error("Configurazione non trovata");
-//   }
-
-//   // 2️⃣ Genero il system prompt dinamico
-//   const systemPrompt = await generateSystemPrompt(assistenteConfig);
-//   try {
-//     const messages = [
-//       { role: "system", content: systemPrompt },
-//       { role: "user", content: text }
-//     ];
-
-//     const assistantHtml = await getOpenAIResponse(messages);
-//     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
-
-//     await sendInstagramMessage(from, assistantText);
-
-//   } catch (err) {
-//     console.error("❌ Errore gestione messaggio IG:", err);
-//     await sendInstagramMessage(from, "❌ Errore interno, riprova più tardi.");
-//   }
-// }
-// Funzione helper per inviare messaggi parziali ogni 50 token
-async function sendInstagramMessagePartial(from, token, state) {
-  // Assicurati che state sia inizializzato
-  if (!state.buffer) state.buffer = "";
-  if (!state.count) state.count = 0;
-
-  state.buffer += token;
-  state.count += 1;
-
-  if (state.count >= 50) {
-    await sendInstagramMessage(from, state.buffer);
-    state.buffer = "";
-    state.count = 0;
-  }
-}
-const processingUsers = new Set();
-
-async function handleIncomingMessageInstagram(from, text) {
-  if (from === pageIgId) return; // ignora messaggi del bot
-  if (processingUsers.has(from)) return; // evita nuovi trigger mentre stiamo rispondendo
-
-  processingUsers.add(from);
-
+async function handleIncomingMessageInstagram(from, text, req, res) {
   const assistenteConfig = await loadConfiguration('Assistente Digitale');
+  if (!assistenteConfig) {
+    throw new Error("Configurazione non trovata");
+  }
+
+  // 2️⃣ Genero il system prompt dinamico
   const systemPrompt = await generateSystemPrompt(assistenteConfig);
-
-  const messages = [
-    { role: "system", content: systemPrompt },
-    { role: "user", content: text }
-  ];
-
-  const state = { buffer: "", count: 0 };
-
   try {
-    await getOpenAIResponse(messages, async (token) => {
-      state.buffer += token;
-      state.count += 1;
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: text }
+    ];
 
-      if (state.count >= 50) {
-        await sendInstagramMessage(from, state.buffer);
-        state.buffer = "";
-        state.count = 0;
-      }
-    });
+    const assistantHtml = await getOpenAIResponse(messages);
+    const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
 
-    // invia eventuale testo rimanente
-    if (state.buffer.length > 0) {
-      await sendInstagramMessage(from, state.buffer);
-    }
+    await sendInstagramMessage(from, assistantText);
 
   } catch (err) {
     console.error("❌ Errore gestione messaggio IG:", err);
     await sendInstagramMessage(from, "❌ Errore interno, riprova più tardi.");
-  } finally {
-    processingUsers.delete(from);
   }
 }
-
 
 // Webhook solo Instagram
 app.post("/webhookIgInstagram", async (req, res) => {
