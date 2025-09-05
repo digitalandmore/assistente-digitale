@@ -28,6 +28,8 @@ import { getUsersController, updateUserDisplayName, createUser, } from './contro
 import { editContact, getKnowledge } from './controllers/KnowledgeController.js'
 import { SYSTEM_PROMPT_WHATSAPP } from './services/promtp/systemPropmtWp.js'
 import { SYSTEM_PROMPT_FB } from './services/promtp/systemPromptFb.js'
+
+import {loadConfiguration, generateSystemPrompt} from './services/promtp/generatesystemPrompt.js'
 // Load environment variables
 dotenv.config();
 
@@ -327,7 +329,6 @@ export async function handleHubSpotQuestions(senderId, messageText) {
   }
 }
 /* ==================== INTEGRAZIONE INSTAGRAM ==================== */
-// import {loadConfiguration, generateSystemPrompt} from './services/promtp/generatesystemPrompt.js'
 // Funzione gestione messaggio in arrivo Instagram con OpenAI
 async function handleIncomingMessageInstagram(from, text, req, res) {
   const assistenteConfig = await loadConfiguration('Assistente Digitale');
