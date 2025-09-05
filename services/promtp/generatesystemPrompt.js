@@ -23,7 +23,7 @@ async function loadConfiguration(nomeAssistente) {
     }
 }
 
-export async function generateSystemPrompt(assistenteConfig) {
+async function generateSystemPrompt(assistenteConfig) {
     const oggi = new Date().toLocaleDateString("it-IT");
 
     if (!assistenteConfig || typeof assistenteConfig !== "object") {
@@ -153,38 +153,4 @@ IMPORTANTE: Usa SEMPRE la formattazione HTML nelle tue risposte:
 
     return systemPrompt;
 }
-export async function initAI(nomeAssistente) {
-    try {
-        // 1️⃣ Recupero configurazione dal backend
-        const assistenteConfig = await loadConfiguration(nomeAssistente);
-
-        if (!assistenteConfig) {
-            throw new Error("Configurazione non trovata");
-        }
-
-        // 2️⃣ Genero il system prompt dinamico
-        const systemPrompt = await generateSystemPrompt(assistenteConfig);
-
-        // 3️⃣ Uso systemPrompt nella chiamata a OpenAI
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "gpt-4o-mini", // o il modello che preferisci
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: "Ciao, dimmi cosa puoi fare per la mia azienda" }
-                ]
-            })
-        });
-
-        const data = await response.json();
-        console.log("💬 Risposta AI:", data.choices[0].message.content);
-
-    } catch (err) {
-        console.error("❌ Errore initAI:", err);
-    }
-}
+export {generateSystemPrompt, loadConfiguration}

@@ -327,7 +327,7 @@ export async function handleHubSpotQuestions(senderId, messageText) {
   }
 }
 /* ==================== INTEGRAZIONE INSTAGRAM ==================== */
-
+// import {loadConfiguration, generateSystemPrompt} from './services/promtp/generatesystemPrompt.js'
 // Funzione gestione messaggio in arrivo Instagram con OpenAI
 async function handleIncomingMessageInstagram(from, text, req, res) {
   const assistenteConfig = await loadConfiguration('Assistente Digitale');
@@ -959,10 +959,6 @@ function listRoutes(app) {
     }
   });
 }
-import { initAI } from './services/promtp/generatesystemPrompt.js';
-// const ai = initAI("Assistente Digitale");
-// console.log(ai)
-// Dopo aver registrato tutte le rotte:
 listRoutes(app);
 /* ==================== SERVER STARTUP ==================== */
 
