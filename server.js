@@ -28,7 +28,7 @@ import { getUsersController, updateUserDisplayName, createUser, } from './contro
 import { editContact, getKnowledge } from './controllers/KnowledgeController.js'
 import { SYSTEM_PROMPT_WHATSAPP } from './services/promtp/systemPropmtWp.js'
 import { SYSTEM_PROMPT_FB } from './services/promtp/systemPromptFb.js'
-
+import OpenAI from "openai";
 import {loadConfiguration, generateSystemPrompt} from './services/promtp/generatesystemPrompt.js'
 // Load environment variables
 dotenv.config();
@@ -170,25 +170,56 @@ QUANDO l'utente conferma esplicitamente l'interesse: rispondi spingendo l'utente
   ;
 
 /* ==================== INTEGRAZIONE META ==================== */
-async function getOpenAIResponse(messages) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages,
-      max_tokens: 150,
-      temperature: 0.8
-    })
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+// async function getOpenAIResponse(messages) {
+//   const response = await fetch('https://api.openai.com/v1/chat/completions', {
+//     method: 'POST',
+//     headers: {
+//       'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+//       'Content-Type': 'application/json'
+//     },
+//     body: JSON.stringify({
+//       model: 'gpt-4o-mini',
+//       messages,
+//       max_tokens: 500,
+//       temperature: 0.8
+//     })
+//   });
+/**
+ * Genera la risposta con streaming e chiama `onToken` per ogni token ricevuto.
+ * @param {Array} messages - Array di messaggi per il modello
+ * @param {Function} onToken - Callback chiamata per ogni token generato
+ */
+export async function getOpenAIResponse(messages, onToken) {
+  if (typeof onToken !== "function") {
+    throw new Error("Devi passare una callback onToken per ricevere lo streaming");
+  }
+
+  let assistantText = "";
+
+  const stream = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages,
+    max_tokens: 800,
+    temperature: 0.8,
+    stream: true
   });
 
-  const data = await response.json();
+  // Ricevi token man mano
+  for await (const event of stream) {
+    const delta = event.choices?.[0]?.delta?.content;
+    if (delta) {
+      assistantText += delta;
+      onToken(delta); // invia subito il token al tuo callback (IG/Messenger)
+    }
+  }
 
-  return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
+  return assistantText; // testo completo al termine
 }
+
+
 /* ==================== INTEGRAZIONE MESSENGER ==================== */
 const msgToken = process.env.MSG_TOKEN
 async function sendMessengerMessage(to, text) {
@@ -330,24 +361,76 @@ export async function handleHubSpotQuestions(senderId, messageText) {
 }
 /* ==================== INTEGRAZIONE INSTAGRAM ==================== */
 // Funzione gestione messaggio in arrivo Instagram con OpenAI
+// async function handleIncomingMessageInstagram(from, text, req, res) {
+//   const assistenteConfig = await loadConfiguration('Assistente Digitale');
+//   if (!assistenteConfig) {
+//     throw new Error("Configurazione non trovata");
+//   }
+
+//   // 2️⃣ Genero il system prompt dinamico
+//   const systemPrompt = await generateSystemPrompt(assistenteConfig);
+//   try {
+//     const messages = [
+//       { role: "system", content: systemPrompt },
+//       { role: "user", content: text }
+//     ];
+
+//     const assistantHtml = await getOpenAIResponse(messages);
+//     const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
+
+//     await sendInstagramMessage(from, assistantText);
+
+//   } catch (err) {
+//     console.error("❌ Errore gestione messaggio IG:", err);
+//     await sendInstagramMessage(from, "❌ Errore interno, riprova più tardi.");
+//   }
+// }
+// Funzione helper per inviare messaggi parziali ogni 50 token
+async function sendInstagramMessagePartial(from, token, state) {
+  // state è un oggetto per mantenere buffer e conteggio tra le chiamate
+  state.buffer += token;
+  state.count += 1;
+
+  if (state.count >= 50) {
+    // Invia il messaggio su IG
+    await sendInstagramMessage(from, state.buffer);
+
+    // Reset buffer e contatore
+    state.buffer = "";
+    state.count = 0;
+  }
+}
 async function handleIncomingMessageInstagram(from, text, req, res) {
   const assistenteConfig = await loadConfiguration('Assistente Digitale');
   if (!assistenteConfig) {
     throw new Error("Configurazione non trovata");
   }
 
-  // 2️⃣ Genero il system prompt dinamico
   const systemPrompt = await generateSystemPrompt(assistenteConfig);
+
   try {
     const messages = [
       { role: "system", content: systemPrompt },
       { role: "user", content: text }
     ];
 
-    const assistantHtml = await getOpenAIResponse(messages);
-    const assistantText = htmlToWhatsappText(assistantHtml) || "🤖 Risposta non disponibile";
+    let buffer = "";
 
-    await sendInstagramMessage(from, assistantText);
+    // Streaming: ricevi token man mano
+    await getOpenAIResponse(messages, async (token) => {
+      buffer += token;
+
+      // Invia a IG ogni 50 caratteri
+      if (buffer.length > 50) {
+        await sendInstagramMessagePartial(from, buffer);
+        buffer = "";
+      }
+    });
+
+    // Invia eventuale testo rimanente
+    if (buffer.length > 0) {
+      await sendInstagramMessage(from, buffer);
+    }
 
   } catch (err) {
     console.error("❌ Errore gestione messaggio IG:", err);
