@@ -173,36 +173,36 @@ QUANDO l'utente conferma esplicitamente l'interesse: rispondi spingendo l'utente
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
-// async function getOpenAIResponse(messages) {
-//   const response = await fetch('https://api.openai.com/v1/chat/completions', {
-//     method: 'POST',
-//     headers: {
-//       'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-//       'Content-Type': 'application/json'
-//     },
-//     body: JSON.stringify({
-//       model: 'gpt-4o-mini',
-//       messages,
-//       max_tokens: 500,
-//       temperature: 0.8
-//     })
-//   });
-
-//   const data = await response.json();
-
-//   return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
-// }
 async function getOpenAIResponse(messages) {
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages,
-    max_tokens: 500,
-    temperature: 0.8
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 500,
+      temperature: 0.8
+    })
   });
 
-  // La risposta del modello è dentro response.choices[0].message
-  return response.choices[0].message;
+  const data = await response.json();
+
+  return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
 }
+// async function getOpenAIResponse(messages) {
+//   const response = await openai.chat.completions.create({
+//     model: "gpt-4o-mini",
+//     messages,
+//     max_tokens: 500,
+//     temperature: 0.8
+//   });
+
+//   // La risposta del modello è dentro response.choices[0].message
+//   return response.choices[0].message;
+// }
 /* ==================== INTEGRAZIONE MESSENGER ==================== */
 const msgToken = process.env.MSG_TOKEN
 async function sendMessengerMessage(to, text) {

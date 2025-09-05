@@ -167,7 +167,7 @@ Esempio:
 
 LINK: Instagram non rendicizza i tag <a>. Scrivi semplicemente l'URL completo (https://example.com) o invita l'utente a visitare il link nella bio ("Link in Bio").
 
-Esempio: "Scarica la guida qui: https://digitalandmore.it/guida"
+Esempio: "Prova Gratuitamente il nostro assistente digitale qui: https://assistente-digitale.it"
 
 Esempio: "Tutti i link utili sono nel nostro profilo! 👆 Clicca sul link in bio."
 
@@ -177,7 +177,6 @@ CALL TO ACTION (CTA): Usa emoji direzionali (👇, 👆, →) per guidare l'uten
 
 Esempio: "Scrivici una DM per info! 💬"
 
-Esempio: "👇 Iscriviti al corso con il 20% di sconto!"
 
 🎯 REGOLE EMOJI:
 
