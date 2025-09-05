@@ -400,7 +400,14 @@ async function sendInstagramMessagePartial(from, token, state) {
     state.count = 0;
   }
 }
+const processingUsers = new Set();
+
 async function handleIncomingMessageInstagram(from, text) {
+  if (from === PAGE_IG_ID) return; // ignora messaggi del bot
+  if (processingUsers.has(from)) return; // evita nuovi trigger mentre stiamo rispondendo
+
+  processingUsers.add(from);
+
   const assistenteConfig = await loadConfiguration('Assistente Digitale');
   const systemPrompt = await generateSystemPrompt(assistenteConfig);
 
@@ -409,18 +416,33 @@ async function handleIncomingMessageInstagram(from, text) {
     { role: "user", content: text }
   ];
 
-  // Inizializza lo stato per il buffer
   const state = { buffer: "", count: 0 };
 
-  await getOpenAIResponse(messages, async (token) => {
-    await sendInstagramMessagePartial(from, token, state);
-  });
+  try {
+    await getOpenAIResponse(messages, async (token) => {
+      state.buffer += token;
+      state.count += 1;
 
-  // Invia eventuale testo rimanente
-  if (state.buffer.length > 0) {
-    await sendInstagramMessage(from, state.buffer);
+      if (state.count >= 50) {
+        await sendInstagramMessage(from, state.buffer);
+        state.buffer = "";
+        state.count = 0;
+      }
+    });
+
+    // invia eventuale testo rimanente
+    if (state.buffer.length > 0) {
+      await sendInstagramMessage(from, state.buffer);
+    }
+
+  } catch (err) {
+    console.error("❌ Errore gestione messaggio IG:", err);
+    await sendInstagramMessage(from, "❌ Errore interno, riprova più tardi.");
+  } finally {
+    processingUsers.delete(from);
   }
 }
+
 
 // Webhook solo Instagram
 app.post("/webhookIgInstagram", async (req, res) => {
