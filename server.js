@@ -403,7 +403,7 @@ async function sendInstagramMessagePartial(from, token, state) {
 const processingUsers = new Set();
 
 async function handleIncomingMessageInstagram(from, text) {
-  if (from === PAGE_IG_ID) return; // ignora messaggi del bot
+  if (from === pageIgId) return; // ignora messaggi del bot
   if (processingUsers.has(from)) return; // evita nuovi trigger mentre stiamo rispondendo
 
   processingUsers.add(from);
