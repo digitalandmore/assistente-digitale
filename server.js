@@ -173,51 +173,21 @@ QUANDO l'utente conferma esplicitamente l'interesse: rispondi spingendo l'utente
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
-// async function getOpenAIResponse(messages) {
-//   const response = await fetch('https://api.openai.com/v1/chat/completions', {
-//     method: 'POST',
-//     headers: {
-//       'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-//       'Content-Type': 'application/json'
-//     },
-//     body: JSON.stringify({
-//       model: 'gpt-4o-mini',
-//       messages,
-//       max_tokens: 500,
-//       temperature: 0.8
-//     })
-//   });
-/**
- * Genera la risposta con streaming e chiama `onToken` per ogni token ricevuto.
- * @param {Array} messages - Array di messaggi per il modello
- * @param {Function} onToken - Callback chiamata per ogni token generato
- */
-export async function getOpenAIResponse(messages, onToken) {
-  if (typeof onToken !== "function") {
-    throw new Error("Devi passare una callback onToken per ricevere lo streaming");
-  }
-
-  let assistantText = "";
-
-  const stream = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages,
-    max_tokens: 800,
-    temperature: 0.8,
-    stream: true
+async function getOpenAIResponse(messages) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 500,
+      temperature: 0.8
+    })
   });
 
-  // Ricevi token man mano
-  for await (const event of stream) {
-    const delta = event.choices?.[0]?.delta?.content;
-    if (delta) {
-      assistantText += delta;
-      onToken(delta); // invia subito il token al tuo callback (IG/Messenger)
-    }
-  }
-
-  return assistantText; // testo completo al termine
-}
   const data = await response.json();
 
   return data.choices?.[0]?.message?.content || "🤖 Risposta non disponibile";
