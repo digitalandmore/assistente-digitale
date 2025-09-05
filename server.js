@@ -787,7 +787,11 @@ app.post("/webhookIg", async (req, res) => {
                 reply = "Hello, I'm your digital assistant!";
               } else if (text.toLowerCase().includes("can i book a consultation?")) {
                 reply = "Yes, of course! You can send me your email or phone number, and our operator will call you soon.";
-              } else if (text.toLowerCase().includes("thanks")) {
+              }
+               else if (text.toLowerCase().includes("test@email.it")) {
+                reply = "Great, our operator will contact you soon.";
+              }
+               else if (text.toLowerCase().includes("thanks")) {
                 reply = "Thank you for choosing us! See you soon.";
               }
 
