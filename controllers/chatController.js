@@ -295,12 +295,14 @@ export async function saveMessages(from, userMessage, assistantMessage) {
 // }
 
 
-export const saveMessagesFb = async (userId, message, conversationId) => {
+export const saveMessagesFb = async (userId, message, conversationId, source) => {
+  const convId = conversationId || uuidv4(); // usa quello passato o crea nuovo
   try {
     await Conversation.create({
-      userId: userId.toString(),   // assicuriamoci che sia stringa
-      message: message,
-      conversationId: conversationId.toString(), // se necessario
+      userId: userId.toString(),
+      message,
+      conversationId: convId,
+      source,                 // obbligatorio
       timestamp: new Date()
     });
     console.log("✅ Messaggio salvato correttamente");

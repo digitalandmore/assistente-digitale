@@ -782,7 +782,6 @@ app.post("/webhookIg", async (req, res) => {
           if (from && text) {
             try {
               let reply = "Sorry, I didn’t understand.";
-              await saveMessagesFb(from, text, id);
               if (text.toLowerCase().includes("hello")) {
                 reply = "Hello, I'm your digital assistant!";
               } else if (text.toLowerCase().includes("can i book a consultation?")) {
@@ -795,7 +794,20 @@ app.post("/webhookIg", async (req, res) => {
                 reply = "Thank you for choosing us! See you soon.";
               }
 
-              await sendMessengerMessage(from, reply);
+              let chat = await Conversation.findOne({ userId: from });
+              let conversationId = chat ? chat.conversationId : null;
+
+              // Salva messaggio utente
+              await saveMessagesFb(from, text, conversationId, "messenger");
+
+              // Aggiorna conversationId se era null
+              if (!conversationId) {
+                chat = await Conversation.findOne({ userId: from });
+                conversationId = chat ? chat.conversationId : null;
+              }
+
+              // Salva risposta dell'assistente
+              await saveMessagesFb(from, reply, conversationId, "assistant");
               // await handleIncomingMessageMessanger(from, text, req, res);
             } catch (err) {
               console.error("❌ Errore invio risposta Messenger:", err);
