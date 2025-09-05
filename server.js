@@ -788,7 +788,7 @@ app.post("/webhookIg", async (req, res) => {
                 timestamp: new Date()
               });
               let reply = "Sorry, I didn’t understand.";
-              await saveMessagesFb(id, prevQuestion, messageText, session.conversationId);
+              await saveMessagesFb(from, text, id);
               if (text.toLowerCase().includes("hello")) {
                 reply = "Hello, I'm your digital assistant!";
               } else if (text.toLowerCase().includes("can i book a consultation?")) {
