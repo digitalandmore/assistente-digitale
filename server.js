@@ -29,7 +29,7 @@ import { editContact, getKnowledge } from './controllers/KnowledgeController.js'
 import { SYSTEM_PROMPT_WHATSAPP } from './services/promtp/systemPropmtWp.js'
 import { SYSTEM_PROMPT_FB } from './services/promtp/systemPromptFb.js'
 import OpenAI from "openai";
-import {loadConfiguration, generateSystemPrompt} from './services/promtp/generatesystemPrompt.js'
+import { loadConfiguration, generateSystemPrompt } from './services/promtp/generatesystemPrompt.js'
 // Load environment variables
 dotenv.config();
 
@@ -778,25 +778,21 @@ app.post("/webhookIg", async (req, res) => {
           console.log("📩 Messaggio Messenger ricevuto:");
           console.log("Mittente:", from);
           console.log("Testo:", text);
-          const welcomeMessage = `Benvenuto!
-              Sono il tuo consulente AI specializzato in soluzioni digitali per PMI.
-              Cosa ti interessa?`;
 
-          const welcomeButtons = [
-            { type: "postback", title: "Come funziona", payload: "Come funziona il vostro servizio?" },
-            { type: "postback", title: "Vedi Demo", payload: "Vorrei vedere le demo disponibili" },
-            { type: "postback", title: "Consulenza Gratuita", payload: "Richiedo informazioni per una consulenza" },
-            { type: "postback", title: "Settori", payload: "Che settori seguite?" },
-            { type: "postback", title: "Prezzi", payload: "Quali sono i costi?" },
-            { type: "postback", title: "Integrazioni", payload: "Integrazione con i miei strumenti" },
-          ];
           if (from && text) {
             try {
+              let reply = "Sorry, I didn’t understand.";
 
+              if (text.toLowerCase().includes("hello")) {
+                reply = "Hello, I'm your digital assistant!";
+              } else if (text.toLowerCase().includes("can i book a consultation?")) {
+                reply = "Yes, of course! You can send me your email or phone number, and our operator will call you soon.";
+              } else if (text.toLowerCase().includes("thanks")) {
+                reply = "Thank you for choosing us! See you soon.";
+              }
 
-              await handleIncomingMessageMessanger(from, text, req, res);
-
-
+              await sendMessengerMessage(from, reply);
+              // await handleIncomingMessageMessanger(from, text, req, res);
             } catch (err) {
               console.error("❌ Errore invio risposta Messenger:", err);
             }
