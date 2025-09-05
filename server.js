@@ -387,54 +387,38 @@ export async function handleHubSpotQuestions(senderId, messageText) {
 // }
 // Funzione helper per inviare messaggi parziali ogni 50 token
 async function sendInstagramMessagePartial(from, token, state) {
-  // state è un oggetto per mantenere buffer e conteggio tra le chiamate
+  // Assicurati che state sia inizializzato
+  if (!state.buffer) state.buffer = "";
+  if (!state.count) state.count = 0;
+
   state.buffer += token;
   state.count += 1;
 
   if (state.count >= 50) {
-    // Invia il messaggio su IG
     await sendInstagramMessage(from, state.buffer);
-
-    // Reset buffer e contatore
     state.buffer = "";
     state.count = 0;
   }
 }
-async function handleIncomingMessageInstagram(from, text, req, res) {
+async function handleIncomingMessageInstagram(from, text) {
   const assistenteConfig = await loadConfiguration('Assistente Digitale');
-  if (!assistenteConfig) {
-    throw new Error("Configurazione non trovata");
-  }
-
   const systemPrompt = await generateSystemPrompt(assistenteConfig);
 
-  try {
-    const messages = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: text }
-    ];
+  const messages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: text }
+  ];
 
-    let buffer = "";
+  // Inizializza lo stato per il buffer
+  const state = { buffer: "", count: 0 };
 
-    // Streaming: ricevi token man mano
-    await getOpenAIResponse(messages, async (token) => {
-      buffer += token;
+  await getOpenAIResponse(messages, async (token) => {
+    await sendInstagramMessagePartial(from, token, state);
+  });
 
-      // Invia a IG ogni 50 caratteri
-      if (buffer.length > 50) {
-        await sendInstagramMessagePartial(from, buffer);
-        buffer = "";
-      }
-    });
-
-    // Invia eventuale testo rimanente
-    if (buffer.length > 0) {
-      await sendInstagramMessage(from, buffer);
-    }
-
-  } catch (err) {
-    console.error("❌ Errore gestione messaggio IG:", err);
-    await sendInstagramMessage(from, "❌ Errore interno, riprova più tardi.");
+  // Invia eventuale testo rimanente
+  if (state.buffer.length > 0) {
+    await sendInstagramMessage(from, state.buffer);
   }
 }
 
