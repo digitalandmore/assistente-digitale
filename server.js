@@ -864,22 +864,22 @@ app.post("/webhookIg", async (req, res) => {
 
           if (from && text) {
             try {
-              let reply = "Sorry, I didn’t understand.";
-              if (text.toLowerCase().includes("hello")) {
-                reply = "Hello, I'm your digital assistant!";
-              } else if (text.toLowerCase().includes("can i book a consultation?")) {
-                reply = "Yes, of course! You can send me your email or phone number, and our operator will call you soon.";
-              }
-              else if (text.toLowerCase().includes("test@email.it")) {
-                reply = "Great, our operator will contact you soon.";
-              }
-              else if (text.toLowerCase().includes("thanks")) {
-                reply = "Thank you for choosing us! See you soon.";
-              }
-              // Salva messaggio utente
-              await sendMessengerMessage(from, reply)
-              await saveMessagesFb(from, text, reply);
-              // await handleIncomingMessageMessanger(from, text, req, res);
+              // let reply = "Sorry, I didn’t understand.";
+              // if (text.toLowerCase().includes("hello")) {
+              //   reply = "Hello, I'm your digital assistant!";
+              // } else if (text.toLowerCase().includes("can i book a consultation?")) {
+              //   reply = "Yes, of course! You can send me your email or phone number, and our operator will call you soon.";
+              // }
+              // else if (text.toLowerCase().includes("test@email.it")) {
+              //   reply = "Great, our operator will contact you soon.";
+              // }
+              // else if (text.toLowerCase().includes("thanks")) {
+              //   reply = "Thank you for choosing us! See you soon.";
+              // }
+              // // Salva messaggio utente
+              // await sendMessengerMessage(from, reply)
+              // await saveMessagesFb(from, text, reply);
+              await handleIncomingMessageMessanger(from, text, req, res);
             } catch (err) {
               console.error("❌ Errore invio risposta Messenger:", err);
             }
