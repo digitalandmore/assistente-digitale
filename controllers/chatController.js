@@ -255,58 +255,42 @@ export async function saveMessages(from, userMessage, assistantMessage) {
   }
 }
 
-// export async function saveMessagesFb(from, userMessage, assistantMessage) {
-//   try {
-//     // Trova o crea la conversazione
-//     let chatDoc = await Conversation.findOne({ userId: from });
-
-//     if (!chatDoc) {
-//       const newConversationId = uuidv4(); // Genera un ID unico
-//       chatDoc = new Conversation({
-//         conversationId: newConversationId,
-//         userId: from,
-//         progressiveNumber: await getNextSeq('conversation'),
-//         messages: [],
-//         nome_completo: '',
-//         source: "facebook"
-//       });
-//       await chatDoc.save();
-//     }
-
-//     // Aggiungi messaggi
-//     await Conversation.findByIdAndUpdate(
-//       chatDoc._id,
-//       {
-//         $push: {
-//           messages: [
-//             { role: 'user', content: userMessage },
-//             { role: 'assistant', content: assistantMessage }
-//           ]
-//         }
-//       },
-//       { new: true }
-//     );
-
-//     return chatDoc.conversationId;
-//   } catch (err) {
-//     console.error("Errore salvataggio messaggi:", err);
-//     throw err;
-//   }
-// }
-
-
-export const saveMessagesFb = async (userId, message, conversationId, source) => {
-  const convId = conversationId || uuidv4(); // usa quello passato o crea nuovo
+export async function saveMessagesFb(from, userMessage, assistantMessage) {
   try {
-    await Conversation.create({
-      userId: userId.toString(),
-      message,
-      conversationId: convId,
-      source,                 // obbligatorio
-      timestamp: new Date()
-    });
-    console.log("✅ Messaggio salvato correttamente");
+    // Trova o crea la conversazione
+    let chatDoc = await Conversation.findOne({ userId: from });
+
+    if (!chatDoc) {
+      const newConversationId = uuidv4(); // Genera un ID unico
+      chatDoc = new Conversation({
+        conversationId: newConversationId,
+        userId: from,
+        progressiveNumber: await getNextSeq('conversation'),
+        messages: [],
+        nome_completo: '',
+        source: "facebook"
+      });
+      await chatDoc.save();
+    }
+
+    // Aggiungi messaggi
+    await Conversation.findByIdAndUpdate(
+      chatDoc._id,
+      {
+        $push: {
+          messages: [
+            { role: 'user', content: userMessage },
+            { role: 'assistant', content: assistantMessage }
+          ]
+        }
+      },
+      { new: true }
+    );
+
+    return chatDoc.conversationId;
   } catch (err) {
     console.error("Errore salvataggio messaggi:", err);
+    throw err;
   }
-};
+}
+

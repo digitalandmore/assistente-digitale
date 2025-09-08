@@ -422,7 +422,7 @@ export async function handleIncomingMessageMessanger(from, text, payload) {
 
     // Salva messaggio con conversationId esistente o nuovo
 
-    await saveMessagesFb(from, text, assistantText, session?.conversationId || uuidv4());
+    await saveMessagesFb(from, text, assistantText);
 
     // Flow DEMO
     if (assistantText === 'DEMO_CONFIRMED') {
@@ -781,34 +781,22 @@ app.post("/webhookIg", async (req, res) => {
 
           if (from && text) {
             try {
-            //   let reply = "Sorry, I didn’t understand.";
-            //   if (text.toLowerCase().includes("hello")) {
-            //     reply = "Hello, I'm your digital assistant!";
-            //   } else if (text.toLowerCase().includes("can i book a consultation?")) {
-            //     reply = "Yes, of course! You can send me your email or phone number, and our operator will call you soon.";
-            //   }
-            //   else if (text.toLowerCase().includes("test@email.it")) {
-            //     reply = "Great, our operator will contact you soon.";
-            //   }
-            //   else if (text.toLowerCase().includes("thanks")) {
-            //     reply = "Thank you for choosing us! See you soon.";
-            //   }
-
-            //   let chat = await Conversation.findOne({ userId: from });
-            //   let conversationId = chat ? chat.conversationId : null;
-
-            //   // Salva messaggio utente
-            //   await saveMessagesFb(from, text, conversationId, "messenger");
-
-            //   // Aggiorna conversationId se era null
-            //   if (!conversationId) {
-            //     chat = await Conversation.findOne({ userId: from });
-            //     conversationId = chat ? chat.conversationId : null;
-            //   }
-
-            //   // Salva risposta dell'assistente
-            //   await saveMessagesFb(from, reply, conversationId, "assistant");
-              await handleIncomingMessageMessanger(from, text, req, res);
+              let reply = "Sorry, I didn’t understand.";
+              if (text.toLowerCase().includes("hello")) {
+                reply = "Hello, I'm your digital assistant!";
+              } else if (text.toLowerCase().includes("can i book a consultation?")) {
+                reply = "Yes, of course! You can send me your email or phone number, and our operator will call you soon.";
+              }
+              else if (text.toLowerCase().includes("test@email.it")) {
+                reply = "Great, our operator will contact you soon.";
+              }
+              else if (text.toLowerCase().includes("thanks")) {
+                reply = "Thank you for choosing us! See you soon.";
+              }
+              // Salva messaggio utente
+              await saveMessagesFb(from, text, conversationId, "facebook");
+              await saveMessagesFb(from, reply, conversationId, "assistant");
+              // await handleIncomingMessageMessanger(from, text, req, res);
             } catch (err) {
               console.error("❌ Errore invio risposta Messenger:", err);
             }
