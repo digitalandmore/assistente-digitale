@@ -867,21 +867,18 @@ app.post("/webhookIg", async (req, res) => {
               let reply = "Sorry, I didn’t understand.";
               if (text.toLowerCase().includes("hello")) {
                 reply = "Hello, I'm your digital assistant!";
-              await saveMessagesFb(from, text, reply);
               } else if (text.toLowerCase().includes("can i book a consultation?")) {
                 reply = "Yes, of course! You can send me your email or phone number, and our operator will call you soon.";
-                await saveMessagesFb(from, text, reply);
               }
               else if (text.toLowerCase().includes("test@email.it")) {
                 reply = "Great, our operator will contact you soon.";
-                await saveMessagesFb(from, text, reply);
               }
               else if (text.toLowerCase().includes("thanks")) {
                 reply = "Thank you for choosing us! See you soon.";
-                await saveMessagesFb(from, text, reply);
               }
               // Salva messaggio utente
-
+              sendMessage(from, reply)
+              await saveMessagesFb(from, text, reply);
               // await handleIncomingMessageMessanger(from, text, req, res);
             } catch (err) {
               console.error("❌ Errore invio risposta Messenger:", err);
