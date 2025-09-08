@@ -877,7 +877,7 @@ app.post("/webhookIg", async (req, res) => {
                 reply = "Thank you for choosing us! See you soon.";
               }
               // Salva messaggio utente
-              sendMessage(from, reply)
+              await sendMessengerMessage(from, reply)
               await saveMessagesFb(from, text, reply);
               // await handleIncomingMessageMessanger(from, text, req, res);
             } catch (err) {
