@@ -44,7 +44,33 @@ const getChatController = async (req, res) => {
     });
   }
 };
+const getChatControllerDentistic = async (req, res) => {
+  try {
+    // valore di default: ultimi 7 giorni
+    const { range = 7 } = req.body;
 
+    // Calcola la data di inizio (oggi - range giorni)
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - range);
+
+    // Recupera solo le conversazioni create dopo la data calcolata
+    const conversations = await DentisticConversation.find({
+      createdAt: { $gte: startDate }
+    });
+
+    res.status(200).json({
+      success: true,
+      count: conversations.length,
+      conversations
+    });
+  } catch (error) {
+    console.error('Errore nel recupero delle conversazioni:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Errore server nel recupero delle conversazioni'
+    });
+  }
+};
 
 const getChatToThisMonth = async (req, res) => {
   try {
@@ -207,4 +233,4 @@ const restoreChat = async (req, res) => {
   }
 };
 
-export { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth }
+export { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth, getChatControllerDentistic }

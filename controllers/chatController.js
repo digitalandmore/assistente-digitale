@@ -122,7 +122,117 @@ export const chat = async (req, res) => {
   }
 
 };
+export const chatDentistic = async (req, res) => {
+  try {
+    let { messages, maxTokens, temperature, conversationId } = req.body;
+    // let conversationId = req.session.conversationId;
 
+    const userId = req.session.userId || 'anonymous';
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        error: 'OpenAI non configurato sul server'
+      });
+    }
+
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Messages array richiesto'
+      });
+    }
+
+    console.log('🤖 OpenAI Chat Request:', {
+      messagesCount: messages.length,
+      maxTokens: maxTokens || openAiConfig.maxTokens,
+      model: openAiConfig.model
+    });
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAiConfig.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: openAiConfig.model,
+        messages,
+        max_tokens: maxTokens || openAiConfig.maxTokens,
+        temperature: temperature || 0.8,
+        presence_penalty: 0.1,
+        frequency_penalty: 0.1
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ OpenAI API Error:', response.status, errorText);
+      throw new Error(`OpenAI Chat Error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+
+    if (data.usage) {
+      console.log('📊 Token Usage:', {
+        prompt: data.usage.prompt_tokens,
+        completion: data.usage.completion_tokens,
+        total: data.usage.total_tokens
+      });
+    }
+
+
+    if (!conversationId) {
+      conversationId = uuidv4();
+    }
+
+    let chatDoc = await DentisticConversation.findOne({ userId, conversationId });
+
+    if (!chatDoc) {
+      const seq = await getNextSeq('DentisticConversation');
+      chatDoc = new DentisticConversation({
+        conversationId,
+        userId,
+        progressiveNumber: seq,
+        messages: [],
+        nome_completo: req.body.nome_completo || '',
+        source: "web"
+      });
+      await chatDoc.save();
+    }
+
+    // aggiungi i messaggi in modo atomico per evitare problemi di concorrenza
+    await DentisticConversation.findByIdAndUpdate(
+      chatDoc._id,
+      {
+        $push: {
+          messages: [
+            { role: 'user', content: messages[messages.length - 1].content },
+            { role: 'assistant', content: data.choices[0].message.content }
+          ]
+        }
+      },
+      { new: true }
+    );
+
+
+
+    res.status(200).json({
+      success: true,
+      conversationId,
+      choices: data.choices,
+      usage: data.usage || null
+    });
+    return data;
+  } catch (error) {
+    console.error('❌ Errore OpenAI Chat:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+
+};
 
 export const archiveChat = async (req, res) => {
   try {

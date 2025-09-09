@@ -10,8 +10,8 @@ import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 // Import controllers
 /* ==================== Controllers principali ==================== */
-import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages, saveMessagesFb } from './controllers/chatController.js';
-import { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth } from './controllers/getChatcontroller.js';
+import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages, saveMessagesFb, chatDentistic } from './controllers/chatController.js';
+import { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth, getChatControllerDentistic } from './controllers/getChatcontroller.js';
 import { saveToDbChatController, setLeadGenerationTrue } from './controllers/saveToDbChatController.js';
 
 /* ====================Meta Controllers  ==================== */
@@ -964,6 +964,7 @@ app.post('/api/ai/analyze-intent', analizeIntent
 
 // // Endpoint principale per chat AI tramite backend
 app.post('/api/ai/chat', chat);
+app.post('/api/ai/chat-dentistic', chatDentistic);
 app.post('/api/ai/saveChat', saveToDbChatController);
 app.post('/api/ai/archive', archiveChat);
 app.post('/api/ai/visualized', markAsVisualized);
@@ -1001,6 +1002,7 @@ app.get('/api/status', statusController);
 /* ==================== API REST ANDPOINT ==================== */
 // app.get('/api/conversations', getChatController);
 app.post('/api/conversations', getChatController);
+app.post('/api/conversations-dentistic', getChatControllerDentistic);
 app.get('/api/chatcount', getChatToThisMonth)
 app.get('/api/archivedconversations', getArchiviedChatController);
 app.get('/api/deleteChat', DeleteChatContoller)
