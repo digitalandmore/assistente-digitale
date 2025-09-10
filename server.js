@@ -11,8 +11,8 @@ import { v4 as uuidv4 } from 'uuid';
 // Import controllers
 /* ==================== Controllers principali ==================== */
 import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages, saveMessagesFb, chatDentistic } from './controllers/chatController.js';
-import { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth, getChatControllerDentistic } from './controllers/getChatcontroller.js';
-import { saveToDbChatController, setLeadGenerationTrue } from './controllers/saveToDbChatController.js';
+import { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth, getChatControllerDentistic,getChatDentisticToThisMonth } from './controllers/getChatcontroller.js';
+import { saveToDbChatController, setLeadGenerationTrue, saveToDentalDbChatController } from './controllers/saveToDbChatController.js';
 
 /* ====================Meta Controllers  ==================== */
 /* ==================== Controllers ==================== */
@@ -966,6 +966,7 @@ app.post('/api/ai/analyze-intent', analizeIntent
 app.post('/api/ai/chat', chat);
 app.post('/api/ai/chat-dentistic', chatDentistic);
 app.post('/api/ai/saveChat', saveToDbChatController);
+app.post('/api/ai/saveDentalChat', saveToDentalDbChatController);
 app.post('/api/ai/archive', archiveChat);
 app.post('/api/ai/visualized', markAsVisualized);
 app.post('/api/ai/deleteChat', deleteChat);
@@ -1004,6 +1005,7 @@ app.get('/api/status', statusController);
 app.post('/api/conversations', getChatController);
 app.post('/api/conversations-dentistic', getChatControllerDentistic);
 app.get('/api/chatcount', getChatToThisMonth)
+app.get('/api/chatcountDentistic', getChatDentisticToThisMonth)
 app.get('/api/archivedconversations', getArchiviedChatController);
 app.get('/api/deleteChat', DeleteChatContoller)
 app.put('/api/lead', setLeadGenerationTrue);
@@ -1023,12 +1025,15 @@ app.post('/api/dental/appuntamenti', createAppointment)
 import {
   createQuestion,
   getQuestions,
+  answerQuestions,
   getQuestionById,
   updateQuestion,
   deleteQuestion
 } from "./controllers/questionController.js";
 
 app.post("/api/dental/domande", createQuestion)
+app.get("/api/dental/domande", getQuestions)
+app.post("/api/dental/risposte", answerQuestions)
 /* ==================== API REST PAZIENTE ==================== */
 import { createPaziente, getPazienti, getPazienteByEmail } from './controllers/pazienteController.js'
 

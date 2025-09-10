@@ -95,3 +95,31 @@ export const deleteQuestion = async (req, res) => {
     res.status(500).json({ success: false, message: "Errore server" });
   }
 };
+// POST /api/dental/risposte
+export const answerQuestions = async (req, res) => {
+  try {
+    const { domandaId, risposta } = req.body;
+
+    if (!domandaId || !risposta) {
+      return res.status(400).json({ success: false, error: "Dati mancanti" });
+    }
+
+    const domanda = await Question.findById(domandaId);
+    if (!domanda) {
+      return res.status(404).json({ success: false, error: "Domanda non trovata" });
+    }
+
+    domanda.risposta = risposta;
+    domanda.stato = "risposto";
+    await domanda.save();
+
+    return res.json({
+      success: true,
+      message: "Risposta salvata con successo",
+      data: domanda
+    });
+  } catch (error) {
+    console.error("Errore rispondiAllaDomanda:", error);
+    res.status(500).json({ success: false, error: "Errore interno del server" });
+  }
+};
