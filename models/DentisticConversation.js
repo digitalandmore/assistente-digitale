@@ -32,3 +32,4 @@ const conversationSchema = new Schema({
 }, { timestamps: true });
 
 export default model("DentisticConversation", conversationSchema);
+
