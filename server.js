@@ -1007,6 +1007,41 @@ app.get('/api/chatcount', getChatToThisMonth)
 app.get('/api/archivedconversations', getArchiviedChatController);
 app.get('/api/deleteChat', DeleteChatContoller)
 app.put('/api/lead', setLeadGenerationTrue);
+/* ==================== API REST APPUNTAMENTI ==================== */
+import {
+  createAppointment,
+  getAppointments,
+  getAppointmentById,
+  updateAppointmentStatus,
+  deleteAppointment
+} from "./controllers/appointmentController.js";
+
+
+app.post('/api/dental/appuntamenti', createAppointment)
+/* ==================== API REST DOMANDE ==================== */
+
+import {
+  createQuestion,
+  getQuestions,
+  getQuestionById,
+  updateQuestion,
+  deleteQuestion
+} from "./controllers/questionController.js";
+
+app.post("/api/dental/domande", createQuestion)
+/* ==================== API REST PAZIENTE ==================== */
+import { createPaziente, getPazienti, getPazienteByEmail } from './controllers/pazienteController.js'
+
+
+// ➡️ Crea un nuovo paziente
+app.post('/api/dental/paziente', createPaziente)
+
+// ➡️ Ottieni tutti i pazienti
+app.get('/api/dental/pazienti', getPazienti)
+
+// ➡️ Ottieni un paziente per email
+app.get('/api/dental/pazienti/:email', getPazienteByEmail)
+
 /* ==================== STATIC FILES & SPA ROUTING ==================== */
 
 // Serve index.html for all non-API routes (SPA behavior)

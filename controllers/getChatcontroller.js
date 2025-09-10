@@ -1,5 +1,6 @@
 import Conversation from '../models/Conversation.js';
 import ArchiviedConversation from '../models/ArchiviedConversation.js';
+import DentisticConversation from '../models/DentisticConversation.js';
 import path from 'path';
 // const getChatController = async (req, res) => {
 //   try {
@@ -71,6 +72,7 @@ const getChatControllerDentistic = async (req, res) => {
     });
   }
 };
+
 
 const getChatToThisMonth = async (req, res) => {
   try {

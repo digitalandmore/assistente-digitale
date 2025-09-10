@@ -7,7 +7,7 @@ const messageSchema = new Schema({
 });
 
 const conversationSchema = new Schema({
-  userId: { type: String, required: true, unique: true },
+  userId: { type: String, required: true },
   nome_completo: { type: String, required: false },
   email: { type: String, required: false },
   telefono: { type: String, required: false },

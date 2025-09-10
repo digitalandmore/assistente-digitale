@@ -186,20 +186,19 @@ export const chatDentistic = async (req, res) => {
       conversationId = uuidv4();
     }
 
-    let chatDoc = await DentisticConversation.findOne({ userId, conversationId });
-
-    if (!chatDoc) {
-      const seq = await getNextSeq('DentisticConversation');
-      chatDoc = new DentisticConversation({
-        conversationId,
-        userId,
-        progressiveNumber: seq,
-        messages: [],
-        nome_completo: req.body.nome_completo || '',
-        source: "web"
-      });
-      await chatDoc.save();
-    }
+    const chatDoc = await DentisticConversation.findOneAndUpdate(
+      { conversationId: conversationId || uuidv4() },
+      {
+        $setOnInsert: {
+          userId,
+          progressiveNumber: await getNextSeq('DentisticConversation'),
+          messages: [],
+          nome_completo: req.body.nome_completo || '',
+          source: "web"
+        }
+      },
+      { upsert: true, new: true }
+    );
 
     // aggiungi i messaggi in modo atomico per evitare problemi di concorrenza
     await DentisticConversation.findByIdAndUpdate(
