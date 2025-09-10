@@ -1020,6 +1020,7 @@ import {
 
 
 app.post('/api/dental/appuntamenti', createAppointment)
+app.get('/api/dental/appuntamenti', getAppointments)
 /* ==================== API REST DOMANDE ==================== */
 
 import {
