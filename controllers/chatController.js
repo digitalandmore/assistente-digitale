@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import Conversation from '../models/Conversation.js';
 import openAiConfig from '../config/openAiConfig.js';
 import ArchivedConversation from '../models/ArchiviedConversation.js';
+import DentisticConversation from '../models/DentisticConversation.js';
 import Counter from '../models/counter.js'
 async function getNextSeq(name) {
   const counter = await Counter.findByIdAndUpdate(
