@@ -306,7 +306,71 @@ export const markAsVisualized = async (req, res) => {
     res.status(500).json({ error: "Errore aggiornamento conversazione" });
   }
 }
+export const archiveDentalConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const conversation = await DentisticConversation.findOne({ conversationId });
 
+    if (!conversation) {
+      return res.status(404).json({ success: false, message: "Conversazione non trovata" });
+    }
+
+    // toggle dello stato
+    conversation.archived = !conversation.archived;
+    await conversation.save();
+
+    return res.json({ 
+      success: true, 
+      archived: conversation.archived, 
+      message: `Conversazione ${conversation.archived ? 'archiviata' : 'ripristinata'}`
+    });
+  } catch (err) {
+    console.error("Errore archiveDentalConversation:", err);
+    return res.status(500).json({ success: false, message: "Errore server" });
+  }
+};
+export const restoreDentalConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    const conversation = await DentisticConversation.findOneAndUpdate(
+      { conversationId },
+      { archived: false },
+      { new: true }
+    );
+
+    if (!conversation) {
+      return res.status(404).json({ success: false, message: "Conversazione non trovata" });
+    }
+
+    res.json({ success: true, message: "Conversazione ripristinata con successo", conversation });
+  } catch (error) {
+    console.error("❌ Errore durante l'archiviazione:", error);
+    res.status(500).json({ success: false, message: "Errore server" });
+  }
+};
+
+// Elimina conversazione (soft-delete → flag deleted: true)
+export const deleteDentalConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    const conversation = await DentisticConversation.findOneAndUpdate(
+      { conversationId },
+      { deleted: true },
+      { new: true }
+    );
+
+    if (!conversation) {
+      return res.status(404).json({ success: false, message: "Conversazione non trovata" });
+    }
+
+    res.json({ success: true, message: "Conversazione eliminata (soft-delete)", conversation });
+  } catch (error) {
+    console.error("❌ Errore durante l'eliminazione:", error);
+    res.status(500).json({ success: false, message: "Errore server" });
+  }
+};
 export const deleteChat = async (req, res) => {
   try {
     const { conversationId } = req.body;
@@ -325,6 +389,37 @@ export const deleteChat = async (req, res) => {
   }
 }
 
+// Segna la conversazione come visualizzata
+export const visualizeDentalConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    const conversation = await DentisticConversation.findOneAndUpdate(
+      { conversationId },
+      { visualized: true },
+      { new: true }
+    );
+
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        message: "Conversazione non trovata"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Conversazione segnata come visualizzata",
+      conversation
+    });
+  } catch (error) {
+    console.error("❌ Errore visualizeConversation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Errore server"
+    });
+  }
+};
 
 // Funzione helper per salvare messaggi in MongoDB
 export async function saveMessages(from, userMessage, assistantMessage) {

@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 // Import controllers
 /* ==================== Controllers principali ==================== */
-import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages, saveMessagesFb, chatDentistic } from './controllers/chatController.js';
+import { chat, archiveChat, markAsVisualized, deleteChat, saveMessages, saveMessagesFb, chatDentistic,archiveDentalConversation,restoreDentalConversation, deleteDentalConversation, visualizeDentalConversation } from './controllers/chatController.js';
 import { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth, getChatControllerDentistic,getChatDentisticToThisMonth } from './controllers/getChatcontroller.js';
 import { saveToDbChatController, setLeadGenerationTrue, saveToDentalDbChatController } from './controllers/saveToDbChatController.js';
 
@@ -1004,8 +1004,12 @@ app.get('/api/status', statusController);
 // app.get('/api/conversations', getChatController);
 app.post('/api/conversations', getChatController);
 app.post('/api/conversations-dentistic', getChatControllerDentistic);
-app.get('/api/chatcount', getChatToThisMonth)
-app.get('/api/chatcountDentistic', getChatDentisticToThisMonth)
+app.get('/api/chatcount', getChatToThisMonth);
+app.get('/api/chatcountDentistic', getChatDentisticToThisMonth);
+app.put('/api/conversations/:conversationId/delete', deleteDentalConversation);
+app.put('/api/conversations/:conversationId/archive', archiveDentalConversation);
+app.put('/api/conversations/:conversationId/restore', restoreDentalConversation);
+app.put('/api/conversations/:conversationId/visualize', visualizeDentalConversation);
 app.get('/api/archivedconversations', getArchiviedChatController);
 app.get('/api/deleteChat', DeleteChatContoller)
 app.put('/api/lead', setLeadGenerationTrue);

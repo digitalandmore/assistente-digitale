@@ -271,6 +271,7 @@ const restoreChat = async (req, res) => {
   }
 };
 
-export { getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth, getChatControllerDentistic,
+export {
+  getChatController, getArchiviedChatController, DeleteChatContoller, restoreChat, getChatToThisMonth, getChatControllerDentistic,
   getChatDentisticToThisMonth
- }
+}

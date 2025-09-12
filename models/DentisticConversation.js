@@ -24,6 +24,8 @@ const conversationSchema = new Schema({
   visualized: { type: Boolean, default: false },
   progressiveNumber: { type: Number, unique: true },
   leadCompleted:{type : Boolean, default:false},
+  archived: { type: Boolean, default: false },
+  deleted: { type: Boolean, default: false },
   source: {
     type: String,
     enum: ["whatsapp", "facebook", "instagram", "web", "altro"],
