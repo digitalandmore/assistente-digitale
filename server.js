@@ -25,7 +25,7 @@ import statusController from './controllers/statusController.js';
 import errorController from './controllers/errorController.js';
 import globalErrorController from './controllers/globalErrorController.js';
 import { getUsersController, updateUserDisplayName, createUser, } from './controllers/usersController.js';
-import { editContact, getKnowledge, editCompanyData } from './controllers/KnowledgeController.js'
+import { editContact, getKnowledge, editCompanyData, editHours } from './controllers/KnowledgeController.js'
 import { SYSTEM_PROMPT_WHATSAPP } from './services/promtp/systemPropmtWp.js'
 import { SYSTEM_PROMPT_FB } from './services/promtp/systemPromptFb.js'
 import OpenAI from "openai";
@@ -977,6 +977,7 @@ app.post('/api/ai/restorechat', restoreChat);
 app.post('/api/ai/getknowledge', getKnowledge)
 app.post('/api/ai/editContact', editContact)
 app.post('/api/ai/editCompanyData', editCompanyData)
+app.post("/api/ai/editHours", editHours);
 // app.post('/api/ai/editCompanyData', editCompanyData)
 
 //ROTTE DI GESTIONE DEGLI UTENTI

@@ -106,3 +106,34 @@ export const editCompanyData = async (req, res) => {
     res.status(500).json({ error: "Errore interno del server" });
   }
 };
+
+
+
+export const editHours = async (req, res) => {
+  try {
+    const { id, openingHours } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "Il campo 'id' è richiesto" });
+    }
+
+    if (!openingHours || typeof openingHours !== "object") {
+      return res.status(400).json({ error: "Il campo 'openingHours' è richiesto" });
+    }
+
+    const updated = await AssistenteDigitale.findByIdAndUpdate(
+      id,
+      { $set: { "studio_dentistico.openingHours": openingHours } }, // ✅ aggiorna solo gli orari
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: "Assistente non trovato" });
+    }
+
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error("❌ Errore in editHours:", error);
+    res.status(500).json({ error: "Errore interno del server" });
+  }
+};
