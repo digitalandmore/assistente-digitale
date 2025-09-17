@@ -16,6 +16,8 @@ import { saveToDbChatController, setLeadGenerationTrue, saveToDentalDbChatContro
 
 /* ====================Meta Controllers  ==================== */
 /* ==================== Controllers ==================== */
+
+import {analizeDentalIntent} from './controllers/analizeIntentController.js'
 import analizeIntent from './controllers/analizeIntentController.js';
 import hubespostController from './controllers/hubspotController.js';
 import healtController from './controllers/healtController.js';
@@ -959,8 +961,8 @@ app.post("/webhookIgInstagram", async (req, res) => {
 });
 
 // Endpoint per analisi intento tramite backend
-app.post('/api/ai/analyze-intent', analizeIntent
-);
+app.post('/api/ai/analyze-intent', analizeIntent);
+app.post('/api/ai/analyze-intent-dental', analizeDentalIntent);
 
 // // Endpoint principale per chat AI tramite backend
 app.post('/api/ai/chat', chat);
