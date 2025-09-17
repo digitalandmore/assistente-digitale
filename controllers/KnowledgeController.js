@@ -51,30 +51,58 @@ export const editContact = async (req, res) => {
   }
 };
 
-const editCompanyData = async (req, res) =>{
-  try {
-    const {nome, dati_aziendali} = req.body;
+// const editCompanyData = async (req, res) =>{
+//   try {
+//     const {nome, dati_aziendali} = req.body;
   
-    if (!nome) {
-      return res.status(400).json({ error: "Il campo 'nome' è richiesto" });
+//     if (!nome) {
+//       return res.status(400).json({ error: "Il campo 'nome' è richiesto" });
+//     }
+
+//         if (!dati_aziendali || typeof dati_aziendali !== "object") {
+//       return res.status(400).json({ error: "Il campo 'dati_aziendali' è richiesto" });
+//     }
+//         const updated = await AssistenteDigitale.findOneAndUpdate(
+//       { "assistente.nome": nome },
+//       { $set: { dati_aziendali  } }, 
+//       { new: true } 
+//     );
+//         if (!updated) {
+//       return res.status(404).json({ error: "Assistente non trovato" });
+//     }
+
+//     res.status(200).json(updated);
+//   } catch (error) {
+//      console.error("Errore in editContact:", error);
+//     res.status(500).json({ error: "Errore interno del server" });
+//   }
+// }
+
+export const editCompanyData = async (req, res) => {
+  try {
+    const { id, assistente } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "Il campo 'id' è richiesto" });
     }
 
-        if (!dati_aziendali || typeof dati_aziendali !== "object") {
-      return res.status(400).json({ error: "Il campo 'dati_aziendali' è richiesto" });
+    if (!assistente || typeof assistente !== "object") {
+      return res.status(400).json({ error: "Il campo 'assistente' è richiesto" });
     }
-        const updated = await AssistenteDigitale.findOneAndUpdate(
-      { "assistente.nome": nome },
-      { $set: { dati_aziendali  } }, 
-      { new: true } 
+
+    const updated = await AssistenteDigitale.findByIdAndUpdate(
+      id,
+      { $set: { assistente } }, // sovrascrive tutta la sezione assistente
+      { new: true }
     );
-        if (!updated) {
+
+    if (!updated) {
       return res.status(404).json({ error: "Assistente non trovato" });
     }
 
     res.status(200).json(updated);
   } catch (error) {
-     console.error("Errore in editContact:", error);
+    console.error("❌ Errore in editCompanyData:", error);
     res.status(500).json({ error: "Errore interno del server" });
   }
-  
-}
+};
