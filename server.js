@@ -989,11 +989,11 @@ import {
 } from "./controllers/studioDentisticoController.js";
 
 
-app.post("api/ai/getStudio", getStudioDentistico);
-app.post("api/ai/editContatti", editContattiStudio);
-app.post("api/ai/editOrari", editOrariStudio);
-app.post("api/ai/editServizi", editServiziStudio);
-app.post("api/ai/editSlots", editSlotsStudio);
+app.post("/api/ai/getStudio", getStudioDentistico);
+app.post("/api/ai/editContatti", editContattiStudio);
+app.post("/api/ai/editOrari", editOrariStudio);
+app.post("/api/ai/editServizi", editServiziStudio);
+app.post("/api/ai/editSlots", editSlotsStudio);
 
 //ROTTE DI GESTIONE DEGLI UTENTI
 app.get('/api/usersGet', getUsersController);
