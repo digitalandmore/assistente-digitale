@@ -979,7 +979,23 @@ app.post('/api/ai/editContact', editContact)
 app.post('/api/ai/editCompanyData', editCompanyData)
 app.post("/api/ai/editHours", editHours);
 // app.post('/api/ai/editCompanyData', editCompanyData)
+import express from "express";
+import {
+  getStudioDentistico,
+  editContattiStudio,
+  editOrariStudio,
+  editServiziStudio,
+  editSlotsStudio,
+} from "../controllers/studioDentisticoController.js";
 
+
+app.post("api/ai/getStudio", getStudioDentistico);
+app.post("api/ai/editContatti", editContattiStudio);
+app.post("api/ai/editOrari", editOrariStudio);
+app.post("api/ai/editServizi", editServiziStudio);
+app.post("api/ai/editSlots", editSlotsStudio);
+
+export default router;
 //ROTTE DI GESTIONE DEGLI UTENTI
 app.get('/api/usersGet', getUsersController);
 app.post('/api/usersUpdate', updateUserDisplayName);

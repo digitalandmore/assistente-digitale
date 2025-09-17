@@ -51,32 +51,7 @@ export const editContact = async (req, res) => {
   }
 };
 
-// const editCompanyData = async (req, res) =>{
-//   try {
-//     const {nome, dati_aziendali} = req.body;
-  
-//     if (!nome) {
-//       return res.status(400).json({ error: "Il campo 'nome' è richiesto" });
-//     }
 
-//         if (!dati_aziendali || typeof dati_aziendali !== "object") {
-//       return res.status(400).json({ error: "Il campo 'dati_aziendali' è richiesto" });
-//     }
-//         const updated = await AssistenteDigitale.findOneAndUpdate(
-//       { "assistente.nome": nome },
-//       { $set: { dati_aziendali  } }, 
-//       { new: true } 
-//     );
-//         if (!updated) {
-//       return res.status(404).json({ error: "Assistente non trovato" });
-//     }
-
-//     res.status(200).json(updated);
-//   } catch (error) {
-//      console.error("Errore in editContact:", error);
-//     res.status(500).json({ error: "Errore interno del server" });
-//   }
-// }
 
 export const editCompanyData = async (req, res) => {
   try {
