@@ -17,8 +17,7 @@ import { saveToDbChatController, setLeadGenerationTrue, saveToDentalDbChatContro
 /* ====================Meta Controllers  ==================== */
 /* ==================== Controllers ==================== */
 
-import {analizeDentalIntent} from './controllers/analizeIntentController.js'
-import analizeIntent from './controllers/analizeIntentController.js';
+import {analizeIntent, analizeDentalIntent} from './controllers/analizeIntentController.js';
 import hubespostController from './controllers/hubspotController.js';
 import healtController from './controllers/healtController.js';
 import dectailHealtController from './controllers/dectailHealtController.js';
