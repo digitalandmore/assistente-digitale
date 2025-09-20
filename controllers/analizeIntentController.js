@@ -94,13 +94,13 @@ Restituisci SOLO un JSON:
 }
 
 const analizeDentalIntent = async (req, res) => {
-   try {
+  try {
     const { message, conversationHistory = [], context = {} } = req.body || {};
     if (!process.env.OPENAI_API_KEY && !openAiConfig?.apiKey) {
       return res.status(500).json({ success: false, error: "OpenAI non configurato sul server" });
     }
 
-    // TRIAGE canonical list (usata come riferimento: l’AI sceglie una domanda per volta)
+    // Domande canoniche del triage
     const TRIAGE_QUESTIONS = [
       "Da quando è iniziato il problema?",
       "Intensità del dolore da 0 a 10?",
@@ -109,39 +109,42 @@ const analizeDentalIntent = async (req, res) => {
       "Quale dente/arcata e cosa lo scatena (caldo/freddo/masticazione)?"
     ];
 
-    // Stato triage (se presente) passato dal client
+    // Stato triage dal client
     const triageCtx = context?.triage || { active: false, step: 0, answers: {}, source: null };
 
-    // Prompt: chiediamo SOLO JSON, includendo schema e constraints
+    // Prompt ridotto e blindato
     const system = `
-Sei un classificatore per uno studio dentistico. Rispondi **solo** in JSON (nessun testo extra).
-Se il messaggio contiene sintomi, attiva un triage a **una domanda per volta** usando l'elenco domande fornito.
-Non ripetere tutte le domande insieme. Se il triage è in corso, fornisci **solo la prossima domanda**.
-Severità (1-5) secondo la scala fornita. "urgent" è true se severity >= 4.
+Sei un classificatore per uno studio dentistico. 
+Rispondi SOLO in JSON (nessun testo extra). 
+Se ci sono sintomi dentali → "action":"SYMPTOM_FOLLOWUP" e proponi UNA sola domanda di triage. 
+Mai scrivere frasi complete, mai tutte le domande insieme. 
+"urgent" = true solo se severity >= 4.
 `;
 
     const user = `
-Analizza il messaggio e restituisci:
-- category (tra: patient_status_yes, patient_status_no, new_appointment, manage_appointment, checkup_request, question_doctor, info_general, symptoms, none)
-- action (tra: "ASK_PATIENT_STATUS","OFFER_CHECKUP","GENERATED_PATIENT","SEARCH_CURRENT_PATIENT","NEW_APPOINTMENT","MANAGE_APPOINTMENT","QUESTION_DOCTOR","SYMPTOM_FOLLOWUP","INFO","NONE")
+Analizza il messaggio utente e restituisci un oggetto JSON con i campi:
+- category (patient_status_yes, patient_status_no, new_appointment, manage_appointment, checkup_request, question_doctor, info_general, symptoms, none)
+- action (ASK_PATIENT_STATUS, OFFER_CHECKUP, GENERATED_PATIENT, SEARCH_CURRENT_PATIENT, NEW_APPOINTMENT, MANAGE_APPOINTMENT, QUESTION_DOCTOR, SYMPTOM_FOLLOWUP, INFO, NONE)
 - severity: 1|2|3|4|5|null (solo se sintomi)
 - confidence: 0.0-1.0
-- urgent: boolean (true se severity >= 4)
-- triage: oggetto con:
-  - needed: true/false
-  - question: string (la *prossima* domanda da porre, UNA SOLA)
-  - next_index: numero indice della domanda (0..${TRIAGE_QUESTIONS.length - 1})
-  - done: true/false (true quando hai raccolto abbastanza info e non servono altre domande)
+- urgent: true|false
+- triage: {
+    needed: true|false,
+    question: "la prossima domanda del triage o stringa vuota",
+    next_index: 0|1|2|3|4,
+    done: true|false
+  }
 
 LINEE GUIDA TRIAGE:
-- Domande canoniche (ordine):
+- Domande in ordine:
   0) ${TRIAGE_QUESTIONS[0]}
   1) ${TRIAGE_QUESTIONS[1]}
   2) ${TRIAGE_QUESTIONS[2]}
   3) ${TRIAGE_QUESTIONS[3]}
   4) ${TRIAGE_QUESTIONS[4]}
-- Se triage attivo, proponi esattamente la *domanda successiva* (next_index = step corrente).
-- Se hai già abbastanza informazioni cliniche, imposta done=true e non proporre altre domande.
+- Se triage già attivo → fornisci la domanda con indice = step corrente.
+- Se già abbastanza info cliniche → imposta done=true e question="".
+- Non inventare nuove domande.
 
 SCALA SEVERITÀ:
 1: lieve (sensibilità saltuaria, lieve fastidio)
@@ -155,39 +158,26 @@ CONTESTO:
 - isCurrentPatient: ${Boolean(context?.isCurrentPatient)}
 - triage.active: ${Boolean(triageCtx.active)}
 - triage.step: ${Number(triageCtx.step) || 0}
-- triage.answers (parziale): ${JSON.stringify(triageCtx.answers || {}).slice(0, 200)}
+- triage.answers: ${JSON.stringify(triageCtx.answers || {}).slice(0, 200)}
 
 MESSAGGIO UTENTE:
-"${String(message || "").slice(0, 1000)}"
+"${String(message || "").slice(0, 500)}"
 
-STORIA (ultimi messaggi, max 3):
-${conversationHistory.map(m => `${m.sender}: ${m.content}`).join("\n").slice(0, 800)}
+STORIA (ultimi 3 messaggi):
+${conversationHistory.map(m => `${m.sender}: ${m.content}`).join("\n").slice(0, 500)}
 
-RISPOSTA SOLO JSON con questo schema ESATTO:
-{
-  "category": "patient_status_yes|patient_status_no|new_appointment|manage_appointment|checkup_request|question_doctor|info_general|symptoms|none",
-  "action": "ASK_PATIENT_STATUS|OFFER_CHECKUP|GENERATED_PATIENT|SEARCH_CURRENT_PATIENT|NEW_APPOINTMENT|MANAGE_APPOINTMENT|QUESTION_DOCTOR|SYMPTOM_FOLLOWUP|INFO|NONE",
-  "severity": 1|2|3|4|5|null,
-  "confidence": 0.0-1.0,
-  "urgent": true|false,
-  "triage": {
-    "needed": true|false,
-    "question": "string|empty if not needed or done",
-    "next_index": 0|1|2|3|4|0,
-    "done": true|false
-  }
-}
+Rispondi SOLO in JSON, senza testo fuori JSON.
 `;
 
-    // Helper per robust parsing
+    // Helper parsing sicuro
     const safeParse = (txt) => {
       if (!txt) return null;
       let s = String(txt).trim();
-      // rimuovi backticks/fences
       s = s.replace(/^```(json)?/i, "").replace(/```$/i, "").trim();
       try { return JSON.parse(s); } catch { return null; }
     };
 
+    // Chiamata API
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -195,12 +185,12 @@ RISPOSTA SOLO JSON con questo schema ESATTO:
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: openAiConfig.model, // es: "gpt-4o-mini" / "gpt-4.1-mini"
+        model: openAiConfig.model,
         messages: [
           { role: "system", content: system },
           { role: "user", content: user }
         ],
-        // Se il tuo modello supporta JSON mode: aggiungi response_format
+        // se supportato → forziamo JSON puro
         // response_format: { type: "json_object" },
         temperature: 0.2,
         max_tokens: 400
@@ -216,16 +206,16 @@ RISPOSTA SOLO JSON con questo schema ESATTO:
     const raw = data?.choices?.[0]?.message?.content || "";
     let intent = safeParse(raw);
 
-    // Retry soft: prova a cercare la prima graffa per recuperare JSON embedded
+    // Retry soft: cerca JSON tra graffe
     if (!intent) {
       const first = raw.indexOf("{");
       const last = raw.lastIndexOf("}");
-      if (first !== -1 && last !== -1 && last > first) {
+      if (first !== -1 && last > first) {
         intent = safeParse(raw.slice(first, last + 1));
       }
     }
 
-    // Default robusti se ancora fallisce
+    // Default fallback
     if (!intent) {
       intent = {
         category: "none",
@@ -237,28 +227,31 @@ RISPOSTA SOLO JSON con questo schema ESATTO:
       };
     }
 
-    // Normalizzazione campi & derive urgent
+    // Normalizzazione campi
     const sev = (typeof intent.severity === "number") ? intent.severity : null;
     intent.urgent = Boolean(sev && sev >= 4);
+
     if (!intent.triage) {
       intent.triage = { needed: false, question: "", next_index: 0, done: false };
     } else {
-      // vincoli next_index in range
-      if (typeof intent.triage.next_index !== "number" || intent.triage.next_index < 0 || intent.triage.next_index > (TRIAGE_QUESTIONS.length - 1)) {
+      // next_index sempre in range
+      if (
+        typeof intent.triage.next_index !== "number" ||
+        intent.triage.next_index < 0 ||
+        intent.triage.next_index > TRIAGE_QUESTIONS.length - 1
+      ) {
         intent.triage.next_index = Math.min(Math.max(Number(triageCtx.step) || 0, 0), TRIAGE_QUESTIONS.length - 1);
       }
+      // fallback domanda coerente
       if (intent.triage.needed && !intent.triage.done && !intent.triage.question) {
-        // se manca la domanda, fornisci fallback coerente
         intent.triage.question = TRIAGE_QUESTIONS[intent.triage.next_index];
       }
     }
 
-    // Risposta OK
     return res.status(200).json({ success: true, intent });
 
   } catch (error) {
     console.error("❌ Errore Intent Analysis:", error?.message || error);
-    // Fallback minimo
     return res.status(500).json({
       success: false,
       error: error?.message || "Intent backend error",
@@ -272,7 +265,7 @@ RISPOSTA SOLO JSON con questo schema ESATTO:
       }
     });
   }
-}
+};
 export {analizeIntent, analizeDentalIntent};
 
 
