@@ -252,7 +252,15 @@ RISPOSTA SOLO JSON con questo schema ESATTO:
         intent.triage.question = TRIAGE_QUESTIONS[intent.triage.next_index];
       }
     }
-
+// Dopo la normalizzazione triage
+if (triageCtx.active) {
+  const maxStep = TRIAGE_QUESTIONS.length;
+  if (triageCtx.step >= maxStep) {
+    intent.triage.done = true;
+    intent.triage.needed = false;
+    intent.triage.question = "";
+  }
+}
     // Risposta OK
     return res.status(200).json({ success: true, intent });
 

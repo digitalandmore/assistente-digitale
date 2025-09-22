@@ -155,7 +155,7 @@ export const saveToDentalDbChatController = async (req, res) => {
           timestamp: new Date()
         }
       },
-      $set: { 
+      $set: {
         updatedAt: new Date()
       }
     };
@@ -181,11 +181,20 @@ export const saveToDentalDbChatController = async (req, res) => {
     });
 
     // Aggiorna o crea conversazione
-    await DentisticConversation.findOneAndUpdate(
+    let conversation = await DentisticConversation.findOneAndUpdate(
       { conversationId },
       updateObject,
       { upsert: true, new: true }
     );
+
+    // Se è stata appena creata, aggiungi progressiveNumber
+    if (!conversation.progressiveNumber) {
+      const lastConv = await DentisticConversation.findOne({}, { progressiveNumber: 1 })
+        .sort({ progressiveNumber: -1 });
+
+      conversation.progressiveNumber = lastConv ? lastConv.progressiveNumber + 1 : 1;
+      await conversation.save();
+    }
 
     res.status(200).json({
       success: true,
