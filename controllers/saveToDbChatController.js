@@ -124,15 +124,16 @@ export const saveToDentalDbChatController = async (req, res) => {
     const {
       messages,
       conversationId: incomingConversationId,
-      userId
+      userId,
+      action,
+      severity
     } = req.body;
 
     // Genera un nuovo conversationId se non fornito
-    let conversationId = incomingConversationId ;
+    let conversationId = incomingConversationId;
     if (!conversationId) {
       conversationId = uuidv4();
     }
-
 
     // Verifica che ci siano messaggi
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -154,12 +155,22 @@ export const saveToDentalDbChatController = async (req, res) => {
           timestamp: new Date()
         }
       },
-      $set: { updatedAt: new Date() }
+      $set: { 
+        updatedAt: new Date()
+      }
     };
 
     // Aggiungi userId se fornito
     if (userId) {
       updateObject.$set.userId = userId;
+    }
+
+    // Aggiungi action e severity se presenti
+    if (action) {
+      updateObject.$set.action = action;
+    }
+    if (severity !== undefined) {
+      updateObject.$set.severity = severity;
     }
 
     // 🔑 Itera sui campi del leadGenState
@@ -189,6 +200,7 @@ export const saveToDentalDbChatController = async (req, res) => {
     });
   }
 };
+
 //saveLead
 export const setLeadGenerationTrue = async (req, res) => {
   try {
