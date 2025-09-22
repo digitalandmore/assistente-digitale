@@ -3,6 +3,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import Conversation from '../models/Conversation.js';
 
+import Counter from '../models/counter.js'
 export const saveToDbChatController = async (req, res) => {
   try {
     const {
