@@ -3,7 +3,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import Conversation from '../models/Conversation.js';
 
-import Counter from '../models/counter.js'
 export const saveToDbChatController = async (req, res) => {
   try {
     const {
@@ -119,14 +118,7 @@ const leadGenState = {
     { key: "messaggio", label: "Descrivi brevemente la tua esigenza", validation: "required" }
   ]
 };
-async function getNextSeq(name) {
-  const counter = await Counter.findByIdAndUpdate(
-    name,
-    { $inc: { seq: 1 } },
-    { new: true, upsert: true } // crea il counter se non esiste
-  );
-  return counter.seq;
-}
+
 export const saveToDentalDbChatController = async (req, res) => {
   try {
     const {
@@ -137,6 +129,13 @@ export const saveToDentalDbChatController = async (req, res) => {
       severity
     } = req.body;
 
+    // Genera un nuovo conversationId se non fornito
+    let conversationId = incomingConversationId;
+    if (!conversationId) {
+      conversationId = uuidv4();
+    }
+
+    // Verifica che ci siano messaggi
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({
         success: false,
@@ -144,51 +143,54 @@ export const saveToDentalDbChatController = async (req, res) => {
       });
     }
 
-    // conversationId sempre valorizzato
-    let conversationId = incomingConversationId || uuidv4();
-
-    // ultimo messaggio (user o assistant)
+    // Salva solo l'ultimo messaggio
     const lastMessage = messages[messages.length - 1];
 
-    // trova o crea conversazione con progressiveNumber sicuro
-    const chatDoc = await DentisticConversation.findOneAndUpdate(
-      { conversationId },
-      {
-        $setOnInsert: {
-          userId: userId || "anonymous",
-          progressiveNumber: await getNextSeq("DentisticConversation"),
-          messages: [],
-          source: "web",
-          createdAt: new Date()
-        },
-        $set: {
-          updatedAt: new Date(),
-          ...(action && { action }),
-          ...(severity !== undefined && { severity })
+    // Prepara l'update object
+    const updateObject = {
+      $push: {
+        messages: {
+          role: lastMessage.role,
+          content: lastMessage.content,
+          timestamp: new Date()
         }
       },
-      { upsert: true, new: true }
-    );
+      $set: { 
+        updatedAt: new Date()
+      }
+    };
 
-    // aggiungi ultimo messaggio
-    await DentisticConversation.findByIdAndUpdate(
-      chatDoc._id,
-      {
-        $push: {
-          messages: {
-            role: lastMessage.role,
-            content: lastMessage.content,
-            timestamp: new Date()
-          }
-        }
-      },
-      { new: true }
+    // Aggiungi userId se fornito
+    if (userId) {
+      updateObject.$set.userId = userId;
+    }
+
+    // Aggiungi action e severity se presenti
+    if (action) {
+      updateObject.$set.action = action;
+    }
+    if (severity !== undefined) {
+      updateObject.$set.severity = severity;
+    }
+
+    // 🔑 Itera sui campi del leadGenState
+    leadGenState.requiredFields.forEach((field) => {
+      if (req.body[field.key]) {
+        updateObject.$set[field.key] = req.body[field.key];
+      }
+    });
+
+    // Aggiorna o crea conversazione
+    await DentisticConversation.findOneAndUpdate(
+      { conversationId },
+      updateObject,
+      { upsert: true, new: true }
     );
 
     res.status(200).json({
       success: true,
       conversationId,
-      message: "Messaggio salvato con successo"
+      message: "Messaggio e dati salvati con successo"
     });
   } catch (error) {
     console.error("❌ Errore salvataggio chat:", error.message);
@@ -198,7 +200,6 @@ export const saveToDentalDbChatController = async (req, res) => {
     });
   }
 };
-
 
 //saveLead
 export const setLeadGenerationTrue = async (req, res) => {
