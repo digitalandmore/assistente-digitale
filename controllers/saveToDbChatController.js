@@ -3,6 +3,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import Conversation from '../models/Conversation.js';
 
+import Counter from '../models/counter.js'
 export const saveToDbChatController = async (req, res) => {
   try {
     const {
@@ -118,7 +119,14 @@ const leadGenState = {
     { key: "messaggio", label: "Descrivi brevemente la tua esigenza", validation: "required" }
   ]
 };
-
+async function getNextSeq(name) {
+  const counter = await Counter.findByIdAndUpdate(
+    name,
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true } // crea il counter se non esiste
+  );
+  return counter.seq;
+}
 export const saveToDentalDbChatController = async (req, res) => {
   try {
     const {
