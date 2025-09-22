@@ -128,7 +128,11 @@ export const saveToDentalDbChatController = async (req, res) => {
     } = req.body;
 
     // Genera un nuovo conversationId se non fornito
-    let conversationId = incomingConversationId || uuidv4();
+    let conversationId = incomingConversationId ;
+    if (!conversationId) {
+      conversationId = uuidv4();
+    }
+
 
     // Verifica che ci siano messaggi
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
