@@ -2,7 +2,7 @@
  * Crea un nuovo appuntamento
  */
 import Appointment from "../models/Appointment.js";
-import Paziente from "../models/Paziente.js";
+import Paziente from "../models/paziente.js";
 import StudioDentistico from "../models/StudioDentistico.js";
 
 export const createAppointment = async (req, res) => {
