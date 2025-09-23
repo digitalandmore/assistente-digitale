@@ -1,6 +1,5 @@
 // controllers/slotController.js
-import Slot from "../models/Slot.js";
-import { generaSlotDisponibili } from "../utils/generaSlotDisponibili.js";
+import slot from "../models/Slot.js";
 
 export const salvaSlot = async (req, res) => {
   try {
@@ -19,7 +18,7 @@ export const salvaSlot = async (req, res) => {
     const savedSlots = [];
     for (const s of slots) {
       try {
-        const newSlot = await Slot.findOneAndUpdate(
+        const newSlot = await slot.findOneAndUpdate(
           { studio: studioId, inizio: s.inizio }, // chiave unica
           { studio: studioId, inizio: s.inizio, fine: s.fine },
           { upsert: true, new: true }
@@ -48,7 +47,7 @@ export const getProssimiSlot = async (req, res) => {
     sevenDaysLater.setDate(now.getDate() + 7);
 
     // Recupera slot disponibili entro 7 giorni
-    const slots = await Slot.find({
+    const slots = await slot.find({
       studio: studioId,
       prenotato: false,
       inizio: { $gte: now, $lte: sevenDaysLater }

@@ -24,4 +24,5 @@ const pazienteSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-export default mongoose.model("Paziente", pazienteSchema);
+export default mongoose.models.Paziente || mongoose.model("Paziente", pazienteSchema);
+

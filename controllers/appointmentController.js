@@ -1,6 +1,3 @@
-// controllers/appointmentController.js
-import Appointment from "../models/Appointment.js";
-
 /**
  * Crea un nuovo appuntamento
  */
