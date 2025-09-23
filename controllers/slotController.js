@@ -37,7 +37,7 @@ export const salvaSlot = async (req, res) => {
 };
 export const getProssimiSlot = async (req, res) => {
   try {
-    const { studioId } = req.query;
+    const { studioId } = req.body;
     if (!studioId) {
       return res.status(400).json({ success: false, error: "studioId richiesto" });
     }
