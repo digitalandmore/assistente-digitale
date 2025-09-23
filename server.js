@@ -976,7 +976,7 @@ app.post('/api/ai/deleteChatArchived', DeleteChatContoller);
 app.post('/api/ai/restorechat', restoreChat);
 //enpoint per la gestione degli appuntamenti
 app.post("/api/slot/save", salvaSlot);
-app.get("/api/slot/next", getProssimiSlot)
+app.post("/api/slot/next", getProssimiSlot)
 //ROTTE GESTIONE KNOWLEDGE
 app.post('/api/ai/getknowledge', getKnowledge)
 app.post('/api/ai/editContact', editContact)
