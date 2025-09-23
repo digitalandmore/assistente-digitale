@@ -16,7 +16,7 @@ import { saveToDbChatController, setLeadGenerationTrue, saveToDentalDbChatContro
 
 /* ====================Meta Controllers  ==================== */
 /* ==================== Controllers ==================== */
-import { salvaSlot, getProssimiSlot } from "./controllers/slotController.js"
+import { salvaSlot, getProssimiSlot,seedSlots } from "./controllers/slotController.js"
 
 import {analizeIntent, analizeDentalIntent} from './controllers/analizeIntentController.js';
 import hubespostController from './controllers/hubspotController.js';
@@ -30,6 +30,8 @@ import { getUsersController, updateUserDisplayName, createUser, } from './contro
 import { editContact, getKnowledge, editCompanyData, editHours } from './controllers/KnowledgeController.js'
 import { SYSTEM_PROMPT_WHATSAPP } from './services/promtp/systemPropmtWp.js'
 import { SYSTEM_PROMPT_FB } from './services/promtp/systemPromptFb.js'
+//alfadocs
+import { getAlfaAppointments } from "./controllers/alfadocsController.js";
 import OpenAI from "openai";
 import { loadConfiguration, generateSystemPrompt } from './services/promtp/generatesystemPrompt.js'
 // Load environment variables
@@ -977,6 +979,7 @@ app.post('/api/ai/restorechat', restoreChat);
 //enpoint per la gestione degli appuntamenti
 app.post("/api/slot/save", salvaSlot);
 app.post("/api/slot/next", getProssimiSlot)
+app.post("/api/slot/seed", seedSlots);
 //ROTTE GESTIONE KNOWLEDGE
 app.post('/api/ai/getknowledge', getKnowledge)
 app.post('/api/ai/editContact', editContact)
@@ -1060,6 +1063,12 @@ import {
 app.post("/api/dental/domande", createQuestion)
 app.get("/api/dental/domande", getQuestions)
 app.post("/api/dental/risposte", answerQuestions)
+
+
+
+/* ==================== API ALFADOCS ==================== */
+app.get("/api/alfa/appointments", getAlfaAppointments);
+
 /* ==================== API REST PAZIENTE ==================== */
 import { createPaziente, getPazienti, getPazienteByEmail } from './controllers/pazienteController.js'
 

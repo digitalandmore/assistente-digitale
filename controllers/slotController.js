@@ -69,3 +69,62 @@ export const getProssimiSlot = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+import StudioDentistico from "../models/StudioDentistico.js";
+
+export const seedSlots = async (req, res) => {
+  try {
+    const { studioId } = req.body;
+    const studio = await StudioDentistico.findById(studioId);
+    if (!studio) {
+      return res.status(404).json({ success: false, error: "Studio non trovato" });
+    }
+
+    const today = new Date();
+    const sevenDaysLater = new Date();
+    sevenDaysLater.setDate(today.getDate() + 7);
+
+    const slots = [];
+
+    for (let d = new Date(today); d <= sevenDaysLater; d.setDate(d.getDate() + 1)) {
+      const weekday = d.toLocaleDateString("it-IT", { weekday: "long" }).toLowerCase();
+      const hours = studio.openingHours[weekday]; // es. "9:00 - 18:00" o "Chiuso"
+      if (!hours || hours.toLowerCase() === "chiuso") continue;
+
+      const [startStr, endStr] = hours.split(" - ");
+      const [startH, startM] = startStr.split(":").map(Number);
+      const [endH, endM] = endStr.split(":").map(Number);
+
+      const start = new Date(d);
+      start.setHours(startH, startM, 0, 0);
+
+      const end = new Date(d);
+      end.setHours(endH, endM, 0, 0);
+
+      // genera slot da 60 minuti
+      let current = new Date(start);
+      while (current < end) {
+        const slotStart = new Date(current);
+        const slotEnd = new Date(current);
+        slotEnd.setMinutes(slotEnd.getMinutes() + 60);
+
+        if (slotEnd <= end) {
+          slots.push({
+            studio: studio._id,
+            inizio: slotStart,
+            fine: slotEnd,
+            prenotato: false
+          });
+        }
+
+        current.setMinutes(current.getMinutes() + 60);
+      }
+    }
+
+    await Slot.insertMany(slots);
+
+    res.json({ success: true, count: slots.length });
+  } catch (err) {
+    console.error("Errore seedSlots:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
