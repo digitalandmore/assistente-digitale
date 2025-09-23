@@ -4,19 +4,52 @@ import Appointment from "../models/Appointment.js";
 /**
  * Crea un nuovo appuntamento
  */
+import Appointment from "../models/Appointment.js";
+import Paziente from "../models/Paziente.js";
+import StudioDentistico from "../models/StudioDentistico.js";
+
 export const createAppointment = async (req, res) => {
   try {
-    const { nome, cognome, email, motivo, servizio, slot } = req.body;
+    const { nome, cognome, email, motivo, servizio, slotId, studioId } = req.body;
 
-    if (!nome || !email || !motivo || !slot) {
+    if (!nome || !email || !motivo || !slotId || !studioId) {
       return res.status(400).json({ success: false, message: "Dati incompleti" });
     }
 
+    // 1. Recupera o crea il paziente
+    let paziente = await Paziente.findOne({ email });
+    if (!paziente) {
+      paziente = new Paziente({
+        nome_completo: `${nome} ${cognome || ""}`.trim(),
+        email,
+        telefono: "",
+        motivo_della_visita: motivo
+      });
+      await paziente.save();
+    }
+
+    // 2. Recupera lo studio
+    const studio = await StudioDentistico.findById(studioId);
+    if (!studio) {
+      return res.status(404).json({ success: false, message: "Studio non trovato" });
+    }
+
+    // 3. Recupera slot dal backend (qui semplifico: potresti avere un modello Slot a parte)
+    const slot = studio.availableSlots.find(s => String(s._id) === String(slotId));
+    if (!slot) {
+      return res.status(404).json({ success: false, message: "Slot non trovato" });
+    }
+
+    // 4. Crea appuntamento
     const newAppointment = new Appointment({
-      paziente: { nome, cognome, email },
-      motivo,
+      studio: studio._id,
+      paziente: paziente._id,
+      data: slot.inizio,   // la data effettiva
+      durata: 60,
       servizio,
-      slot
+      note: motivo,
+      status: "prenotato",
+      slot: slotId
     });
 
     await newAppointment.save();
@@ -31,6 +64,7 @@ export const createAppointment = async (req, res) => {
     res.status(500).json({ success: false, message: "Errore server" });
   }
 };
+
 
 /**
  * Recupera tutti gli appuntamenti

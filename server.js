@@ -16,6 +16,7 @@ import { saveToDbChatController, setLeadGenerationTrue, saveToDentalDbChatContro
 
 /* ====================Meta Controllers  ==================== */
 /* ==================== Controllers ==================== */
+import { salvaSlot, getProssimiSlot } from "./controllers/slotController.js"
 
 import {analizeIntent, analizeDentalIntent} from './controllers/analizeIntentController.js';
 import hubespostController from './controllers/hubspotController.js';
@@ -973,7 +974,9 @@ app.post('/api/ai/visualized', markAsVisualized);
 app.post('/api/ai/deleteChat', deleteChat);
 app.post('/api/ai/deleteChatArchived', DeleteChatContoller);
 app.post('/api/ai/restorechat', restoreChat);
-
+//enpoint per la gestione degli appuntamenti
+app.post("/api/slot/save", salvaSlot);
+app.post("/api/slot/next", getProssimiSlot)
 //ROTTE GESTIONE KNOWLEDGE
 app.post('/api/ai/getknowledge', getKnowledge)
 app.post('/api/ai/editContact', editContact)
