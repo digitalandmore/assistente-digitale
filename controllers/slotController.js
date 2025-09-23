@@ -1,5 +1,5 @@
 // controllers/slotController.js
-import slot from "../models/Slot.js";
+import slot from "../models/slot.js";
 
 export const salvaSlot = async (req, res) => {
   try {
