@@ -75,7 +75,7 @@ export const createAppointment = async (req, res) => {
     console.log("Tipologia:", typeof slotId);
     const allSlots = await slot.find({});
     console.log("Tutti gli slot disponibili:", allSlots.map(s => s._id.toString()));
-    console.log("SlotId ricevuto:", slotId); ì
+    console.log("SlotId ricevuto:", slotId); 
     const selectedSlot = await slot.findById(slotId);
     console.log("Slot trovato:", selectedSlot);
     if (!selectedSlot) {
