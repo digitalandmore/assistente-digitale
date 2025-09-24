@@ -52,7 +52,7 @@ export const getPazienteByEmail = async (req, res) => {
       return res.status(400).json({ success: false, message: "Email richiesta" });
     }
 
-    const url = `https://app.alfadocs.com/api/v1/practices/${process.env.PRACTICE_ID}/archives/${process.env.ARCHIVE_ID}/patients?email=${encodeURIComponent(email)}`;
+    const url = `${process.env.ALFADOCS_API_URL}/practices/${process.env.PRACTICE_ID}/archives/${process.env.ARCHIVE_ID}/patients?email=${encodeURIComponent(email)}`;
 
     const response = await fetch(url, {
       headers: {
