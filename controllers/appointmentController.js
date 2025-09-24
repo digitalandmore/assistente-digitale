@@ -71,7 +71,9 @@ export const createAppointment = async (req, res) => {
     }
 
     // 1. Recupera slot dal DB (qui lo usiamo solo per la data)
+    console.log("SlotId ricevuto:", slotId);ì
     const selectedSlot = await slot.findById(slotId);
+    console.log("Slot trovato:", selectedSlot);
     if (!selectedSlot) {
       return res.status(404).json({ success: false, message: "Slot non trovato" });
     }
