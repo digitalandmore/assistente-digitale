@@ -13,4 +13,4 @@ const slotSchema = new Schema({
 // Evita slot duplicati (per lo stesso studio + ora inizio)
 slotSchema.index({ studio: 1, inizio: 1 }, { unique: true });
 
-export default model("Slot", slotSchema);
+export default model("slot", slotSchema);
