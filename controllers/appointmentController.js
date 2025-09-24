@@ -4,6 +4,7 @@
 import Appointment from "../models/Appointment.js";
 import Paziente from "../models/paziente.js";
 import StudioDentistico from "../models/StudioDentistico.js";
+import slot from "../models/slot.js";
 
 // export const createAppointment = async (req, res) => {
 //   try {
@@ -70,8 +71,8 @@ export const createAppointment = async (req, res) => {
     }
 
     // 1. Recupera slot dal DB (qui lo usiamo solo per la data)
-    const slot = await Slot.findById(slotId);
-    if (!slot) {
+    const selectedSlot = await slot.findById(slotId);
+    if (!selectedSlot) {
       return res.status(404).json({ success: false, message: "Slot non trovato" });
     }
 
@@ -88,7 +89,7 @@ export const createAppointment = async (req, res) => {
       patientId = data.results[0].id;
     } else {
       // 3. Se non esiste, crealo
-      const patientCreateUrl = `${process.env.ALFADOCS_API_URL}/practices/${process.env.PRACTICE_ID}/archives/${process.env.ALFADOCS_ARCHIVE_ID}/patients`;
+      const patientCreateUrl = `${process.env.ALFADOCS_API_URL}/practices/${process.env.PRACTICE_ID}/archives/${process.env.ARCHIVE_ID}/patients`;
       response = await fetch(patientCreateUrl, {
         method: "POST",
         headers: {
@@ -115,7 +116,7 @@ export const createAppointment = async (req, res) => {
     const appointmentUrl = `${process.env.ALFADOCS_API_URL}/practices/${process.env.PRACTICE_ID}/archives/${process.env.ARCHIVE_ID}/appointments`;
 
     const newAppointmentBody = {
-      date: slot.inizio.toISOString().slice(0, 19).replace("T", " "), // "YYYY-MM-DD HH:mm:ss"
+      date: selectedSlot.inizio.toISOString().slice(0, 19).replace("T", " "),// "YYYY-MM-DD HH:mm:ss"
       patientId,
       emailReminder: true,
       smsReminder: false,
