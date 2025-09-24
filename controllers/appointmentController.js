@@ -124,7 +124,7 @@ export const createAppointment = async (req, res) => {
       type: "inPractice",
       duration: 60,
       state: "confirmed",
-      colorId: 1,      // TODO: recupera il vero colorId dal tuo AlfaDocs
+      colorId: 331903,      // TODO: recupera il vero colorId dal tuo AlfaDocs
       chairId: null,   // opzionale
       operatorId: null // opzionale
     };
