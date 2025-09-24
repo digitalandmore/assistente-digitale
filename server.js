@@ -17,7 +17,7 @@ import { saveToDbChatController, setLeadGenerationTrue, saveToDentalDbChatContro
 /* ====================Meta Controllers  ==================== */
 /* ==================== Controllers ==================== */
 import { salvaSlot, getProssimiSlot,seedSlots } from "./controllers/slotController.js"
-
+import { getColors } from './controllers/colorsController.js';
 import {analizeIntent, analizeDentalIntent} from './controllers/analizeIntentController.js';
 import hubespostController from './controllers/hubspotController.js';
 import healtController from './controllers/healtController.js';
@@ -1068,7 +1068,7 @@ app.post("/api/dental/risposte", answerQuestions)
 
 /* ==================== API ALFADOCS ==================== */
 app.get("/api/alfa/appointments", getAlfaAppointments);
-
+app.get("/colors", getColors);
 /* ==================== API REST PAZIENTE ==================== */
 import { createPaziente, getPazienti, getPazienteByEmail } from './controllers/pazienteController.js'
 
