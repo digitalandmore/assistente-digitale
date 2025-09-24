@@ -1068,7 +1068,7 @@ app.post("/api/dental/risposte", answerQuestions)
 
 /* ==================== API ALFADOCS ==================== */
 app.get("/api/alfa/appointments", getAlfaAppointments);
-app.get("/colors", getColors);
+app.get("/api/alfa/colors", getColors);
 /* ==================== API REST PAZIENTE ==================== */
 import { createPaziente, getPazienti, getPazienteByEmail } from './controllers/pazienteController.js'
 
