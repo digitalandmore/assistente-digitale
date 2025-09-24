@@ -120,7 +120,7 @@ export const seedSlots = async (req, res) => {
       }
     }
 
-    await Slot.insertMany(slots);
+    await slots.insertMany(slots);
 
     res.json({ success: true, count: slots.length });
   } catch (err) {

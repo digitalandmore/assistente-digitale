@@ -56,8 +56,9 @@ export const getPazienteByEmail = async (req, res) => {
 
     const response = await fetch(url, {
       headers: {
-        "X-Api-Key": process.env.ALFADOCS_KEY
-      }
+        "X-Api-Key": process.env.ALFADOCS_KEY,
+        "Content-Type": "application/json",
+      },
     });
 
     if (!response.ok) {
