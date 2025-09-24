@@ -66,7 +66,7 @@ export const createAppointment = async (req, res) => {
   try {
     const { nome, cognome, email, motivo, servizio, slotId, studioId } = req.body;
 
-    if (!nome || !email || !motivo || !slotId) {
+    if (!email || !motivo || !slotId) {
       return res.status(400).json({ success: false, message: "Dati incompleti" });
     }
 
